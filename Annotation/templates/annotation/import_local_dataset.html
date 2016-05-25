@@ -3,7 +3,9 @@
 {% block content %}
 <form action="/annotation/import-local-dataset/" method="post">
     {% csrf_token %}
-    {{ form }}
+    <table>
+        {{ form.as_table }}
+    </table>
     <input type="submit" value="Submit" />
 </form>
 {% endblock %}
