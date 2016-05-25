@@ -1,0 +1,18 @@
+{% extends 'annotation/base.html' %}
+
+{% block content %}
+<h2>Export labeled dataset</h2>
+{% if message %}
+<div class="message">{{ message }}</div>
+{% endif %}
+<form action="/annotation/export-labeled-dataset/" method="post">
+{% csrf_token %}
+Task: <select name="task_id">
+{% for task in tasks %}
+    <option value="{{ task.id }}">{{ task.name }}</option>
+{% endfor %}
+</select><br />
+    Path: <input type="text" name="path" />
+    <input type="submit" value="Export" />
+</form>
+{% endblock %}

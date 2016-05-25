@@ -1,0 +1,18 @@
+{% extends 'annotation/base.html' %}
+
+{% block title %} Label image {% endblock %}
+
+{% block content %}
+    <h2>Label the following image</h2>
+    {{ number_of_labeled_images }} of {{ total_number_of_images}} images has been labeled ({{ percentage_finished }}%).<br />
+    <img src="/annotation/show-image/{{ image.id }}/" alt="" width="512"/>
+    <br />
+    <br />
+    <form id="label-form" method="post" action="/annotation/label-image/{{ task.id }}/">
+        <input type="hidden" value="{{ image.id }}" name="image_id" />
+        {% csrf_token %}
+        {% for label in labels %}
+        <input type="submit" name="{{label.name}}" value="{{label.name}}" class="labelButton">
+        {% endfor %}
+    </form>
+{% endblock %}

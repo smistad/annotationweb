@@ -1,0 +1,40 @@
+body {
+    background-color: #000000;
+    color: #fdfdfd;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    line-height: 28px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+#content {
+    max-width: 640px;
+    width: 96%;
+    padding: 2%;
+    margin: 28px  auto;
+}
+
+.labelButton {
+    font-size: 20px;
+}
+
+.message {
+    background-color: #FFFFCC;
+    border: 1px solid #FFFF00;
+    padding: 3px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+    color: #000000;
+}
+
+a:link, a:visited {
+    color: #fdfdfd;
+    text-decoration: underline;
+}
+a:hover {
+    text-decoration: none;
+}
+
+img {
+    border: 1px solid #fdfdfd;
+}

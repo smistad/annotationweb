@@ -1,0 +1,9 @@
+{% extends 'annotation/base.html' %}
+
+{% block content %}
+<form action="/annotation/import-local-dataset/" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit" />
+</form>
+{% endblock %}

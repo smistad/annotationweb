@@ -1,0 +1,10 @@
+{% extends 'annotation/base.html' %}
+
+{% block content %}
+<h2>Tasks</h2>
+<ul>
+{% for task in tasks %}
+    <li><a href="/annotation/label-image/{{ task.id }}/">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)</li>
+{% endfor %}
+</ul>
+{% endblock %}
