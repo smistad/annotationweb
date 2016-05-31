@@ -1,5 +1,7 @@
-from django.shortcuts import render
+from django.contrib import messages
+from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.db.models import Max
 
 import fnmatch
 import os
@@ -17,7 +19,7 @@ def index(request):
     tasks = Task.objects.all()
     for task in tasks:
         task.total_number_of_images = Image.objects.filter(dataset = task.dataset).count()
-        task.percentage_finished = round(Image.objects.filter(labeledimage__label__task = task.id).count()*100 / task.total_number_of_images, 2)
+        task.percentage_finished = round(Image.objects.filter(labeledimage__label__task = task.id).count()*100 / task.total_number_of_images, 1)
     context['tasks'] = tasks
     return render(request, 'annotation/index.html', context)
 
@@ -58,6 +60,7 @@ def pick_random_image(task_id):
 
 def label_images(request, task_id):
     context = {}
+    context['dark_style'] = 'yes'
     try:
         task = Task.objects.get(pk=task_id)
         labels = Label.objects.filter(task = task)
@@ -75,19 +78,22 @@ def label_images(request, task_id):
         labeled_image.save()
 
     # Get random unlabeled image
-    image = pick_random_image(task_id)
-    context['image'] = image
-    context['task'] = task
-    context['number_of_labeled_images'] = Image.objects.filter(labeledimage__label__task = task_id).count()
-    context['total_number_of_images'] = Image.objects.filter(dataset = task.dataset).count()
-    context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 2)
+    try:
+        image = pick_random_image(task_id)
+        context['image'] = image
+        context['task'] = task
+        context['number_of_labeled_images'] = Image.objects.filter(labeledimage__label__task = task_id).count()
+        context['total_number_of_images'] = Image.objects.filter(dataset = task.dataset).count()
+        context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
-    # Get all labels for this task
-    context['labels'] = labels
+        # Get all labels for this task
+        context['labels'] = labels
+        print('Got the following random image: ', image.filename)
+        return render(request, 'annotation/label_image.html', context)
+    except ValueError:
+        messages.info(request, 'This task is finished, no more images to label.')
+        return redirect('annotation:index')
 
-    print('Got the following random image: ', image.filename)
-
-    return render(request, 'annotation/label_image.html', context)
 
 def show_image(request, image_id):
     try:
@@ -130,9 +136,37 @@ def export_labeled_dataset(request):
             image_filename = name[name.rfind('/')+1:]
             print('Copying the file ', image_filename)
             copyfile(name, os.path.join(path, os.path.join(labeled_image.label.name, image_filename)))
-        context['message'] = 'Done!'
+        messages.success(request, 'The labeled dataset was successfully exported to ' + path)
+        return redirect('annotation:index')
 
     # Get all possible tasks
     context['tasks'] = Task.objects.all()
 
     return render(request, 'annotation/export_labeled_dataset.html', context)
+
+def new_task(request):
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('annotation:index')
+    else:
+        form = TaskForm()
+    context = {'form': form}
+
+    return render(request, 'annotation/new_task.html', context)
+
+def delete_task(request, task_id):
+    if request.method == 'POST':
+        Task.objects.get(pk = task_id).delete()
+        return redirect('annotation:index')
+    else:
+        return render(request, 'annotation/delete_task.html', {'task_id': task_id})
+
+def undo_image_label(request, task_id):
+    try:
+        id_max = LabeledImage.objects.filter(label__task_id=task_id).aggregate(Max('id'))['id__max']
+        LabeledImage.objects.get(pk=id_max).delete()
+        return redirect('annotation:label_image', task_id=task_id)
+    except Task.DoesNotExist:
+        raise Http404('Image label does not exist')

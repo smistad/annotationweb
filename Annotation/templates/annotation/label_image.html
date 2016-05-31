@@ -11,8 +11,11 @@
     <form id="label-form" method="post" action="/annotation/label-image/{{ task.id }}/">
         <input type="hidden" value="{{ image.id }}" name="image_id" />
         {% csrf_token %}
+        <h3>Assign label:</h3>
         {% for label in labels %}
         <input type="submit" name="{{label.name}}" value="{{label.name}}" class="labelButton">
         {% endfor %}
+        <br><br>
+        <input type="button" value="Undo previous labeled image" class="labelButton" onclick="javascript:window.location.href='{% url 'annotation:undo_image_label' task.id %}'">
     </form>
 {% endblock %}

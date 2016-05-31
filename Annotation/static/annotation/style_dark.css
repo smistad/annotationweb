@@ -1,6 +1,6 @@
 body {
-    background-color: #fdfdfd;
-    color: #000000;
+    background-color: #000000;
+    color: #fdfdfd;
     margin: 0;
     padding: 0;
     font-size: 14px;
@@ -18,23 +18,7 @@ body {
     font-size: 20px;
 }
 
-.info {
-    background-color: #FFFFCC;
-    border: 1px solid #FFFF00;
-    padding: 3px;
-    margin-bottom: 3px;
-    margin-top: 3px;
-    color: #000000;
-}
-.success {
-    background-color: #CCFF99;
-    border: 1px solid #336600;
-    padding: 3px;
-    margin-bottom: 3px;
-    margin-top: 3px;
-    color: #000000;
-}
-.error {
+.message {
     background-color: #FFFFCC;
     border: 1px solid #FFFF00;
     padding: 3px;
@@ -44,7 +28,7 @@ body {
 }
 
 a:link, a:visited {
-    color: #000000;
+    color: #fdfdfd;
     text-decoration: underline;
 }
 a:hover {

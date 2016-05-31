@@ -17,8 +17,9 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 urlpatterns = [
-    url(r'^annotation/', include('Annotation.urls')),
     url(r'^admin/', admin.site.urls),
+    url(r'^', include('Annotation.urls')),
+    url(r'^annotation/', include('Annotation.urls')),
 ]
 
 # This is for making statics in a development environment

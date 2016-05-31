@@ -1,0 +1,9 @@
+{% extends 'annotation/base.html' %}
+
+{% block content %}
+<form action="{% url 'annotation:delete_task' task_id %}" method="post">
+    {% csrf_token %}
+    Are you sure you want to delete this task?
+    <input type="submit" value="Yes">
+</form>
+{% endblock %}
