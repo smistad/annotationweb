@@ -2,17 +2,19 @@
 
 {% block content %}
 <h2>Export labeled dataset</h2>
-{% if message %}
-<div class="message">{{ message }}</div>
-{% endif %}
-<form action="/annotation/export-labeled-dataset/" method="post">
-{% csrf_token %}
-Task: <select name="task_id">
-{% for task in tasks %}
-    <option value="{{ task.id }}">{{ task.name }}</option>
+{% for message in messages %}
+<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
 {% endfor %}
-</select><br />
-    Path: <input type="text" name="path" />
-    <input type="submit" value="Export" />
+<form action="{% url 'annotation:export_labeled_dataset' task.id %}" method="post">
+{% csrf_token %}
+Select datasets to export:<br>
+{% for dataset in datasets %}
+<input type="checkbox" name="datasets" value="{{ dataset.id }}"> {{ dataset.name }}<br>
+{% endfor %}
+<br>
+    Path: <input type="text" name="path"><br>
+    Mirror augmentation: <input type="checkbox" name="mirror" checked><br>
+    Intensity scaling augmentation: <input type="checkbox" name="intensity_scale" checked><br>
+    <input type="submit" value="Export">
 </form>
 {% endblock %}

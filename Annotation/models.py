@@ -15,7 +15,7 @@ class Image(models.Model):
 
 class Task(models.Model):
     name = models.CharField(max_length = 200)
-    dataset = models.ForeignKey(Dataset, on_delete = models.CASCADE)
+    dataset = models.ManyToManyField(Dataset)
 
     def __str__(self):
         return self.name

@@ -14,12 +14,17 @@ from shutil import copyfile, rmtree
 from .forms import *
 from .models import *
 
+import numpy as np
+
 def index(request):
     context = {}
     tasks = Task.objects.all()
     for task in tasks:
-        task.total_number_of_images = Image.objects.filter(dataset = task.dataset).count()
-        task.percentage_finished = round(Image.objects.filter(labeledimage__label__task = task.id).count()*100 / task.total_number_of_images, 1)
+        task.total_number_of_images = Image.objects.filter(dataset__task = task.id).count()
+        if(task.total_number_of_images == 0):
+            task.percentage_finished = 0
+        else:
+            task.percentage_finished = round(Image.objects.filter(labeledimage__label__task = task.id).count()*100 / task.total_number_of_images, 1)
     context['tasks'] = tasks
     return render(request, 'annotation/index.html', context)
 
@@ -45,7 +50,8 @@ def import_local_dataset(request):
                 dataset.name = form.cleaned_data['name']
                 dataset.save()
                 import_images(path, dataset)
-                return HttpResponse('Success!')
+                messages.success(request, 'Successfully imported dataset')
+                return redirect('annotation:index')
             else:
                 form.add_error(field='path', error='The path doesn\'t exist.')
     else:
@@ -55,7 +61,7 @@ def import_local_dataset(request):
 
 def pick_random_image(task_id):
     # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.exclude(labeledimage__label__task = task_id)
+    unlabeled_images = Image.objects.filter(dataset__task = task_id).exclude(labeledimage__label__task = task_id)
     return unlabeled_images[random.randrange(0, len(unlabeled_images))]
 
 def label_images(request, task_id):
@@ -83,7 +89,7 @@ def label_images(request, task_id):
         context['image'] = image
         context['task'] = task
         context['number_of_labeled_images'] = Image.objects.filter(labeledimage__label__task = task_id).count()
-        context['total_number_of_images'] = Image.objects.filter(dataset = task.dataset).count()
+        context['total_number_of_images'] = Image.objects.filter(dataset__task = task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
         # Get all labels for this task
@@ -107,14 +113,41 @@ def show_image(request, image_id):
 
     return HttpResponse(buffer.getvalue(), content_type="image/png")
 
-def export_labeled_dataset(request):
+
+def scale(array, factor):
+    array = array.astype('float')
+    for i in range(3):
+        array[..., i] *= factor
+
+    array[array > 255] = 255
+    array[array < 0] = 0
+    return array
+
+def intensityScaling(image, factor):
+    arr = np.array(image)
+    return PIL.Image.fromarray(scale(arr, factor).astype('uint8'), 'RGB')
+
+def export_labeled_dataset(request, task_id):
     context = {}
+    # Validate form
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
+    context['task'] = task
+
+    # Get all possible tasks
+    context['datasets'] = Dataset.objects.filter(task__id = task_id)
+
     if request.method == 'POST':
-        # Validate form
-        try:
-            task = Task.objects.get(pk=request.POST['task_id'])
-        except Task.DoesNotExist:
-            raise Http404('Task does not exist')
+        datasets = request.POST.getlist('datasets')
+        mirror = request.POST.get('mirror', False)
+        intensityScale = request.POST.get('intensity_scale', False)
+        scalingFactors = [0.9, 1.1]
+
+        if len(datasets) == 0:
+            messages.error(request, 'You must select at least 1 dataset')
+            return render(request, 'annotation/export_labeled_dataset.html', context)
 
         # Create dir, delete old if it exists
         path = request.POST['path']
@@ -123,24 +156,66 @@ def export_labeled_dataset(request):
             rmtree(path)
         except:
             pass
-        os.mkdir(path)
+        try:
+            os.mkdir(path)
+        except:
+            messages.error(request, 'Invalid path')
+            return render(request, 'annotation/export_labeled_dataset.html', context)
 
-        # Create label dirs
+
+        # Create label file
+        label_file = open(os.path.join(path, 'labels.txt'), 'w')
         labels = Label.objects.filter(task = task)
+        labelDict = {}
+        counter = 0
         for label in labels:
-            os.mkdir(os.path.join(path, label.name))
+            label_file.write(label.name + '\n')
+            labelDict[label.name] = counter
+            counter += 1
+        label_file.close()
 
-        labeled_images = LabeledImage.objects.filter(label__task = task)
+        # Create file_list.txt file
+        file_list = open(os.path.join(path, 'file_list.txt'), 'w')
+        labeled_images = LabeledImage.objects.filter(label__task = task, image__dataset__in = datasets)
         for labeled_image in labeled_images:
             name = labeled_image.image.filename
             image_filename = name[name.rfind('/')+1:]
-            print('Copying the file ', image_filename)
-            copyfile(name, os.path.join(path, os.path.join(labeled_image.label.name, image_filename)))
+            dataset_path = os.path.join(path, labeled_image.image.dataset.name)
+            try:
+                os.mkdir(dataset_path) # Make dataset path if doesn't exist
+            except:
+                pass
+            new_filename = os.path.join(dataset_path, image_filename)
+            copyfile(name, new_filename)
+            file_list.write(new_filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
+
+            if mirror:
+                flippedImage = PIL.Image.open(new_filename).transpose(PIL.Image.FLIP_LEFT_RIGHT)
+                # Save flipped image
+                flippedFilename = os.path.join(dataset_path, 'flipped_' + image_filename)
+                flippedImage.save(flippedFilename)
+                file_list.write(flippedFilename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
+            if intensityScale:
+                originalImage = PIL.Image.open(new_filename)
+                if len(scalingFactors) > 0:
+                    for scalingFactor in scalingFactors:
+                        newImage = originalImage.copy()
+                        newImage = intensityScaling(newImage, scalingFactor)
+                        filename = os.path.join(dataset_path, 'intensity_' + str(scalingFactor) + image_filename)
+                        newImage.save(filename)
+                        file_list.write(filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
+
+                        if mirror:
+                            newImage = flippedImage.copy()
+                            newImage = intensityScaling(newImage, scalingFactor)
+                            filename = os.path.join(dataset_path, 'intensity_' + str(scalingFactor) + '_flipped_' + image_filename)
+                            newImage.save(filename)
+                            file_list.write(filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
+        file_list.close()
+
         messages.success(request, 'The labeled dataset was successfully exported to ' + path)
         return redirect('annotation:index')
 
-    # Get all possible tasks
-    context['tasks'] = Task.objects.all()
 
     return render(request, 'annotation/export_labeled_dataset.html', context)
 
@@ -170,3 +245,4 @@ def undo_image_label(request, task_id):
         return redirect('annotation:label_image', task_id=task_id)
     except Task.DoesNotExist:
         raise Http404('Image label does not exist')
+
