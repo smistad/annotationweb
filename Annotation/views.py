@@ -15,6 +15,7 @@ from .forms import *
 from .models import *
 
 import numpy as np
+import zlib
 
 def index(request):
     context = {}
@@ -246,3 +247,115 @@ def undo_image_label(request, task_id):
     except Task.DoesNotExist:
         raise Http404('Image label does not exist')
 
+def datasets(request):
+    # Show all datasets
+    context = {}
+    context['datasets'] = Dataset.objects.all()
+
+    return render(request, 'annotation/datasets.html', context)
+
+def new_dataset(request):
+    pass
+
+def delete_dataset(request):
+    pass
+
+def add_image_sequence(request, dataset_id):
+    try:
+        dataset = Dataset.objects.get(pk=dataset_id)
+    except Dataset.DoesNotExist:
+        raise Http404('Dataset does not exist')
+
+    if request.method == 'POST':
+        form = ImageSequenceForm(request.POST)
+        if form.is_valid():
+            new_image_sequence = form.save(commit=False)  # Create new model, but don't save to DB
+            new_image_sequence.dataset = dataset  # Set dataset
+            new_image_sequence.save()  # Save to db
+            return redirect('annotation:add_key_frames', new_image_sequence.id)
+    else:
+        form = ImageSequenceForm()
+
+    return render(request, 'annotation/add_image_sequence.html', {'form': form, 'dataset': dataset})
+
+def add_key_frames(request, image_sequence_id):
+    try:
+        image_sequence = ImageSequence.objects.get(pk=image_sequence_id)
+    except ImageSequence.DoesNotExist:
+        raise Http404('Image sequence does not exist')
+
+    if request.method == 'POST':
+        frame_list = request.POST.getlist('frames')
+        if len(frame_list) == 0:
+            messages.error(request, 'You must select at least 1 frame')
+        else:
+            # Add frames to db
+            for frame_nr in frame_list:
+                key_frame = KeyFrame()
+                key_frame.frame_nr = frame_nr
+                key_frame.image_sequence = image_sequence
+                key_frame.save()
+
+            messages.success(request, 'The image sequence and frames were stored.')
+            return redirect('annotation:datasets')
+
+    return render(request, 'annotation/add_key_frames.html', {'image_sequence': image_sequence})
+
+
+class MetaImageReader:
+    def __init__(self, filename):
+        if not os.path.isfile(filename):
+            raise Exception('File ' + filename + ' does not exist')
+
+        self.attributes = {}
+        self.base_path = os.path.dirname(filename) + '/'
+        # Parse file
+        with open(filename, 'r') as f:
+            for line in f:
+                parts = line.split('=')
+                if len(parts) != 2:
+                    raise Exception('Unable to parse metaimage file')
+                self.attributes[parts[0].strip()] = parts[1].strip()
+
+    def get_size(self):
+        dims = self.attributes['DimSize'].split(' ')
+        return (int(dims[0]), int(dims[1]))
+
+    def get_raw_filename(self):
+        return self.base_path + self.attributes['ElementDataFile']
+
+    def get_pixel_data(self):
+        if self.attributes['CompressedData'] == 'True':
+            # Read compressed raw file (.zraw)
+            with open(self.get_raw_filename(), 'rb') as raw_file:
+                raw_data_compressed = raw_file.read()
+                raw_data_uncompressed = zlib.decompress(raw_data_compressed)
+                return np.fromstring(raw_data_uncompressed, dtype=np.uint8)
+        else:
+            # Read uncompressed raw file (.raw)
+            return np.fromfile(self.get_raw_filename(), dtype=np.uint8)
+
+    def get_image(self):
+        pil_image = PIL.Image.new('L', self.get_size(), color='white')
+        pil_image.putdata(self.get_pixel_data())
+
+        return pil_image
+
+def show_frame(request, image_sequence_id, frame_nr):
+    # Get image sequence the key frame belongs to
+    try:
+        image_sequence = ImageSequence.objects.get(pk=image_sequence_id)
+    except ImageSequence.DoesNotExist:
+        raise Http404('Image sequence does not exist')
+
+    filename = image_sequence.format.replace('#', str(frame_nr))
+
+    reader = MetaImageReader(filename)
+
+
+    # Convert raw data to image, and then to a http response
+    buffer = BytesIO()
+    pil_image = reader.get_image()
+    pil_image.save(buffer, "PNG")
+
+    return HttpResponse(buffer.getvalue(), content_type="image/png")

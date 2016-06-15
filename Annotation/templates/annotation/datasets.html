@@ -1,0 +1,22 @@
+{% extends 'annotation/base.html' %}
+
+{% block content %}
+
+{% for message in messages %}
+<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+{% endfor %}
+
+<h2>Datasets</h2>
+
+<a href="{% url 'annotation:new_dataset' %}">Create new dataset</a><br>
+<a href="{% url 'annotation:import_local_dataset' %}">Import a local dataset</a><br>
+
+<ul>
+    {% for dataset in datasets %}
+    <li>{{ dataset.name }} -
+        <a href="{% url 'annotation:add_image_sequence' dataset.id %}">Add an image sequence</a> -
+        <a href="{% url 'annotation:delete_dataset' dataset.id %}">Delete</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

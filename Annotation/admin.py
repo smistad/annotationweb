@@ -8,4 +8,6 @@ admin.site.register(Image)
 admin.site.register(Task)
 admin.site.register(Label)
 admin.site.register(LabeledImage)
+admin.site.register(ImageSequence)
+admin.site.register(KeyFrame)
 

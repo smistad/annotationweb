@@ -11,13 +11,17 @@
         {% else %}
         <link rel="stylesheet" type="text/css" href="{% static 'annotation/style.css' %}">
         {% endif %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+        <script src="{% static 'annotation/sequence.js' %}"></script>
     </head>
-    <body>
+    <body onload="{% block onload %}{% endblock %}">
         <div id="content">
             <h1>Annotation Web</h1>
             <div id="menu">
                 <a href="/">Tasks</a> -
-                <a href="{% url 'annotation:import_local_dataset' %}">Import a local dataset</a>
+                <a href="{% url 'annotation:datasets' %}">Datasets</a>
             </div>
             {% block content %}
             {% endblock %}

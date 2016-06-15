@@ -35,3 +35,17 @@ class LabeledImage(models.Model):
 
     def __str__(self):
         return self.image.filename + ' with label ' + self.label.name + ' created on ' + self.date.strftime('%Y-%m-%d %H:%M')
+
+class ImageSequence(models.Model):
+    format = models.CharField(max_length=1024)
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.format
+
+class KeyFrame(models.Model):
+    frame_nr = models.PositiveIntegerField()
+    image_sequence = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.frame_nr)
