@@ -58,7 +58,7 @@ function loadSequence(image_sequence_id, nrOfFrames) {
     progressbar.progressbar({
       value: false,
       change: function() {
-        progressLabel.text( "Please wait while loading. " + progressbar.progressbar( "value" ) + "%" );
+        progressLabel.text( "Please wait while loading. " + progressbar.progressbar( "value" ).toFixed(1) + "%" );
       },
       complete: function() {
             // Remove progress bar and redraw
