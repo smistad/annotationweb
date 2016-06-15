@@ -13,4 +13,4 @@ class TaskForm(forms.ModelForm):
 class ImageSequenceForm(forms.ModelForm):
     class Meta:
         model = ImageSequence
-        fields = ['format']
+        fields = ['format', 'nr_of_frames']

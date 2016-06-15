@@ -1,5 +1,5 @@
 {% extends 'annotation/base.html' %}
-{% block onload %}loadSequence('{{ image_sequence.id }}', 50){% endblock %}
+{% block onload %}loadSequence({{ image_sequence.id }}, {{ image_sequence.nr_of_frames }}){% endblock %}
 
 {% block content %}
 <h2>Add key frames</h2>

@@ -39,6 +39,7 @@ class LabeledImage(models.Model):
 class ImageSequence(models.Model):
     format = models.CharField(max_length=1024)
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    nr_of_frames = models.PositiveIntegerField()
 
     def __str__(self):
         return self.format
