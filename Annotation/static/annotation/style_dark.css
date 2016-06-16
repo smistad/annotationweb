@@ -19,6 +19,31 @@ body {
     color: #000000;
 }
 
+.info {
+    background-color: #FFFFCC;
+    border: 1px solid #FFFF00;
+    padding: 3px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+    color: #000000;
+}
+.success {
+    background-color: #CCFF99;
+    border: 1px solid #336600;
+    padding: 3px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+    color: #000000;
+}
+.error {
+    background-color: #FFFFCC;
+    border: 1px solid #FFFF00;
+    padding: 3px;
+    margin-bottom: 3px;
+    margin-top: 3px;
+    color: #000000;
+}
+
 .message {
     background-color: #FFFFCC;
     border: 1px solid #FFFF00;

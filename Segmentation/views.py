@@ -1,7 +1,13 @@
 from django.shortcuts import render, redirect
 from .forms import *
 from django.contrib import messages
+from django.http import HttpResponse, Http404, JsonResponse
 import random
+import os
+from io import StringIO, BytesIO
+import base64
+import PIL
+from AnnotationWeb.settings import PROJECT_PATH
 
 def new_task(request):
     if request.method == 'POST':
@@ -32,11 +38,6 @@ def segment_image(request, task_id):
     except Task.DoesNotExist:
         raise Http404("Task does not exist")
 
-    if request.method == 'POST':
-        pass
-        # TODO Save segmentation
-
-
     # Get random unlabeled image
     try:
         image = pick_random_image(task_id)
@@ -58,3 +59,44 @@ def segment_image(request, task_id):
     except ValueError:
         messages.info(request, 'This task is finished, no more images to label.')
         return redirect('annotation:index')
+
+def save_segmentation(request):
+    if request.method != 'POST':
+        raise Http404('')
+
+    # Save the image
+
+    try:
+        # Save to DB
+        result = SegmentedImage()
+        result.image_id = int(request.POST['image_id'])
+        result.task_id = int(request.POST['task_id'])
+        result.save()
+
+        # Save segmentation image to disk
+        base_path = PROJECT_PATH + '/segmentations/' + str(result.task_id) + '/'
+        try:
+            os.makedirs(base_path)
+        except:
+            # Path already exists
+            pass
+        image_string = request.POST['image']
+        image_string = image_string.replace('data:image/png;base64,', '')
+        image_string = image_string.replace(' ', '+')
+        image_string = BytesIO(base64.b64decode(image_string))
+        image = PIL.Image.open(image_string)
+        image.save(base_path + str(result.id) + '.png')
+
+        response = {
+            'success': 'true',
+            'message': 'Complete'
+        }
+        messages.success(request, 'Segmentation was saved')
+    except Exception as e:
+        response = {
+            'success': 'false',
+            'message': str(e)
+        }
+
+
+    return JsonResponse(response)

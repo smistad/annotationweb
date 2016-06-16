@@ -128,3 +128,5 @@ STATIC_FILEFINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
+PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
+

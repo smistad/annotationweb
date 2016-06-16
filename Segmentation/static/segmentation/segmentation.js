@@ -9,7 +9,7 @@ var paint = false;
 var frameNr;
 var currentColor = null;
 
-function setupSegmentation() {
+function setupSegmentation(task_id, image_id) {
     // Initialize canvas with background image
     context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
     context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight); // Draw background image
@@ -96,16 +96,80 @@ function setupSegmentation() {
 
         redraw();
     });
+
+    // This is required due to djangos CSRF protection
+    var csrftoken = getCookie('csrftoken');
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+    $('#saveButton').mousedown(function(e) {
+        var messageBox = document.getElementById("message")
+        messageBox.innerHTML = '<span class="info">Please wait while saving image..</span>';
+        sendDataForSave(task_id, image_id).done(function(data) {
+            console.log("Save done..");
+            console.log(data);
+            var messageBox = document.getElementById("message")
+            if(data.success == "true") {
+                messageBox.innerHTML = '<span class="success">Image was saved</span>';
+                // Refresh page
+                location.reload();
+            } else {
+                messageBox.innerHTML = '<span class="error">Save failed!</span>';
+            }
+            console.log(data.message);
+        }).fail(function(data) {
+            console.log("Ajax failed");
+            var messageBox = document.getElementById("message")
+            messageBox.innerHTML = '<span class="error">Save failed!</span>';
+        }).always(function(data) {
+            console.log("Ajax complete");
+        });
+        console.log("Save button pressed");
+});
 }
 
-function loadSegmentation(image_sequence_id, frame_nr) {
+function sendDataForSave(task_id, image_id) {
+    // Create a new canvas to put segmentation in
+    var dummyCanvas = document.createElement('canvas');
+    dummyCanvas.setAttribute('width', canvasWidth);
+    dummyCanvas.setAttribute('height', canvasHeight);
+    // IE stuff
+    if(typeof G_vmlCanvasManager != 'undefined') {
+        dummyCanvas = G_vmlCanvasManager.initElement(dummyCanvas);
+    }
+
+    // Put segmentation into canvas
+    var ctx = dummyCanvas.getContext('2d');
+    ctx.putImageData(segmentation, 0, 0);
+    var dataURL = dummyCanvas.toDataURL('image/png', 1); // Use png to compress image and save bandwidth
+
+    return $.ajax({
+        type: "POST",
+        url: "/segmentation/save/",
+        data: {
+            image: dataURL,
+            width: canvasWidth,
+            height: canvasHeight,
+            image_id: image_id,
+            task_id: task_id
+        },
+        dataType: "json" // Need this do get result back as JSON
+    });
+}
+
+function loadSegmentation(image_sequence_id, frame_nr, task_id, image_id) {
     console.log('In segmentation load')
 
     backgroundImage = new Image();
     frameNr = frame_nr;
     backgroundImage.src = '/annotation/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
     backgroundImage.onload = function() {
-        setupSegmentation();
+        setupSegmentation(task_id, image_id);
     };
 
 }
@@ -191,4 +255,25 @@ function changeColor(label_id, red, green, blue) {
         green: green,
         blue: blue
     };
+}
+
+// using jQuery
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }

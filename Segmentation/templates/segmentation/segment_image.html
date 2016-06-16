@@ -6,7 +6,7 @@
 {% block onload %}
 {% if image_sequence %}
 loadSequence({{ image_sequence.id }}, {{ image_sequence.nr_of_frames }}, {{ frame_nr }}, 50);
-loadSegmentation({{ image_sequence.id }}, {{ frame_nr }})
+loadSegmentation({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}})
 {% endif %}
 {% endblock %}
 
@@ -37,8 +37,14 @@ loadSegmentation({{ image_sequence.id }}, {{ frame_nr }})
 
 {% block content %}
 <h2>Segment the following image</h2>
+
+{% for message in messages %}
+<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+{% endfor %}
+
 {{ number_of_labeled_images }} of {{ total_number_of_images}} images has been labeled ({{ percentage_finished }}%).<br />
 {% if image_sequence %}
+<div id="message"></div>
 <div id="progressbar"><div class="progress-label">Loading...</div></div>
 <div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
 <div id="slider"></div>
@@ -57,5 +63,6 @@ loadSegmentation({{ image_sequence.id }}, {{ frame_nr }})
 {% endif %}
 <br />
 <br />
+<button id="saveButton">Submit</button>
 
 {% endblock %}
