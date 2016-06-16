@@ -3,6 +3,7 @@ var canvasWidth = 512;
 var canvasHeight = 512;
 var sequence = new Array();
 var currentFrameNr;
+var startFrame;
 var progressbar;
 var framesLoaded;
 
@@ -15,6 +16,7 @@ function min(a, b) {
 }
 
 function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to_load = 0) {
+    console.log('In load sequence');
 
     // Create canvas
     var canvas = document.getElementById('canvas');
@@ -36,6 +38,7 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to
         end = min(nrOfFrames - 1, target_frame + images_to_load);
         totalToLoad = end - start;
     }
+    startFrame = start;
 
     // Create slider
     $("#slider").slider(
@@ -47,28 +50,10 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to
                 value: currentFrameNr,
             slide: function(event, ui) {
                 currentFrameNr = ui.value;
-                redrawSequence(start);
+                redrawSequence();
             }
             }
-    )/*.each(function() {
-        var options = $(this).data().uiSlider.options;
-
-        var nrOfValues = options.max - options.min;
-
-        for(var i = 0; i < nrOfValues; i++) {
-            var element;
-            if(i+options.min == frameToSegment) {
-                element = $('<label>' + (i + options.min) + '</label>').css('left', (i*100/nrOfValues) + '%').css('font-weight', 'bold');
-            } else if(i == 0) {
-                element = $('<label>' + (i + options.min) + '</label>').css('left', (i*100/nrOfValues) + '%');
-            } else if(i == nrOfValues-1) {
-                element = $('<label>' + (i + options.min) + '</label>').css('left', (i*100/nrOfValues) + '%');
-            } else {
-                element = $('<label>' + '</label>').css('left', (i*100/nrOfValues) + '%');
-            }
-            $("#slider").append(element);
-        }
-    })*/;
+    );
 
     // Create progress bar
     progressbar = $( "#progressbar" );
@@ -82,7 +67,7 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to
             // Remove progress bar and redraw
             progressLabel.text( "Finished loading!" );
             progressbar.hide();
-            redrawSequence(start);
+            redrawSequence();
       }
     });
 
@@ -94,8 +79,9 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to
     $("#goToTargetFrame").click(function() {
         currentFrameNr = target_frame;
         $('#slider').slider('value', target_frame); // Update slider
-        redrawSequence(start);
+        redrawSequence();
     });
+
 
     // Load images
     framesLoaded = 0;
@@ -119,8 +105,8 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to
     }
 }
 
-function redrawSequence(startFrame) {
+function redrawSequence() {
     var index = currentFrameNr - startFrame;
-    //console.log('index: ' + index)
+    console.log('index: ' + index)
     context.drawImage(sequence[index], 0, 0, canvasWidth, canvasHeight); // Draw background image
 }

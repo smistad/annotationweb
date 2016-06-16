@@ -51,3 +51,5 @@ class KeyFrame(models.Model):
 
     def __str__(self):
         return str(self.frame_nr)
+
+

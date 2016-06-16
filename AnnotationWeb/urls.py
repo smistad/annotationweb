@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^', include('Annotation.urls')),
     url(r'^annotation/', include('Annotation.urls')),
+    url(r'^segmentation/', include('Segmentation.urls')),
 ]
 
 # This is for making statics in a development environment

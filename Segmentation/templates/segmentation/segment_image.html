@@ -1,0 +1,61 @@
+{% extends 'annotation/base.html' %}
+
+{% block title %} Segment image {% endblock %}
+
+
+{% block onload %}
+{% if image_sequence %}
+loadSequence({{ image_sequence.id }}, {{ image_sequence.nr_of_frames }}, {{ frame_nr }}, 50);
+loadSegmentation({{ image_sequence.id }}, {{ frame_nr }})
+{% endif %}
+{% endblock %}
+
+{% block javascript %}
+{% for label in task.label.all %}
+{
+    var red = {{ label.color_red }};
+    var green = {{ label.color_green }};
+    var blue = {{ label.color_blue }};
+
+    red = red.toString(16);
+    if(red.length == 1) {
+        red = "0" + red;
+    }
+    green = green.toString(16);
+    if(green.length == 1) {
+        green = "0" + green;
+    }
+    blue = blue.toString(16);
+    if(blue.length == 1) {
+        blue = "0" + blue;
+    }
+    console.log(red + green + blue);
+    $("#labelButton{{ label.id }}").css("background-color", "#" + red + green + blue);
+}
+{% endfor %}
+{% endblock %}
+
+{% block content %}
+<h2>Segment the following image</h2>
+{{ number_of_labeled_images }} of {{ total_number_of_images}} images has been labeled ({{ percentage_finished }}%).<br />
+{% if image_sequence %}
+<div id="progressbar"><div class="progress-label">Loading...</div></div>
+<div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
+<div id="slider"></div>
+<div>
+    <button id="goToTargetFrame">Go to target frame</button>
+    <button id="clearButton">Clear</button>
+</div>
+<div>
+{% for label in task.label.all %}
+    <button onclick="changeColor({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
+{% endfor %}
+</div>
+<canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+{% else %}
+<img src="/annotation/show-image/{{ image.id }}/" alt="" width="512"/>
+{% endif %}
+<br />
+<br />
+
+{% endblock %}
