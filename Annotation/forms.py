@@ -10,6 +10,11 @@ class TaskForm(forms.ModelForm):
         model = Task
         fields = ['name', 'dataset']
 
+class DatasetForm(forms.ModelForm):
+    class Meta:
+        model = Dataset
+        fields = ['name']
+
 class ImageSequenceForm(forms.ModelForm):
     class Meta:
         model = ImageSequence

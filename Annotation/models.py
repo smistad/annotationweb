@@ -47,6 +47,7 @@ class ImageSequence(models.Model):
 class KeyFrame(models.Model):
     frame_nr = models.PositiveIntegerField()
     image_sequence = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
+    image = models.OneToOneField(Image, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.frame_nr)

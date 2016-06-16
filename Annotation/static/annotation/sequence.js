@@ -4,8 +4,17 @@ var canvasHeight = 512;
 var sequence = new Array();
 var currentFrameNr;
 var progressbar;
+var framesLoaded;
 
-function loadSequence(image_sequence_id, nrOfFrames) {
+function max(a, b) {
+    return a > b ? a : b;
+}
+
+function min(a, b) {
+    return a < b ? a : b;
+}
+
+function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to_load = 0) {
 
     // Create canvas
     var canvas = document.getElementById('canvas');
@@ -17,19 +26,28 @@ function loadSequence(image_sequence_id, nrOfFrames) {
     }
     context = canvas.getContext("2d");
 
-    currentFrameNr = 0;
+    currentFrameNr = target_frame;
+
+    var start = 0;
+    var end = nrOfFrames-1;
+    var totalToLoad = nrOfFrames;
+    if(images_to_load > 0) {
+        start = max(0, target_frame - images_to_load);
+        end = min(nrOfFrames - 1, target_frame + images_to_load);
+        totalToLoad = end - start;
+    }
 
     // Create slider
     $("#slider").slider(
             {
                 range: "max",
-                min: 0,
-                max: nrOfFrames,
+                min: start,
+                max: end,
                 step: 1,
                 value: currentFrameNr,
             slide: function(event, ui) {
                 currentFrameNr = ui.value;
-                redrawSequence();
+                redrawSequence(start);
             }
             }
     )/*.each(function() {
@@ -64,20 +82,26 @@ function loadSequence(image_sequence_id, nrOfFrames) {
             // Remove progress bar and redraw
             progressLabel.text( "Finished loading!" );
             progressbar.hide();
-            redrawSequence();
+            redrawSequence(start);
       }
     });
 
     $("#addFrameButton").click(function() {
-        console.log('weee' + currentFrameNr);
         $("#framesSelected").append('<li>' + currentFrameNr + '</li>');
         $("#framesForm").append('<input type="hidden" name="frames" value="' + currentFrameNr + '">');
     });
 
+    $("#goToTargetFrame").click(function() {
+        currentFrameNr = target_frame;
+        $('#slider').slider('value', target_frame); // Update slider
+        redrawSequence(start);
+    });
+
     // Load images
     framesLoaded = 0;
-    console.log('Hmm' + nrOfFrames)
-    for(var i = 0; i < nrOfFrames; i++) {
+    //console.log('start: ' + start + ' end: ' + end)
+    //console.log('target_frame: ' + target_frame)
+    for(var i = start; i <= end; i++) {
         var image = new Image();
         image.src = '/annotation/show_frame/' + image_sequence_id + '/' + i + '/';
         image.onload = function() {
@@ -88,13 +112,15 @@ function loadSequence(image_sequence_id, nrOfFrames) {
 
             // Update progressbar
             framesLoaded++;
-            progressbar.progressbar( "value", framesLoaded*100/nrOfFrames);
+            progressbar.progressbar( "value", framesLoaded*100/totalToLoad);
         }
 
         sequence.push(image);
     }
 }
 
-function redrawSequence() {
-    context.drawImage(sequence[currentFrameNr], 0, 0, canvasWidth, canvasHeight); // Draw background image
+function redrawSequence(startFrame) {
+    var index = currentFrameNr - startFrame;
+    //console.log('index: ' + index)
+    context.drawImage(sequence[index], 0, 0, canvasWidth, canvasHeight); // Draw background image
 }

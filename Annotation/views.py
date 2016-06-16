@@ -70,7 +70,7 @@ def label_images(request, task_id):
     context['dark_style'] = 'yes'
     try:
         task = Task.objects.get(pk=task_id)
-        labels = Label.objects.filter(task = task)
+        labels = Label.objects.filter(task=task)
     except Task.DoesNotExist:
         raise Http404("Task does not exist")
 
@@ -87,6 +87,13 @@ def label_images(request, task_id):
     # Get random unlabeled image
     try:
         image = pick_random_image(task_id)
+
+        # Check if image belongs to an image sequence
+        if hasattr(image, 'keyframe'):
+            print('Is part of image sequence')
+            context['image_sequence'] = image.keyframe.image_sequence
+            context['frame_nr'] = image.keyframe.frame_nr
+
         context['image'] = image
         context['task'] = task
         context['number_of_labeled_images'] = Image.objects.filter(labeledimage__label__task = task_id).count()
@@ -94,6 +101,8 @@ def label_images(request, task_id):
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
         # Get all labels for this task
+        if len(labels) == 0:
+            raise Http404('No labels found!')
         context['labels'] = labels
         print('Got the following random image: ', image.filename)
         return render(request, 'annotation/label_image.html', context)
@@ -255,7 +264,17 @@ def datasets(request):
     return render(request, 'annotation/datasets.html', context)
 
 def new_dataset(request):
-    pass
+    if request.method == 'POST':
+        form = DatasetForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'New dataset created')
+            return redirect('annotation:datasets')
+    else:
+        form = DatasetForm()
+
+    return render(request, 'annotation/new_dataset.html', {'form': form})
+
 
 def delete_dataset(request):
     pass
@@ -291,9 +310,17 @@ def add_key_frames(request, image_sequence_id):
         else:
             # Add frames to db
             for frame_nr in frame_list:
+                # Create image
+                image = Image()
+                image.filename = image_sequence.format.replace('#', str(frame_nr))
+                image.dataset = image_sequence.dataset
+                image.save()
+
+                # Create associated key frame
                 key_frame = KeyFrame()
-                key_frame.frame_nr = frame_nr
+                key_frame.frame_nr = int(frame_nr)
                 key_frame.image_sequence = image_sequence
+                key_frame.image = image
                 key_frame.save()
 
             messages.success(request, 'The image sequence and frames were stored.')

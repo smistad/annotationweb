@@ -2,10 +2,25 @@
 
 {% block title %} Label image {% endblock %}
 
+
+{% block onload %}
+{% if image_sequence %}
+loadSequence({{ image_sequence.id }}, {{ image_sequence.nr_of_frames }}, {{ frame_nr }}, 50)
+{% endif %}
+{% endblock %}
+
 {% block content %}
     <h2>Label the following image</h2>
     {{ number_of_labeled_images }} of {{ total_number_of_images}} images has been labeled ({{ percentage_finished }}%).<br />
+    {% if image_sequence %}
+    <div id="progressbar"><div class="progress-label">Loading...</div></div>
+    <div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
+    <div id="slider"></div>
+    <button id="goToTargetFrame">Go to target frame</button><br>
+    <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+    {% else %}
     <img src="/annotation/show-image/{{ image.id }}/" alt="" width="512"/>
+    {% endif %}
     <br />
     <br />
     <form id="label-form" method="post" action="/annotation/label-image/{{ task.id }}/">
