@@ -14,9 +14,9 @@ from shutil import copyfile, rmtree
 from .forms import *
 from .models import *
 from Segmentation.models import *
+from common.metaimage import MetaImageReader
 
 import numpy as np
-import zlib
 
 def index(request):
     context = {}
@@ -30,11 +30,11 @@ def index(request):
     context['tasks'] = tasks
     segmentation_tasks = SegmentationTask.objects.all()
     for task in segmentation_tasks:
-        task.total_number_of_images = Image.objects.filter(dataset__task = task.id).count()
+        task.total_number_of_images = Image.objects.filter(dataset__segmentationtask=task.id).count()
         if(task.total_number_of_images == 0):
             task.percentage_finished = 0
         else:
-            task.percentage_finished = round(Image.objects.filter(segmentedimage__task = task.id).count()*100 / task.total_number_of_images, 1)
+            task.percentage_finished = round(Image.objects.filter(segmentedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
     context['segmentation_tasks'] = segmentation_tasks
     return render(request, 'annotation/index.html', context)
 
@@ -336,46 +336,6 @@ def add_key_frames(request, image_sequence_id):
             return redirect('annotation:datasets')
 
     return render(request, 'annotation/add_key_frames.html', {'image_sequence': image_sequence})
-
-
-class MetaImageReader:
-    def __init__(self, filename):
-        if not os.path.isfile(filename):
-            raise Exception('File ' + filename + ' does not exist')
-
-        self.attributes = {}
-        self.base_path = os.path.dirname(filename) + '/'
-        # Parse file
-        with open(filename, 'r') as f:
-            for line in f:
-                parts = line.split('=')
-                if len(parts) != 2:
-                    raise Exception('Unable to parse metaimage file')
-                self.attributes[parts[0].strip()] = parts[1].strip()
-
-    def get_size(self):
-        dims = self.attributes['DimSize'].split(' ')
-        return (int(dims[0]), int(dims[1]))
-
-    def get_raw_filename(self):
-        return self.base_path + self.attributes['ElementDataFile']
-
-    def get_pixel_data(self):
-        if self.attributes['CompressedData'] == 'True':
-            # Read compressed raw file (.zraw)
-            with open(self.get_raw_filename(), 'rb') as raw_file:
-                raw_data_compressed = raw_file.read()
-                raw_data_uncompressed = zlib.decompress(raw_data_compressed)
-                return np.fromstring(raw_data_uncompressed, dtype=np.uint8)
-        else:
-            # Read uncompressed raw file (.raw)
-            return np.fromfile(self.get_raw_filename(), dtype=np.uint8)
-
-    def get_image(self):
-        pil_image = PIL.Image.new('L', self.get_size(), color='white')
-        pil_image.putdata(self.get_pixel_data())
-
-        return pil_image
 
 def show_frame(request, image_sequence_id, frame_nr):
     # Get image sequence the key frame belongs to

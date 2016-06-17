@@ -8,6 +8,8 @@ from io import StringIO, BytesIO
 import base64
 import PIL
 from AnnotationWeb.settings import PROJECT_PATH
+from common.metaimage import MetaImageReader, MetaImageWriter
+import numpy as np
 
 def new_task(request):
     if request.method == 'POST':
@@ -21,6 +23,7 @@ def new_task(request):
 
     return render(request, 'segmentation/new_task.html', {'form': form})
 
+
 def delete_task(request, task_id):
     pass
 
@@ -29,6 +32,7 @@ def pick_random_image(task_id):
     # Want to get an image which is not labeled yet for a given task
     unlabeled_images = Image.objects.filter(dataset__segmentationtask = task_id).exclude(segmentedimage__task = task_id)
     return unlabeled_images[random.randrange(0, len(unlabeled_images))]
+
 
 def segment_image(request, task_id):
     context = {}
@@ -50,15 +54,16 @@ def segment_image(request, task_id):
 
         context['image'] = image
         context['task'] = task
-        context['number_of_labeled_images'] = Image.objects.filter(labeledimage__label__task = task_id).count()
-        context['total_number_of_images'] = Image.objects.filter(dataset__task = task_id).count()
+        context['number_of_labeled_images'] = Image.objects.filter(segmentedimage__task=task_id).count()
+        context['total_number_of_images'] = Image.objects.filter(dataset__task=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
         print('Got the following random image: ', image.filename)
         return render(request, 'segmentation/segment_image.html', context)
     except ValueError:
-        messages.info(request, 'This task is finished, no more images to label.')
+        messages.info(request, 'This task is finished, no more images to segment.')
         return redirect('annotation:index')
+
 
 def save_segmentation(request):
     if request.method != 'POST':
@@ -84,8 +89,16 @@ def save_segmentation(request):
         image_string = image_string.replace('data:image/png;base64,', '')
         image_string = image_string.replace(' ', '+')
         image_string = BytesIO(base64.b64decode(image_string))
+
+        # Store as png
         image = PIL.Image.open(image_string)
         image.save(base_path + str(result.id) + '.png')
+
+        # TODO have to convert colors into labels
+
+        # Store as metaimage
+        writer = MetaImageWriter(base_path + str(result.id) + '.mhd', np.asarray(image))
+        writer.write()
 
         response = {
             'success': 'true',
@@ -97,6 +110,5 @@ def save_segmentation(request):
             'success': 'false',
             'message': str(e)
         }
-
 
     return JsonResponse(response)
