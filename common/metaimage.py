@@ -57,8 +57,13 @@ class MetaImageWriter:
         self.base_path = os.path.dirname(filename) + '/'
         self.filename = os.path.basename(filename)
         self.ndims = len(data.shape)
-        self.dim_size = data.shape
         self.data = data
+
+        # Switch so that we get width first
+        if self.ndims == 2:
+            self.dim_size = (data.shape[1], data.shape[0])
+        else:
+            self.dim_size = (data.shape[1], data.shape[0], data.shape[2])
 
     def set_attribute(self, key, value):
         self.attributes[key] = value

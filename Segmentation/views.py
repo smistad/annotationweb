@@ -94,10 +94,34 @@ def save_segmentation(request):
         image = PIL.Image.open(image_string)
         image.save(base_path + str(result.id) + '.png')
 
-        # TODO have to convert colors into labels
+        # Convert color image to single channel label image
+        # Get all labels for this task
+        # Go through each pixel, match color with label and choose label id from that
+        color_pixels = np.asarray(image)
+
+        # Get positions of all non-background pixels
+        grayscaleimage = image.convert('L')
+        X, Y = np.nonzero(np.asarray(grayscaleimage))
+
+        labels = SegmentationLabel.objects.filter(segmentationtask__id=result.task_id)
+        width = color_pixels.shape[0]
+        height = color_pixels.shape[1]
+        pixels = np.zeros((width, height)).astype(np.uint8)
+        for i in range(len(X)):
+            x = X[i]
+            y = Y[i]
+            min_distance = 9999999
+            min_label = 0
+            for label in labels:
+                color = np.asarray([label.color_red, label.color_green, label.color_blue])
+                if np.linalg.norm(color_pixels[x, y, 0:3] - color) < min_distance:
+                    min_distance = np.linalg.norm(color_pixels[x, y, 0:3] - color)
+                    min_label = label.id
+            pixels[x, y] = min_label
+
 
         # Store as metaimage
-        writer = MetaImageWriter(base_path + str(result.id) + '.mhd', np.asarray(image))
+        writer = MetaImageWriter(base_path + str(result.id) + '.mhd', pixels)
         writer.write()
 
         response = {
