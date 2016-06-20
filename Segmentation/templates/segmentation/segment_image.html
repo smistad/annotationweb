@@ -31,9 +31,10 @@ addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {
 <div id="progressbar"><div class="progress-label">Loading...</div></div>
 <div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
 <div id="slider"></div>
-<div>
+<div id="actionButtons">
     <button id="goToTargetFrame">Go to target frame</button>
     <button id="clearButton">Clear</button>
+    <button id="saveButton">Save</button>
 </div>
 <div id="labelButtons">
 {% for label in task.label.all %}
@@ -46,6 +47,5 @@ addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {
 {% endif %}
 <br />
 <br />
-<button id="saveButton">Submit</button>
 
 {% endblock %}

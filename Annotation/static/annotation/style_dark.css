@@ -71,7 +71,14 @@ img {
     border: 3px solid #FFFFFF;
 }
 
-#labelButtons {
+#labelButtons, #actionButtons {
     margin-top: 10px;
     margin-bottom: 10px;
+}
+
+button {
+    font-size: 20px;
+    color: #000000;
+    border: none;
+    padding: 4px;
 }

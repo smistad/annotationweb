@@ -96,6 +96,7 @@ function setupSegmentation(task_id, image_id) {
             imageData[i*4+3] = 255;
         }
 
+        $('#slider').slider('value', frameNr); // Update slider
         redraw();
     });
 

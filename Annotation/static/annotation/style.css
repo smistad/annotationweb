@@ -54,3 +54,10 @@ a:hover {
 img {
     border: 1px solid #fdfdfd;
 }
+
+button {
+    font-size: 20px;
+    color: #000000;
+    border: none;
+    padding: 4px;
+}
