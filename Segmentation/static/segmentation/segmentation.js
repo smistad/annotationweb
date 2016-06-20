@@ -8,6 +8,8 @@ var segmentationData;
 var paint = false;
 var frameNr;
 var currentColor = null;
+var labelButtons = new Array();
+var currentLabel = 0;
 
 function setupSegmentation(task_id, image_id) {
     // Initialize canvas with background image
@@ -130,7 +132,10 @@ function setupSegmentation(task_id, image_id) {
             console.log("Ajax complete");
         });
         console.log("Save button pressed");
-});
+    });
+
+    // Set first label active
+    changeLabel(labelButtons[0].id)
 }
 
 function sendDataForSave(task_id, image_id) {
@@ -169,20 +174,17 @@ function loadSegmentation(image_sequence_id, frame_nr, task_id, image_id) {
     frameNr = frame_nr;
     backgroundImage.src = '/annotation/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
     backgroundImage.onload = function() {
+        canvasWidth = this.width;
+        canvasHeight = this.height;
         setupSegmentation(task_id, image_id);
     };
 
 }
 
 function addClick(x, y, dragging) {
-
     segmentationChanged = true;
     //var label = labels[activeLabel];
     var color = currentColor;
-    if(color == null) {
-        alert('Select label first.');
-        return;
-    }
     var brushRadius = 1;
     //if(label.name == "Eraser") {
     //    brushRadius = 3;
@@ -222,25 +224,13 @@ function drawAtPoint(x, y, width, brushRadius, color) {
                 currentX = 0;
             if(currentY < 0)
                 currentY = 0;
-            // Check if eraser is used
-            if(color.red == 0 && color.green == 0 && color.blue == 0) {
-                // Remove segmentation and put background back
-                segmentationData[(currentX + currentY*canvasWidth)*4] = 0;
-                segmentationData[(currentX + currentY*canvasWidth)*4+1] = 0;
-                segmentationData[(currentX + currentY*canvasWidth)*4+2] = 0;
-                imageData[(currentX + currentY*canvasWidth)*4] = backgroundImageData[(currentX + currentY*canvasWidth)*4];
-                imageData[(currentX + currentY*canvasWidth)*4+1] = backgroundImageData[(currentX + currentY*canvasWidth)*4+1];
-                imageData[(currentX + currentY*canvasWidth)*4+2] = backgroundImageData[(currentX + currentY*canvasWidth)*4+2];
-            } else {
-                segmentationData[(currentX + currentY*canvasWidth)*4] = color.red;
-                segmentationData[(currentX + currentY*canvasWidth)*4+1] = color.green;
-                segmentationData[(currentX + currentY*canvasWidth)*4+2] = color.blue;
-                imageData[(currentX + currentY*canvasWidth)*4] = color.red;
-                imageData[(currentX + currentY*canvasWidth)*4+1] = color.green;
-                imageData[(currentX + currentY*canvasWidth)*4+2] = color.blue;
-                var position = {x: currentX, y: currentY};
-                //currentAction.push(position);
-            }
+            segmentationData[(currentX + currentY*canvasWidth)*4] = color.red;
+            segmentationData[(currentX + currentY*canvasWidth)*4+1] = color.green;
+            segmentationData[(currentX + currentY*canvasWidth)*4+2] = color.blue;
+            imageData[(currentX + currentY*canvasWidth)*4] = color.red;
+            imageData[(currentX + currentY*canvasWidth)*4+1] = color.green;
+            imageData[(currentX + currentY*canvasWidth)*4+2] = color.blue;
+            var position = {x: currentX, y: currentY};
         }
     }
 }
@@ -249,13 +239,51 @@ function redraw(){
     context.putImageData(image, 0, 0);
 }
 
-function changeColor(label_id, red, green, blue) {
-    currentColor = {
+function addLabelButton(label_id, red, green, blue) {
+     var labelButton = {
+        id: label_id,
         red: red,
         green: green,
         blue: blue
     };
+    labelButtons.push(labelButton);
+
+    red = red.toString(16);
+    if(red.length == 1) {
+        red = "0" + red;
+    }
+    green = green.toString(16);
+    if(green.length == 1) {
+        green = "0" + green;
+    }
+    blue = blue.toString(16);
+    if(blue.length == 1) {
+        blue = "0" + blue;
+    }
+    console.log(red + green + blue);
+    $("#labelButton" + label_id).css("background-color", "#" + red + green + blue);
 }
+
+function changeLabel(label_id) {
+    for(var i = 0; i < labelButtons.length; i++)  {
+        if(labelButtons[i].id == label_id) {
+            currentLabel = i;
+            label = labelButtons[i]
+            // Set correct button to active
+            $('#labelButton' + label.id).addClass('activeLabel');
+            currentColor = {
+                red: label.red,
+                green: label.green,
+                blue: label.blue
+            };
+            console.log(i + ' is now active label');
+        } else {
+            // Set all other buttons to inactive
+            $('#labelButton' + labelButtons[i].id).removeClass('activeLabel');
+        }
+    }
+}
+
 
 // using jQuery
 function getCookie(name) {
@@ -276,4 +304,14 @@ function getCookie(name) {
 function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+// Override redraw sequence in sequence.js
+function redrawSequence() {
+    if(currentFrameNr == frameNr) {
+        redraw();
+    } else {
+        var index = currentFrameNr - startFrame;
+        context.drawImage(sequence[index], 0, 0, canvasWidth, canvasHeight);
+    }
 }
