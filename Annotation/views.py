@@ -162,6 +162,7 @@ def export_labeled_dataset(request, task_id):
         datasets = request.POST.getlist('datasets')
         mirror = request.POST.get('mirror', False)
         intensityScale = request.POST.get('intensity_scale', False)
+        pixelRemoval = request.POST.get('pixel_removal', False)
         scalingFactors = [0.9, 1.1]
 
         if len(datasets) == 0:
@@ -230,6 +231,26 @@ def export_labeled_dataset(request, task_id):
                             filename = os.path.join(dataset_path, 'intensity_' + str(scalingFactor) + '_flipped_' + image_filename)
                             newImage.save(filename)
                             file_list.write(filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
+            if pixelRemoval:
+
+                # Set pixels to 0 with a probability of 0.25
+                n = 3
+                for i in range(n):
+                    originalImage = PIL.Image.open(new_filename)
+                    pixels = np.array(originalImage.copy())
+                    selection = np.random.random((pixels.shape[0], pixels.shape[1]))
+                    pixels[selection > 0.75, :] = 0
+                    #pixels = pixels.astype(np.float32)
+                    #pixels[:, :, 0] = np.random.normal(size=(pixels.shape[0], pixels.shape[1]))*25 + pixels[:, :, 0]
+                    #pixels[:, :, 1] = pixels[:, :, 0]
+                    #pixels[:, :, 2] = pixels[:, :, 0]
+                    #pixels[pixels > 255] = 255
+                    #pixels[pixels < 0] = 0
+                    newImage = PIL.Image.fromarray(pixels.astype(np.uint8), 'RGB')
+                    filename = os.path.join(dataset_path, 'pixel_removal_' + str(i) + '_' + image_filename)
+                    newImage.save(filename)
+                    file_list.write(filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
+
         file_list.close()
 
         messages.success(request, 'The labeled dataset was successfully exported to ' + path)
