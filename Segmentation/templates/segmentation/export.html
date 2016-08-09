@@ -1,0 +1,18 @@
+{% extends 'annotation/base.html' %}
+
+{% block content %}
+<h2>Export segmentation dataset</h2>
+{% for message in messages %}
+<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+{% endfor %}
+<form action="{% url 'segmentation:export' task.id %}" method="post">
+    {% csrf_token %}
+    Select datasets to export:<br>
+    {% for dataset in datasets %}
+    <input type="checkbox" name="datasets" value="{{ dataset.id }}"> {{ dataset.name }}<br>
+    {% endfor %}
+    <br>
+    Path: <input type="text" name="path"><br>
+    <input type="submit" value="Export">
+</form>
+{% endblock %}

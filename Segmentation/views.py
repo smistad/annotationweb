@@ -8,8 +8,9 @@ from io import StringIO, BytesIO
 import base64
 import PIL
 from AnnotationWeb.settings import PROJECT_PATH
-from common.metaimage import MetaImageReader, MetaImageWriter
+from common.metaimage import *
 import numpy as np
+from shutil import copyfile, rmtree
 
 def new_task(request):
     if request.method == 'POST':
@@ -30,7 +31,7 @@ def delete_task(request, task_id):
 
 def pick_random_image(task_id):
     # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(dataset__segmentationtask = task_id).exclude(segmentedimage__task = task_id)
+    unlabeled_images = Image.objects.filter(dataset__segmentationtask=task_id).exclude(segmentedimage__task=task_id)
     return unlabeled_images[random.randrange(0, len(unlabeled_images))]
 
 
@@ -55,7 +56,7 @@ def segment_image(request, task_id):
         context['image'] = image
         context['task'] = task
         context['number_of_labeled_images'] = Image.objects.filter(segmentedimage__task=task_id).count()
-        context['total_number_of_images'] = Image.objects.filter(dataset__task=task_id).count()
+        context['total_number_of_images'] = Image.objects.filter(dataset__segmentationtask=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
         print('Got the following random image: ', image.filename)
@@ -121,8 +122,8 @@ def save_segmentation(request):
 
 
         # Store as metaimage
-        writer = MetaImageWriter(base_path + str(result.id) + '.mhd', pixels)
-        writer.write()
+        writer = MetaImage(data=pixels)
+        writer.write(base_path + str(result.id) + '.mhd')
 
         response = {
             'success': 'true',
@@ -136,3 +137,64 @@ def save_segmentation(request):
         }
 
     return JsonResponse(response)
+
+
+# Export segmentation results for a given task
+def export(request, task_id):
+    context = {}
+    # Validate form
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
+    context['task'] = task
+
+    # Get all possible tasks
+    context['datasets'] = Dataset.objects.filter(segmentationtask__id=task_id)
+
+    if request.method == 'POST':
+        datasets = request.POST.getlist('datasets')
+
+        if len(datasets) == 0:
+            messages.error(request, 'You must select at least 1 dataset')
+            return render(request, 'segmentation/export.html', context)
+
+        # Create dir, delete old if it exists
+        path = request.POST['path']
+        try:
+            os.stat(path)
+            rmtree(path)
+        except:
+            pass
+        try:
+            os.mkdir(path)
+        except:
+            messages.error(request, 'Invalid path')
+            return render(request, 'segmentation/export.html', context)
+
+        segmented_images = SegmentedImage.objects.filter(task=task_id, image__dataset__in=datasets)
+        for segmented_image in segmented_images:
+            name = segmented_image.image.filename
+            image_filename = name[name.rfind('/')+1:]
+            dataset_path = os.path.join(path, segmented_image.image.dataset.name)
+            try:
+                os.mkdir(dataset_path)  # Make dataset path if doesn't exist
+            except:
+                pass
+
+            # Copy image
+            metaimage = MetaImage(filename=name)
+            image_id = segmented_image.image.pk
+            metaimage.write(os.path.join(dataset_path, str(image_id) + '.mhd'))
+
+            # Copy all segmentation files
+            segmentation_filename = os.path.join(PROJECT_PATH, os.path.join('segmentations', os.path.join(str(task_id), str(segmented_image.id) + '.mhd')))
+            new_segmentation_filename = os.path.join(dataset_path, str(image_id) + '_segmentation.mhd')
+            metaimage = MetaImage(filename=segmentation_filename)
+            metaimage.write(new_segmentation_filename)
+
+        messages.success(request, 'The segmentation dataset was successfully exported to ' + path)
+        return redirect('annotation:index')
+
+
+    return render(request, 'segmentation/export.html', context)

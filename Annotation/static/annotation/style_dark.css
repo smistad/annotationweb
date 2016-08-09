@@ -10,8 +10,7 @@ body {
 #content {
     max-width: 640px;
     width: 96%;
-    padding: 2%;
-    margin: 28px  auto;
+    margin: 0px auto;
 }
 
 .labelButton {
@@ -80,6 +79,7 @@ img {
 button {
     font-size: 20px;
     color: #000000;
+    background-color: #FFFFFF;
     border: none;
     padding: 4px;
 }

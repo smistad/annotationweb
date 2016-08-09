@@ -14,7 +14,7 @@ from shutil import copyfile, rmtree
 from .forms import *
 from .models import *
 from Segmentation.models import *
-from common.metaimage import MetaImageReader
+from common.metaimage import MetaImage
 
 import numpy as np
 
@@ -234,12 +234,12 @@ def export_labeled_dataset(request, task_id):
             if pixelRemoval:
 
                 # Set pixels to 0 with a probability of 0.25
-                n = 3
+                n = 1
                 for i in range(n):
                     originalImage = PIL.Image.open(new_filename)
                     pixels = np.array(originalImage.copy())
                     selection = np.random.random((pixels.shape[0], pixels.shape[1]))
-                    pixels[selection > 0.75, :] = 0
+                    pixels[selection > 0.5, :] = 0
                     #pixels = pixels.astype(np.float32)
                     #pixels[:, :, 0] = np.random.normal(size=(pixels.shape[0], pixels.shape[1]))*25 + pixels[:, :, 0]
                     #pixels[:, :, 1] = pixels[:, :, 0]
@@ -367,7 +367,7 @@ def show_frame(request, image_sequence_id, frame_nr):
 
     filename = image_sequence.format.replace('#', str(frame_nr))
 
-    reader = MetaImageReader(filename)
+    reader = MetaImage(filename=filename)
 
 
     # Convert raw data to image, and then to a http response

@@ -20,6 +20,7 @@
 {% endfor %}
 {% for task in segmentation_tasks %}
     <li><a href="{% url 'segmentation:segment_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+        <a href="{% url 'segmentation:export' task.id %}">Export</a>
         <a href="{% url 'segmentation:delete_task' task.id %}">Delete</a>
     </li>
 {% endfor %}
