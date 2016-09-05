@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^', include('Annotation.urls')),
     url(r'^annotation/', include('Annotation.urls')),
     url(r'^segmentation/', include('Segmentation.urls')),
+    url(r'^boundingbox/', include('BoundingBox.urls')),
 ]
 
 # This is for making statics in a development environment

@@ -1,6 +1,7 @@
 from django.db import models
 from Annotation.models import *
 
+
 class SegmentationLabel(models.Model):
     name = models.CharField(max_length=200)
     # Color stored as R G B with values from 0 to 255
@@ -11,6 +12,7 @@ class SegmentationLabel(models.Model):
     def __str__(self):
         return self.name
 
+
 class SegmentationTask(models.Model):
     name = models.CharField(max_length=200)
     dataset = models.ManyToManyField(Dataset)
@@ -18,6 +20,7 @@ class SegmentationTask(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class SegmentedImage(models.Model):
     image = models.ForeignKey(Image, on_delete=models.CASCADE)

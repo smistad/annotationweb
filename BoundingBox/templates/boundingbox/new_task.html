@@ -1,0 +1,13 @@
+{% extends 'annotation/base.html' %}
+
+{% block content %}
+<h2>New bounding box task</h2>
+
+<form action="{% url 'boundingbox:new_task' %}" method="post">
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+{% endblock %}

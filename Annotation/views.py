@@ -14,9 +14,11 @@ from shutil import copyfile, rmtree
 from .forms import *
 from .models import *
 from Segmentation.models import *
+from BoundingBox.models import *
 from common.metaimage import MetaImage
 
 import numpy as np
+
 
 def index(request):
     context = {}
@@ -36,7 +38,16 @@ def index(request):
         else:
             task.percentage_finished = round(Image.objects.filter(segmentedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
     context['segmentation_tasks'] = segmentation_tasks
+    bb_tasks = BoundingBoxTask.objects.all()
+    for task in bb_tasks:
+        task.total_number_of_images = Image.objects.filter(dataset__boundingboxtask=task.id).count()
+        if(task.total_number_of_images == 0):
+            task.percentage_finished = 0
+        else:
+            task.percentage_finished = round(Image.objects.filter(completedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+    context['boundingbox_tasks'] = bb_tasks
     return render(request, 'annotation/index.html', context)
+
 
 # Crawl recursively in path to find all images and add them to db
 def import_images(path, dataset):
