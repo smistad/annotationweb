@@ -129,7 +129,8 @@ function createBox() {
         y: boxOriginY,
         width: width,
         height: height,
-        label_id: 1 // TODO add lopic for setting label id
+        label_id: labelButtons[currentLabel].id, // actual DB id
+        label: currentLabel // index: only used for color
     };
     return box;
 }
@@ -170,32 +171,29 @@ function loadBBTask(image_sequence_id, frame_nr, task_id, image_id) {
 function redraw(){
     context.putImageData(image, 0, 0);
     // Draw all stores boxes
-    context.beginPath();
-    context.lineWidth = 2;
-    context.strokeStyle = 'red';
-    console.log(boxes.length + ' boxes to draw');
     for(var i = 0; i < boxes.length; ++i) {
+        context.beginPath();
+        context.lineWidth = 2;
         var box = boxes[i];
+        var label = labelButtons[box.label];
+        context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         context.rect(box.x, box.y, box.width, box.height);
+        context.stroke();
     }
     // Draw current box
     if(paint) {
+        context.beginPath();
+        context.lineWidth = 2;
         var box = createBox();
+        var label = labelButtons[box.label];
+        context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         context.rect(box.x, box.y, box.width, box.height);
+        context.stroke();
     }
-    context.stroke();
 }
 
-function addLabelButton(label_id, red, green, blue) {
-    var labelButton = {
-        id: label_id,
-        red: red,
-        green: green,
-        blue: blue
-    };
-    labelButtons.push(labelButton);
-
-    red = red.toString(16);
+function colorToHexString(red, green, blue) {
+     red = red.toString(16);
     if(red.length == 1) {
         red = "0" + red;
     }
@@ -207,15 +205,28 @@ function addLabelButton(label_id, red, green, blue) {
     if(blue.length == 1) {
         blue = "0" + blue;
     }
+    return '#' + red + green + blue;
+}
+
+function addLabelButton(label_id, red, green, blue) {
+    var labelButton = {
+        id: label_id,
+        red: red,
+        green: green,
+        blue: blue
+    };
+    labelButtons.push(labelButton);
+
+
     console.log(red + green + blue);
-    $("#labelButton" + label_id).css("background-color", "#" + red + green + blue);
+    $("#labelButton" + label_id).css("background-color", colorToHexString(red, green, blue));
 }
 
 function changeLabel(label_id) {
     for(var i = 0; i < labelButtons.length; i++)  {
         if(labelButtons[i].id == label_id) {
             currentLabel = i;
-            label = labelButtons[i]
+            var label = labelButtons[i]
             // Set correct button to active
             $('#labelButton' + label.id).addClass('activeLabel');
             currentColor = {

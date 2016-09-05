@@ -62,7 +62,6 @@ def process_image(request, task_id):
         return redirect('annotation:index')
 
 
-
 def save_boxes(request):
     if request.method != 'POST':
         raise Http404('')
@@ -97,7 +96,6 @@ def save_boxes(request):
         }
 
     return JsonResponse(response)
-
 
 
 def export(request):
