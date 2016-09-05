@@ -38,6 +38,7 @@ def pick_random_image(task_id):
 def segment_image(request, task_id):
     context = {}
     context['dark_style'] = 'yes'
+    context['javascript_files'] = ['segmentation/segmentation.js']
     try:
         task = SegmentationTask.objects.get(pk=task_id)
     except Task.DoesNotExist:

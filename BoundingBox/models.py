@@ -24,4 +24,5 @@ class BoundingBox(models.Model):
     y = models.PositiveIntegerField()
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
+    label = models.ForeignKey(SegmentationLabel)
 
