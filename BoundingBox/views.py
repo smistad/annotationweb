@@ -107,8 +107,8 @@ def export(request, task_id):
     context = {}
     # Validate form
     try:
-        task = Task.objects.get(pk=task_id)
-    except Task.DoesNotExist:
+        task = BoundingBoxTask.objects.get(pk=task_id)
+    except BoundingBoxTask.DoesNotExist:
         raise Http404('Task does not exist')
     context['task'] = task
 
@@ -157,7 +157,10 @@ def export(request, task_id):
                     x_max = box.x + box.width
                     y_max = box.y + box.height
                     # KITTI format (https://github.com/NVIDIA/DIGITS/blob/digits-4.0/digits/extensions/data/objectDetection/README.md#label-format)
-                    f.write('{} 0.0 0 0.0 {} {} {} {} 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n'.format(object_name, box.x, box.y, x_max, y_max, ))
+                    #f.write('{} 0.0 0 0.0 {:f} {:f} {:f} {:f} 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n'.format(object_name.lower(), box.x, box.y, x_max, y_max).replace(u'\xa0', u' '))
+                    center_x = round(box.x + box.width*0.5)
+                    center_y = round(box.y + box.height*0.5)
+                    f.write('{} {} {} {}\n'.format(center_x, center_y, box.width, box.height))
 
 
         messages.success(request, 'The bounding box dataset was successfully exported to ' + path)

@@ -145,8 +145,8 @@ def export(request, task_id):
     context = {}
     # Validate form
     try:
-        task = Task.objects.get(pk=task_id)
-    except Task.DoesNotExist:
+        task = SegmentationTask.objects.get(pk=task_id)
+    except SegmentationTask.DoesNotExist:
         raise Http404('Task does not exist')
     context['task'] = task
 
