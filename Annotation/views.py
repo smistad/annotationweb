@@ -331,8 +331,38 @@ def add_image_sequence(request, dataset_id):
         if form.is_valid():
             new_image_sequence = form.save(commit=False)  # Create new model, but don't save to DB
             new_image_sequence.dataset = dataset  # Set dataset
-            new_image_sequence.save()  # Save to db
-            return redirect('annotation:add_key_frames', new_image_sequence.id)
+
+            if request.POST['frame_selection'] == 'manual':
+                new_image_sequence.save()  # Save to db
+                return redirect('annotation:add_key_frames', new_image_sequence.id)
+            elif request.POST['frame_selection'] == 'every_n_frame':
+                try:
+                    frame_step = int(request.POST['frame_step'])
+                except:
+                    messages.error(request, 'No input given to every X frame.')
+                if frame_step <= 0 or frame_step >= new_image_sequence.nr_of_frames:
+                    messages.error(request, 'Incorrect frame step nr.')
+                else:
+                    new_image_sequence.save()  # Save to db
+
+                    # Add every frame_step
+                    for frame_nr in range(0, new_image_sequence.nr_of_frames, frame_step):
+                        # Create image
+                        image = Image()
+                        image.filename = new_image_sequence.format.replace('#', str(frame_nr))
+                        image.dataset = new_image_sequence.dataset
+                        image.save()
+
+                        # Create associated key frame
+                        key_frame = KeyFrame()
+                        key_frame.frame_nr = frame_nr
+                        key_frame.image_sequence = new_image_sequence
+                        key_frame.image = image
+                        key_frame.save()
+
+                    messages.success(request, 'The image sequence and frames were stored.')
+                    return redirect('annotation:datasets')
+
     else:
         form = ImageSequenceForm()
 
