@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'Annotation',
     'Segmentation',
     'BoundingBox',
+    'user',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -51,6 +52,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'AnnotationWeb.login.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'AnnotationWeb.urls'
@@ -131,3 +133,9 @@ STATIC_FILEFINDERS = [
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
 
+LOGIN_URL = '/user/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_EXEMPT_URLS = (
+ r'^about\.html$',
+ r'^legal/', # allow any URL under /legal/*
+)
