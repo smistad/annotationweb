@@ -35,7 +35,6 @@ def get_task_statistics(tasks):
 def index(request):
     context = {}
 
-
     if is_annotater(request.user):
         # Show only tasks own by this user
         tasks = Task.objects.filter(user=request.user)
@@ -74,7 +73,11 @@ def export(request, task_id):
         return redirect('export_options', task_id=task.id, exporter_index=exporter_index)
     else:
         available_exporters = common.exporter.find_all_exporters(task.type)
-        return render(request, 'annotationweb/choose_exporter.html', {'exporters': available_exporters, 'task': task})
+        # If only 1 exporter exists for this type, use that one
+        if len(available_exporters) == 1:
+            return redirect('export_options', task_id=task.id, exporter_index=0)
+        else:
+            return render(request, 'annotationweb/choose_exporter.html', {'exporters': available_exporters, 'task': task})
 
 
 @staff_member_required
