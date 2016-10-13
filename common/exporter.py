@@ -25,7 +25,6 @@ class Exporter(metaclass=MetaExporter):
 
 
 def find_all_exporters(task_type):
-    exporters.clear()
     result = []
 
     # Go through each app and see if there is an exporters.py file
@@ -36,6 +35,7 @@ def find_all_exporters(task_type):
         if spec is not None:
             print('Found exporters module in ', app)
             print('Importing..')
+            exporters.clear()
             foo = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(foo)
             for exporter in exporters:
