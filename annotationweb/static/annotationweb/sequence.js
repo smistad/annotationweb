@@ -15,7 +15,7 @@ function min(a, b) {
     return a < b ? a : b;
 }
 
-function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to_load = 0) {
+function loadSequence(image_sequence_id, nrOfFrames, target_frame, images_to_load) {
     console.log('In load sequence');
 
     // Create canvas
