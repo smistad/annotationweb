@@ -11,15 +11,14 @@
 
 <ul>
 {% for task in tasks %}
-    <li><a href="{% url 'classification:label_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
-    </li>
-{% endfor %}
-{% for task in segmentation_tasks %}
-    <li><a href="{% url 'segmentation:segment_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
-    </li>
-{% endfor %}
-{% for task in boundingbox_tasks %}
-    <li><a href="{% url 'boundingbox:process_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+    <li>
+        {% if task.type == 'classification' %}
+        <a href="{% url 'classification:label_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+        {% elif task.type == 'segmentation' %}
+        <a href="{% url 'segmentation:segment_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+        {% elif task.type == 'boundingbox' %}
+        <a href="{% url 'boundingbox:process_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+        {% endif %}
     </li>
 {% endfor %}
 </ul>

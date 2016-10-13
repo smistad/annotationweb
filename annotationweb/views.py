@@ -18,44 +18,44 @@ from common.user import is_annotater
 
 import numpy as np
 
+def get_task_statistics(tasks):
+    for task in tasks:
+        task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
+        if(task.total_number_of_images == 0):
+            task.percentage_finished = 0
+        elif task.type == Task.CLASSIFICATION:
+            task.percentage_finished = round(Image.objects.filter(classifiedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+        elif task.type == Task.SEGMENTATION:
+            task.percentage_finished = round(Image.objects.filter(segmentedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+        elif task.type == Task.BOUNDING_BOX:
+            task.percentage_finished = round(Image.objects.filter(completedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
 
 def index(request):
     context = {}
 
     if is_annotater(request.user):
         # Show only tasks own by this user
+        tasks = Task.objects.filter(user=request.user)
+        get_task_statistics(tasks)
+        context['tasks'] = tasks
         return render(request, 'annotationweb/index_annotater.html', context)
     else:
         # Admin page
         # Classification tasks
         tasks = Task.objects.filter(type=Task.CLASSIFICATION)
-        for task in tasks:
-            task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
-            if(task.total_number_of_images == 0):
-                task.percentage_finished = 0
-            else:
-                task.percentage_finished = round(Image.objects.filter(classifiedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+        get_task_statistics(tasks)
         context['tasks'] = tasks
 
         # Segmentation tasks
         segmentation_tasks = Task.objects.filter(type=Task.SEGMENTATION)
-        for task in segmentation_tasks:
-            task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
-            if(task.total_number_of_images == 0):
-                task.percentage_finished = 0
-            else:
-                task.percentage_finished = round(Image.objects.filter(segmentedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+        get_task_statistics(segmentation_tasks)
         context['segmentation_tasks'] = segmentation_tasks
 
         # Bounding box tasks
         bb_tasks = Task.objects.filter(type=Task.BOUNDING_BOX)
-        for task in bb_tasks:
-            task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
-            if(task.total_number_of_images == 0):
-                task.percentage_finished = 0
-            else:
-                task.percentage_finished = round(Image.objects.filter(completedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+        get_task_statistics(bb_tasks)
         context['boundingbox_tasks'] = bb_tasks
+
         return render(request, 'annotationweb/index_admin.html', context)
 
 
