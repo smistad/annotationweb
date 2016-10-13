@@ -27,10 +27,11 @@ urlpatterns = [
     url(r'^new-dataset/$', views.new_dataset, name='new_dataset'),
     url(r'^delete-dataset/(?P<task_id>[0-9]+)/$', views.delete_dataset, name='delete_dataset'),
     url(r'^import-local-dataset/$', views.import_local_dataset, name='import_local_dataset'),
-    url(r'^export-labeled-dataset/(?P<task_id>[0-9]+)/$', views.export_labeled_dataset, name='export_labeled_dataset'),
     url(r'^delete-task/(?P<task_id>[0-9]+)/$', views.delete_task, name='delete_task'),
     url(r'^show-image/(?P<image_id>[0-9]+)/$', views.show_image, name='show_image'),
     url(r'^new-task/$', views.new_task, name='new_task'),
+    url(r'^export/(?P<task_id>[0-9]+)/$', views.export, name='export'),
+    url(r'^export-options/(?P<task_id>[0-9]+)/(?P<exporter_index>[0-9]+)/$', views.export_options, name='export_options'),
 
     url(r'^admin/', admin.site.urls),
     url(r'^user/', include('user.urls')),

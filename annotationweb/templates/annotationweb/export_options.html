@@ -1,0 +1,13 @@
+{% extends 'annotationweb/base.html' %}
+
+{% block content %}
+    <h2>Export options</h2>
+
+    <form action="{% url 'export_options' task.id exporter_index%}" method="post">
+        {% csrf_token %}
+        <table>
+            {{ form.as_table }}
+        </table>
+        <input type="submit" value="Submit" />
+    </form>
+{% endblock %}

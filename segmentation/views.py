@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from .forms import *
 from django.contrib import messages
@@ -125,6 +126,7 @@ def save_segmentation(request):
 
 
 # Export segmentation results for a given task
+@staff_member_required
 def export(request, task_id):
     context = {}
     # Validate form

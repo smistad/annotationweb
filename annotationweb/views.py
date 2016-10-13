@@ -2,6 +2,8 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.db.models import Max
+from django.contrib.admin.views.decorators import staff_member_required
+import common.exporter
 
 import fnmatch
 import os
@@ -33,6 +35,7 @@ def get_task_statistics(tasks):
 def index(request):
     context = {}
 
+
     if is_annotater(request.user):
         # Show only tasks own by this user
         tasks = Task.objects.filter(user=request.user)
@@ -59,6 +62,45 @@ def index(request):
         return render(request, 'annotationweb/index_admin.html', context)
 
 
+@staff_member_required
+def export(request, task_id):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
+
+    if request.method == 'POST':
+        exporter_index = int(request.POST['exporter'])
+        return redirect('export_options', task_id=task.id, exporter_index=exporter_index)
+    else:
+        available_exporters = common.exporter.find_all_exporters(task.type)
+        return render(request, 'annotationweb/choose_exporter.html', {'exporters': available_exporters, 'task': task})
+
+
+@staff_member_required
+def export_options(request, task_id, exporter_index):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
+
+    available_exporters = common.exporter.find_all_exporters(task.type)
+    exporter = available_exporters[int(exporter_index)]()
+    exporter.task = task
+
+    if request.method == 'POST':
+        form = exporter.get_form(data=request.POST)
+        if form.is_valid():
+            exporter.export(form)
+            messages.success(request, 'Export finished')
+            return redirect('index')
+    else:
+        # Get unbound form
+        form = exporter.get_form()
+
+    return render(request, 'annotationweb/export_options.html', {'form': form, 'exporter_index': exporter_index, 'task': task})
+
+
 # Crawl recursively in path to find all images and add them to db
 def import_images(path, dataset):
     for root, dirnames, filenames in os.walk(path):
@@ -70,6 +112,7 @@ def import_images(path, dataset):
             print('Saved image ', image.filename)
 
 
+@staff_member_required
 def import_local_dataset(request):
     if request.method == 'POST':
         # Process form
@@ -83,7 +126,7 @@ def import_local_dataset(request):
                 dataset.save()
                 import_images(path, dataset)
                 messages.success(request, 'Successfully imported dataset')
-                return redirect('annotation:index')
+                return redirect('index')
             else:
                 form.add_error(field='path', error='The path doesn\'t exist.')
     else:
@@ -105,135 +148,10 @@ def show_image(request, image_id):
     return HttpResponse(buffer.getvalue(), content_type="image/png")
 
 
-def scale(array, factor):
-    array = array.astype('float')
-    for i in range(3):
-        array[..., i] *= factor
-
-    array[array > 255] = 255
-    array[array < 0] = 0
-    return array
 
 
-def intensityScaling(image, factor):
-    arr = np.array(image)
-    return PIL.Image.fromarray(scale(arr, factor).astype('uint8'), 'RGB')
 
-
-def export_labeled_dataset(request, task_id):
-    context = {}
-    # Validate form
-    try:
-        task = Task.objects.get(pk=task_id)
-    except Task.DoesNotExist:
-        raise Http404('Task does not exist')
-    context['task'] = task
-
-    # Get all possible tasks
-    context['datasets'] = Dataset.objects.filter(task__id = task_id)
-
-    if request.method == 'POST':
-        datasets = request.POST.getlist('datasets')
-        mirror = request.POST.get('mirror', False)
-        intensityScale = request.POST.get('intensity_scale', False)
-        pixelRemoval = request.POST.get('pixel_removal', False)
-        scalingFactors = [0.9, 1.1]
-
-        if len(datasets) == 0:
-            messages.error(request, 'You must select at least 1 dataset')
-            return render(request, 'annotationweb/export_labeled_dataset.html', context)
-
-        # Create dir, delete old if it exists
-        path = request.POST['path']
-        try:
-            os.stat(path)
-            rmtree(path)
-        except:
-            pass
-        try:
-            os.mkdir(path)
-        except:
-            messages.error(request, 'Invalid path')
-            return render(request, 'annotationweb/export_labeled_dataset.html', context)
-
-
-        # Create label file
-        label_file = open(os.path.join(path, 'labels.txt'), 'w')
-        labels = Label.objects.filter(task = task)
-        labelDict = {}
-        counter = 0
-        for label in labels:
-            label_file.write(label.name + '\n')
-            labelDict[label.name] = counter
-            counter += 1
-        label_file.close()
-
-        # Create file_list.txt file
-        file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = LabeledImage.objects.filter(label__task = task, image__dataset__in = datasets)
-        for labeled_image in labeled_images:
-            name = labeled_image.image.filename
-            image_filename = name[name.rfind('/')+1:]
-            dataset_path = os.path.join(path, labeled_image.image.dataset.name)
-            try:
-                os.mkdir(dataset_path) # Make dataset path if doesn't exist
-            except:
-                pass
-            new_filename = os.path.join(dataset_path, image_filename)
-            copyfile(name, new_filename)
-            file_list.write(new_filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
-
-            if mirror:
-                flippedImage = PIL.Image.open(new_filename).transpose(PIL.Image.FLIP_LEFT_RIGHT)
-                # Save flipped image
-                flippedFilename = os.path.join(dataset_path, 'flipped_' + image_filename)
-                flippedImage.save(flippedFilename)
-                file_list.write(flippedFilename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
-            if intensityScale:
-                originalImage = PIL.Image.open(new_filename)
-                if len(scalingFactors) > 0:
-                    for scalingFactor in scalingFactors:
-                        newImage = originalImage.copy()
-                        newImage = intensityScaling(newImage, scalingFactor)
-                        filename = os.path.join(dataset_path, 'intensity_' + str(scalingFactor) + image_filename)
-                        newImage.save(filename)
-                        file_list.write(filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
-
-                        if mirror:
-                            newImage = flippedImage.copy()
-                            newImage = intensityScaling(newImage, scalingFactor)
-                            filename = os.path.join(dataset_path, 'intensity_' + str(scalingFactor) + '_flipped_' + image_filename)
-                            newImage.save(filename)
-                            file_list.write(filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
-            if pixelRemoval:
-
-                # Set pixels to 0 with a probability of 0.25
-                n = 1
-                for i in range(n):
-                    originalImage = PIL.Image.open(new_filename)
-                    pixels = np.array(originalImage.copy())
-                    selection = np.random.random((pixels.shape[0], pixels.shape[1]))
-                    pixels[selection > 0.5, :] = 0
-                    #pixels = pixels.astype(np.float32)
-                    #pixels[:, :, 0] = np.random.normal(size=(pixels.shape[0], pixels.shape[1]))*25 + pixels[:, :, 0]
-                    #pixels[:, :, 1] = pixels[:, :, 0]
-                    #pixels[:, :, 2] = pixels[:, :, 0]
-                    #pixels[pixels > 255] = 255
-                    #pixels[pixels < 0] = 0
-                    newImage = PIL.Image.fromarray(pixels.astype(np.uint8), 'RGB')
-                    filename = os.path.join(dataset_path, 'pixel_removal_' + str(i) + '_' + image_filename)
-                    newImage.save(filename)
-                    file_list.write(filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
-
-        file_list.close()
-
-        messages.success(request, 'The labeled dataset was successfully exported to ' + path)
-        return redirect('annotation:index')
-
-
-    return render(request, 'annotationweb/export_labeled_dataset.html', context)
-
-
+@staff_member_required
 def new_task(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
@@ -247,6 +165,7 @@ def new_task(request):
     return render(request, 'annotationweb/new_task.html', context)
 
 
+@staff_member_required
 def delete_task(request, task_id):
     if request.method == 'POST':
         Task.objects.get(pk = task_id).delete()
@@ -255,6 +174,7 @@ def delete_task(request, task_id):
         return render(request, 'annotationweb/delete_task.html', {'task_id': task_id})
 
 
+@staff_member_required
 def datasets(request):
     # Show all datasets
     context = {}
@@ -262,6 +182,7 @@ def datasets(request):
 
     return render(request, 'annotationweb/datasets.html', context)
 
+@staff_member_required
 def new_dataset(request):
     if request.method == 'POST':
         form = DatasetForm(request.POST)
@@ -275,9 +196,11 @@ def new_dataset(request):
     return render(request, 'annotationweb/new_dataset.html', {'form': form})
 
 
+@staff_member_required
 def delete_dataset(request):
     pass
 
+@staff_member_required
 def add_image_sequence(request, dataset_id):
     try:
         dataset = Dataset.objects.get(pk=dataset_id)
@@ -326,6 +249,7 @@ def add_image_sequence(request, dataset_id):
 
     return render(request, 'annotationweb/add_image_sequence.html', {'form': form, 'dataset': dataset})
 
+@staff_member_required
 def add_key_frames(request, image_sequence_id):
     try:
         image_sequence = ImageSequence.objects.get(pk=image_sequence_id)
@@ -357,6 +281,7 @@ def add_key_frames(request, image_sequence_id):
 
     return render(request, 'annotationweb/add_key_frames.html', {'image_sequence': image_sequence})
 
+@staff_member_required
 def show_frame(request, image_sequence_id, frame_nr):
     # Get image sequence the key frame belongs to
     try:

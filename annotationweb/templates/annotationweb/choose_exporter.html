@@ -1,0 +1,13 @@
+{% extends 'annotationweb/base.html' %}
+
+{% block content %}
+    <h2>Choose an exporter</h2>
+
+    <form action="{% url 'export' task.id %}" method="post">
+        {% csrf_token %}
+        {% for exporter in exporters %}
+            <input type="radio" name="exporter" value="{{ forloop.counter0 }}"> {{ exporter.name }}<br>
+        {% endfor %}
+        <input type="submit" value="Submit" />
+    </form>
+{% endblock %}

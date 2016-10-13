@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from .models import *
 from .forms import *
@@ -85,7 +86,7 @@ def save_boxes(request):
 
     return JsonResponse(response)
 
-
+@staff_member_required
 def export(request, task_id):
     context = {}
     # Validate form
