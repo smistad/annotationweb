@@ -91,10 +91,11 @@ def export_options(request, task_id, exporter_index):
     if request.method == 'POST':
         form = exporter.get_form(data=request.POST)
         if form.is_valid():
-            if exporter.export(form):
+            success, message = exporter.export(form)
+            if success:
                 messages.success(request, 'Export finished')
             else:
-                messages.error(request, 'Export failed')
+                messages.error(request, 'Export failed: ' + message)
 
             return redirect('index')
     else:

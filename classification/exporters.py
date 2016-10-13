@@ -8,19 +8,11 @@ from shutil import rmtree, copyfile
 
 class ClassificationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
+    delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=True, required=False)
 
     def __init__(self, task, data=None):
         super().__init__(data)
         self.fields['dataset'] = forms.ModelMultipleChoiceField(queryset=Dataset.objects.filter(task=task))
-
-
-    # Validate path
-    def clean_path(self):
-        data = self.cleaned_data['path']
-        # TODO validate
-        return data
-
-    # TODO check that at least 1 dataset is selected and check that path is valid
 
 
 """
@@ -39,17 +31,25 @@ class ClassificationExporter(Exporter):
     def export(self, form):
 
         datasets = form.cleaned_data['dataset']
+        delete_existing_data = form.cleaned_data['delete_existing_data']
         # Create dir, delete old if it exists
         path = form.cleaned_data['path']
-        try:
-            os.stat(path)
-            rmtree(path)
-        except:
-            pass
-        try:
-            os.mkdir(path)
-        except:
-            return False
+        if delete_existing_data:
+            try:
+                os.stat(path)
+                rmtree(path)
+            except:
+                pass
+
+            try:
+                os.mkdir(path)
+            except:
+                return False, 'Failed to create directory at ' + path
+        else:
+            try:
+                os.stat(path)
+            except:
+                return False, 'Path does not exist: ' + path
 
 
         # Create label file
@@ -81,6 +81,6 @@ class ClassificationExporter(Exporter):
 
         file_list.close()
 
-        return True
+        return True, ''
 
 
