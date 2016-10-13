@@ -22,7 +22,7 @@
 </div>
 </ul>
 
-<form action="{% url 'annotationweb:add_key_frames' image_sequence.id %}" method="post">
+<form action="{% url 'add_key_frames' image_sequence.id %}" method="post">
     {% csrf_token %}
     <div id="framesForm"></div>
     <input type="submit" value="Finished">

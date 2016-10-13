@@ -6,7 +6,7 @@
 <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
 {% endfor %}
 
-<form action="{% url 'annotationweb:add_image_sequence' dataset.id %}" method="post">
+<form action="{% url 'add_image_sequence' dataset.id %}" method="post">
     {% csrf_token %}
     <table>
         {{ form.as_table }}

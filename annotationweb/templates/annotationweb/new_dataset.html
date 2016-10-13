@@ -3,7 +3,7 @@
 {% block content %}
 <h2>New dataset</h2>
 
-<form action="{% url 'annotationweb:new_dataset' %}" method="post">
+<form action="{% url 'new_dataset' %}" method="post">
     {% csrf_token %}
     <table>
         {{ form.as_table }}

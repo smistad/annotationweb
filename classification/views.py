@@ -57,7 +57,7 @@ def label_images(request, task_id):
         return render(request, 'classification/label_image.html', context)
     except ValueError:
         messages.info(request, 'This task is finished, no more images to label.')
-        return redirect('annotationweb:index')
+        return redirect('index')
 
 
 def undo_image_label(request, task_id):

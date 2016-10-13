@@ -27,25 +27,30 @@ def index(request):
         return render(request, 'annotationweb/index_annotater.html', context)
     else:
         # Admin page
+        # Classification tasks
         tasks = Task.objects.filter(type=Task.CLASSIFICATION)
         for task in tasks:
-            task.total_number_of_images = Image.objects.filter(dataset__task = task.id).count()
+            task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
             if(task.total_number_of_images == 0):
                 task.percentage_finished = 0
             else:
-                task.percentage_finished = round(Image.objects.filter(labeledimage__label__task = task.id).count()*100 / task.total_number_of_images, 1)
+                task.percentage_finished = round(Image.objects.filter(labeledimage__task=task.id).count()*100 / task.total_number_of_images, 1)
         context['tasks'] = tasks
+
+        # Segmentation tasks
         segmentation_tasks = Task.objects.filter(type=Task.SEGMENTATION)
         for task in segmentation_tasks:
-            task.total_number_of_images = Image.objects.filter(dataset__segmentationtask=task.id).count()
+            task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
             if(task.total_number_of_images == 0):
                 task.percentage_finished = 0
             else:
                 task.percentage_finished = round(Image.objects.filter(segmentedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
         context['segmentation_tasks'] = segmentation_tasks
+
+        # Bounding box tasks
         bb_tasks = Task.objects.filter(type=Task.BOUNDING_BOX)
         for task in bb_tasks:
-            task.total_number_of_images = Image.objects.filter(dataset__boundingboxtask=task.id).count()
+            task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
             if(task.total_number_of_images == 0):
                 task.percentage_finished = 0
             else:
@@ -234,7 +239,7 @@ def new_task(request):
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('annotationweb:index')
+            return redirect('index')
     else:
         form = TaskForm()
     context = {'form': form}
@@ -245,7 +250,7 @@ def new_task(request):
 def delete_task(request, task_id):
     if request.method == 'POST':
         Task.objects.get(pk = task_id).delete()
-        return redirect('annotationweb:index')
+        return redirect('index')
     else:
         return render(request, 'annotationweb/delete_task.html', {'task_id': task_id})
 
@@ -263,7 +268,7 @@ def new_dataset(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'New dataset created')
-            return redirect('annotationweb:datasets')
+            return redirect('datasets')
     else:
         form = DatasetForm()
 
@@ -287,7 +292,7 @@ def add_image_sequence(request, dataset_id):
 
             if request.POST['frame_selection'] == 'manual':
                 new_image_sequence.save()  # Save to db
-                return redirect('annotationweb:add_key_frames', new_image_sequence.id)
+                return redirect('add_key_frames', new_image_sequence.id)
             elif request.POST['frame_selection'] == 'every_n_frame':
                 try:
                     frame_step = int(request.POST['frame_step'])
@@ -314,7 +319,7 @@ def add_image_sequence(request, dataset_id):
                         key_frame.save()
 
                     messages.success(request, 'The image sequence and frames were stored.')
-                    return redirect('annotationweb:datasets')
+                    return redirect('datasets')
 
     else:
         form = ImageSequenceForm()
@@ -348,7 +353,7 @@ def add_key_frames(request, image_sequence_id):
                 key_frame.save()
 
             messages.success(request, 'The image sequence and frames were stored.')
-            return redirect('annotationweb:datasets')
+            return redirect('datasets')
 
     return render(request, 'annotationweb/add_key_frames.html', {'image_sequence': image_sequence})
 

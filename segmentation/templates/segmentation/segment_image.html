@@ -43,7 +43,7 @@ addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {
 </div>
 <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 {% else %}
-<img src="{% url 'annotationweb:show_image' image.id %}/" alt="" width="512"/>
+<img src="{% url 'show_image' image.id %}/" alt="" width="512"/>
 {% endif %}
 <br />
 <br />

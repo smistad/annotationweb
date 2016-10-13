@@ -19,7 +19,7 @@ loadSequence({{ image_sequence.id }}, {{ image_sequence.nr_of_frames }}, {{ fram
     <button id="goToTargetFrame">Go to target frame</button><br>
     <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
     {% else %}
-    <img src="{% url 'annotationweb:show_image' image.id %}" alt="" width="512"/>
+    <img src="{% url 'show_image' image.id %}" alt="" width="512"/>
     {% endif %}
     <br />
     <br />

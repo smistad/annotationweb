@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class AnnotationWebConfig(AppConfig):
+class AnnotationwebConfig(AppConfig):
     name = 'annotationweb'
