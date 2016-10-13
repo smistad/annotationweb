@@ -34,7 +34,7 @@ def index(request):
             if(task.total_number_of_images == 0):
                 task.percentage_finished = 0
             else:
-                task.percentage_finished = round(Image.objects.filter(labeledimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+                task.percentage_finished = round(Image.objects.filter(classifiedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
         context['tasks'] = tasks
 
         # Segmentation tasks
