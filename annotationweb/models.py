@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Dataset(models.Model):
@@ -42,6 +43,7 @@ class Task(models.Model):
     dataset = models.ManyToManyField(Dataset)
     type = models.CharField(max_length=50, choices=TASK_TYPES)
     label = models.ManyToManyField(Label)
+    user = models.ManyToManyField(User)
 
     def __str__(self):
         return self.name

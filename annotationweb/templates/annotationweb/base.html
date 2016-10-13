@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <title>
-            Annotation Web - {% block title %}{% endblock %}
+            Annotation Web {% block title %}{% endblock %}
         </title>
         {% if dark_style %}
         <link rel="stylesheet" type="text/css" href="{% static 'annotationweb/style_dark.css' %}">
@@ -31,7 +31,8 @@
             <div id="menu">
                 {% ifequal user.groups.all.0.name 'annotater' %}
                 {% else %}
-                <a href="/">Tasks</a> -
+                <a href="{% url 'admin:index' %}">Admin</a> -
+                <a href="{%  url 'index' %}">Tasks</a> -
                 <a href="{% url 'datasets' %}">Datasets</a> -
                 {% endifequal %}
                 <a href="{% url 'user:logout' %}">Logout</a><br>
