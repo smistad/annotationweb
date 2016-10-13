@@ -29,9 +29,13 @@
         <div id="content">
             <h1>Annotation Web</h1>
             <div id="menu">
+                {% ifequal user.groups.all.0.name 'annotater' %}
+                {% else %}
                 <a href="/">Tasks</a> -
                 <a href="{% url 'datasets' %}">Datasets</a> -
-                <a href="{% url 'user:logout' %}">Logout</a>
+                {% endifequal %}
+                <a href="{% url 'user:logout' %}">Logout</a><br>
+                Logged in as {{ user }}
             </div>
             {% block content %}
             {% endblock %}
