@@ -91,8 +91,11 @@ def export_options(request, task_id, exporter_index):
     if request.method == 'POST':
         form = exporter.get_form(data=request.POST)
         if form.is_valid():
-            exporter.export(form)
-            messages.success(request, 'Export finished')
+            if exporter.export(form):
+                messages.success(request, 'Export finished')
+            else:
+                messages.error(request, 'Export failed')
+
             return redirect('index')
     else:
         # Get unbound form

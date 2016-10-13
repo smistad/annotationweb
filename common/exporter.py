@@ -16,10 +16,11 @@ class MetaExporter(type):
 
 
 class Exporter(metaclass=MetaExporter):
-    def export(self):
-        raise NotImplementedError('An exporter needs to implement an export method')
 
     def get_form(self, data=None):
+        raise NotImplementedError('An exporter needs to implement an export method')
+
+    def export(self, form):
         raise NotImplementedError('An exporter needs to implement an export method')
 
 
