@@ -1,7 +1,0 @@
-from django.contrib import admin
-from .models import *
-
-# Register your models here.
-admin.site.register(BoundingBoxTask)
-admin.site.register(BoundingBox)
-admin.site.register(CompletedImage)

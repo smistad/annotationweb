@@ -1,0 +1,31 @@
+{% extends 'annotationweb/base.html' %}
+{% block onload %}loadSequence({{ image_sequence.id }}, {{ image_sequence.nr_of_frames }}){% endblock %}
+
+{% block content %}
+<h2>Add key frames</h2>
+
+{% for message in messages %}
+<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+{% endfor %}
+
+<div id="progressbar"><div class="progress-label">Loading...</div></div>
+<div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
+<div id="slider"></div>
+<canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+
+<br><br>
+<button id="addFrameButton">Add current frame</button>
+
+<h4>Selected frames</h4>
+<ul>
+<div id="framesSelected">
+</div>
+</ul>
+
+<form action="{% url 'annotationweb:add_key_frames' image_sequence.id %}" method="post">
+    {% csrf_token %}
+    <div id="framesForm"></div>
+    <input type="submit" value="Finished">
+</form>
+
+{% endblock %}

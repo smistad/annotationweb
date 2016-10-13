@@ -1,0 +1,13 @@
+{% extends 'annotationweb/base.html' %}
+
+{% block content %}
+<h2>New segmentation task</h2>
+
+<form action="{% url 'segmentation:new_task' %}" method="post">
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+{% endblock %}
