@@ -96,7 +96,7 @@ def export_options(request, task_id, exporter_index):
         if form.is_valid():
             success, message = exporter.export(form)
             if success:
-                messages.success(request, 'Export finished')
+                messages.success(request, 'Export finished: ' + message)
             else:
                 messages.error(request, 'Export failed: ' + message)
 

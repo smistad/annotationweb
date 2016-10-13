@@ -8,7 +8,7 @@ from shutil import rmtree, copyfile
 
 class ClassificationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
-    delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=True, required=False)
+    delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=False, required=False)
 
     def __init__(self, task, data=None):
         super().__init__(data)
@@ -29,23 +29,26 @@ class ClassificationExporter(Exporter):
         return ClassificationExporterForm(self.task, data=data)
 
     def export(self, form):
-
         datasets = form.cleaned_data['dataset']
         delete_existing_data = form.cleaned_data['delete_existing_data']
         # Create dir, delete old if it exists
         path = form.cleaned_data['path']
         if delete_existing_data:
+            # Delete path
             try:
                 os.stat(path)
                 rmtree(path)
             except:
+                # Folder does not exist
                 pass
 
+            # Create folder again
             try:
                 os.mkdir(path)
             except:
                 return False, 'Failed to create directory at ' + path
         else:
+            # Check that folder exist
             try:
                 os.stat(path)
             except:
@@ -81,6 +84,6 @@ class ClassificationExporter(Exporter):
 
         file_list.close()
 
-        return True, ''
+        return True, path
 
 

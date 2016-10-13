@@ -1,14 +1,14 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
+from common.utility import create_folder
 from annotationweb.models import Dataset, Task, Label
-from segmentation.models import SegmentedImage
+from boundingbox.models import CompletedImage, BoundingBox
 from django import forms
 import os
 from shutil import rmtree, copyfile
-from annotationweb.settings import PROJECT_PATH
 
 
-class SegmentationExporterForm(forms.Form):
+class BoundingBoxExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
     delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=False, required=False)
 
@@ -17,16 +17,16 @@ class SegmentationExporterForm(forms.Form):
         self.fields['dataset'] = forms.ModelMultipleChoiceField(queryset=Dataset.objects.filter(task=task))
 
 
-class SegmentationExporter(Exporter):
+class BoundingBoxExporter(Exporter):
     """
     asdads
     """
 
-    task_type = Task.SEGMENTATION
-    name = 'Default image segmentation exporter'
+    task_type = Task.BOUNDING_BOX
+    name = 'Default bounding box exporter'
 
     def get_form(self, data=None):
-        return SegmentationExporterForm(self.task, data=data)
+        return BoundingBoxExporterForm(self.task, data=data)
 
     def export(self, form):
 
@@ -51,28 +51,27 @@ class SegmentationExporter(Exporter):
             except:
                 return False, 'Path does not exist: ' + path
 
-
-        # TODO non metaimage support
-        segmented_images = SegmentedImage.objects.filter(task=self.task, image__dataset__in=datasets)
-        for segmented_image in segmented_images:
-            name = segmented_image.image.filename
+        images = CompletedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        for image in images:
+            name = image.image.filename
             image_filename = name[name.rfind('/')+1:]
-            dataset_path = os.path.join(path, segmented_image.image.dataset.name)
-            try:
-                os.mkdir(dataset_path)  # Make dataset path if doesn't exist
-            except:
-                pass
+            create_folder(path)
+            create_folder(os.path.join(path, 'images'))
+            create_folder(os.path.join(path, 'labels'))
 
             # Copy image
             metaimage = MetaImage(filename=name)
-            image_id = segmented_image.image.pk
-            metaimage.write(os.path.join(dataset_path, str(image_id) + '.mhd'))
+            image_id = image.image.pk
+            pil_image = metaimage.get_image()
+            pil_image.save(os.path.join(path, os.path.join('images', str(image_id) + '.png')))
 
-            # Copy all segmentation files
-            segmentation_filename = os.path.join(PROJECT_PATH, os.path.join('segmentations', os.path.join(str(self.task.id), str(segmented_image.id) + '.mhd')))
-            new_segmentation_filename = os.path.join(dataset_path, str(image_id) + '_segmentation.mhd')
-            metaimage = MetaImage(filename=segmentation_filename)
-            metaimage.write(new_segmentation_filename)
-
+            # Write bounding boxes to labels folder
+            boxes = BoundingBox.objects.filter(image=image)
+            with open(os.path.join(path, os.path.join('labels', str(image_id) + '.txt')), 'w') as f:
+                for box in boxes:
+                    center_x = round(box.x + box.width*0.5)
+                    center_y = round(box.y + box.height*0.5)
+                    f.write('{} {} {} {}\n'.format(center_x, center_y, box.width, box.height))
 
         return True, path
+
