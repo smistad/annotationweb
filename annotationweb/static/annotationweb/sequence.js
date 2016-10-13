@@ -89,7 +89,7 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame = 0, images_to
     //console.log('target_frame: ' + target_frame)
     for(var i = start; i <= end; i++) {
         var image = new Image();
-        image.src = '/annotation/show_frame/' + image_sequence_id + '/' + i + '/';
+        image.src = '/show_frame/' + image_sequence_id + '/' + i + '/';
         image.onload = function() {
             canvasWidth = this.width;
             canvasHeight = this.height;
