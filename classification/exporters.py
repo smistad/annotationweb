@@ -1,27 +1,34 @@
 from common.exporter import Exporter
+from common.utility import copy_image
 from annotationweb.models import ProcessedImage, Dataset, Task, Label
 from classification.models import ImageLabel
 from django import forms
 import os
 from shutil import rmtree, copyfile
+from common.metaimage import MetaImage
 
 
 class ClassificationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
     delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=False, required=False)
+    output_image_format = forms.ChoiceField(choices=(
+        ('png', 'PNG'),
+        ('mhd', 'MetaImage')
+    ), initial='png', label='Output image format')
 
     def __init__(self, task, data=None):
         super().__init__(data)
         self.fields['dataset'] = forms.ModelMultipleChoiceField(queryset=Dataset.objects.filter(task=task))
 
 
-"""
-This exporter will create a folder at the given path and create 2 files:
-labels.txt      - list of labels
-file_list.txt   - list of files and labels
-A folder is created for each dataset with the actual images
-"""
 class ClassificationExporter(Exporter):
+    """
+    This exporter will create a folder at the given path and create 2 files:
+    labels.txt      - list of labels
+    file_list.txt   - list of files and labels
+    A folder is created for each dataset with the actual images
+    """
+
     task_type = Task.CLASSIFICATION
     name = 'Default image classification exporter'
 
@@ -71,19 +78,20 @@ class ClassificationExporter(Exporter):
         labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
         for labeled_image in labeled_images:
             name = labeled_image.image.filename
-            image_filename = name[name.rfind('/')+1:]
             dataset_path = os.path.join(path, labeled_image.image.dataset.name)
             try:
                 os.mkdir(dataset_path) # Make dataset path if doesn't exist
             except:
                 pass
-            new_filename = os.path.join(dataset_path, image_filename)
-            copyfile(name, new_filename)
+
+            image_id = labeled_image.image.id
+            new_extension = form.cleaned_data['output_image_format']
+            new_filename = os.path.join(dataset_path, str(image_id) + '.' + new_extension)
+            copy_image(name, new_filename)
 
             # Get image label
             label = ImageLabel.objects.get(image=labeled_image)
 
-            # TODO metaimage support
             file_list.write(new_filename + ' ' + str(labelDict[label.label.name]) + '\n')
 
         file_list.close()
