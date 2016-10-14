@@ -1,8 +1,7 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import Http404
 from django.db.models import Max
-from django.contrib.admin.views.decorators import staff_member_required
 
 import random
 
