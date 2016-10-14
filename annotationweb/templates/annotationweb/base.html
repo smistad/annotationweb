@@ -32,8 +32,8 @@
                 <a href="{%  url 'index' %}">Task list</a> -
                 {% ifequal user.groups.all.0.name 'annotater' %}
                 {% else %}
-                <a href="{% url 'admin:index' %}">Admin</a> -
                 <a href="{% url 'datasets' %}">Datasets</a> -
+                <a href="{% url 'admin:index' %}">Admin</a> -
                 {% endifequal %}
                 <a href="{% url 'user:logout' %}">Logout</a><br>
                 Logged in as {{ user }}
