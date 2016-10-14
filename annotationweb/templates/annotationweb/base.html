@@ -28,6 +28,8 @@
     <body onload="{% block onload %}{% endblock %}">
         <div id="content">
             <h1>Annotation Web</h1>
+
+            {% if user.is_authenticated %}
             <div id="menu">
                 <a href="{%  url 'index' %}">Task list</a> -
                 {% ifequal user.groups.all.0.name 'annotater' %}
@@ -38,6 +40,8 @@
                 <a href="{% url 'user:logout' %}">Logout</a><br>
                 Logged in as {{ user }}
             </div>
+            {% endif %}
+
             {% block content %}
             {% endblock %}
         </div>

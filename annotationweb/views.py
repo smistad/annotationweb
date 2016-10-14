@@ -187,6 +187,7 @@ def datasets(request):
 
     return render(request, 'annotationweb/datasets.html', context)
 
+
 @staff_member_required
 def new_dataset(request):
     if request.method == 'POST':
@@ -204,6 +205,7 @@ def new_dataset(request):
 @staff_member_required
 def delete_dataset(request):
     pass
+
 
 @staff_member_required
 def add_image_sequence(request, dataset_id):
@@ -253,6 +255,7 @@ def add_image_sequence(request, dataset_id):
         form = ImageSequenceForm()
 
     return render(request, 'annotationweb/add_image_sequence.html', {'form': form, 'dataset': dataset})
+
 
 @staff_member_required
 def add_key_frames(request, image_sequence_id):

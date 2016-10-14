@@ -1,20 +1,10 @@
-{% load staticfiles %}
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>
-            Annotation Web
-        </title>
-    </head>
-<body>
+{% extends 'annotationweb/base.html' %}
 
-<h1>Annotation Web</h1>
-
+{% block content %}
 <h2>Please log in</h2>
 
 {% if form.errors %}
-<p>Your username and password didn't match. Please try again.</p>
+<div class="error">Your username and password didn't match. Please try again.</div>
 {% endif %}
 
 {% if next %}
@@ -43,9 +33,8 @@
 </tr>
 </table>
 
-<input type="submit" value="login" />
+<input type="submit" value="Login" />
 <input type="hidden" name="next" value="{{ next }}" />
 </form>
 
-</body>
-</html>
+{% endblock %}
