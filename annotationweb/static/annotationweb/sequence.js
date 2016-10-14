@@ -15,7 +15,7 @@ function min(a, b) {
     return a < b ? a : b;
 }
 
-function loadSequence(image_sequence_id, nrOfFrames, target_frame, images_to_load) {
+function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after) {
     console.log('In load sequence');
 
     // Create canvas
@@ -30,12 +30,16 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, images_to_loa
 
     currentFrameNr = target_frame;
 
-    var start = 0;
-    var end = nrOfFrames-1;
-    var totalToLoad = nrOfFrames;
-    if(images_to_load > 0) {
-        start = max(0, target_frame - images_to_load);
-        end = min(nrOfFrames - 1, target_frame + images_to_load);
+    var start;
+    var end;
+    var totalToLoad;
+    if(show_entire_sequence) {
+        start = 0;
+        end = nrOfFrames-1;
+        totalToLoad = nrOfFrames;
+    } else {
+        start = max(0, target_frame - images_to_load_before);
+        end = min(nrOfFrames - 1, target_frame + images_to_load_after);
         totalToLoad = end - start;
     }
     startFrame = start;

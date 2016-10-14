@@ -8,7 +8,7 @@ class ImportLocalDatasetForm(forms.Form):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ['name', 'dataset', 'type', 'label']
+        fields = ['name', 'dataset', 'show_entire_sequence', 'frames_before', 'frames_after', 'type', 'label', 'user']
 
 class DatasetForm(forms.ModelForm):
     class Meta:

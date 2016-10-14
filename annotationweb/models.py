@@ -41,6 +41,9 @@ class Task(models.Model):
 
     name = models.CharField(max_length=200)
     dataset = models.ManyToManyField(Dataset)
+    show_entire_sequence = models.BooleanField(help_text='Allow user to see entire sequence.', default=False)
+    frames_before = models.PositiveIntegerField(help_text='How many frames to allow user to see before a key frame', default=0)
+    frames_after = models.PositiveIntegerField(help_text='How many frames to allow user to see after a key frame', default=0)
     type = models.CharField(max_length=50, choices=TASK_TYPES)
     label = models.ManyToManyField(Label)
     user = models.ManyToManyField(User)

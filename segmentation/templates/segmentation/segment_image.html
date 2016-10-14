@@ -5,7 +5,14 @@
 
 {% block onload %}
 {% if image_sequence %}
-loadSequence({{ image_sequence.id }}, {{ image_sequence.nr_of_frames }}, {{ frame_nr }}, 50);
+loadSequence(
+    {{ image_sequence.id }},
+    {{ image_sequence.nr_of_frames }},
+    {{ frame_nr }},
+    {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
+    {{ task.frames_before }},
+    {{ task.frames_after }}
+);
 loadSegmentation({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}})
 {% endif %}
 {% endblock %}
