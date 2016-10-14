@@ -286,7 +286,7 @@ def add_key_frames(request, image_sequence_id):
 
     return render(request, 'annotationweb/add_key_frames.html', {'image_sequence': image_sequence})
 
-@staff_member_required
+
 def show_frame(request, image_sequence_id, frame_nr):
     # Get image sequence the key frame belongs to
     try:
