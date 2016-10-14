@@ -173,7 +173,7 @@ function loadSegmentation(image_sequence_id, frame_nr, task_id, image_id) {
 
     backgroundImage = new Image();
     frameNr = frame_nr;
-    backgroundImage.src = '/annotation/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
+    backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
     backgroundImage.onload = function() {
         canvasWidth = this.width;
         canvasHeight = this.height;
