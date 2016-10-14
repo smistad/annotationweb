@@ -1,5 +1,5 @@
 from common.exporter import Exporter
-from common.metaimage import MetaImage
+from common.utility import copy_image
 from annotationweb.models import ProcessedImage, Dataset, Task, Label
 from django import forms
 import os
@@ -63,15 +63,14 @@ class SegmentationExporter(Exporter):
                 pass
 
             # Copy image
-            metaimage = MetaImage(filename=name)
             image_id = segmented_image.image.pk
-            metaimage.write(os.path.join(dataset_path, str(image_id) + '.mhd'))
+            new_filename = os.path.join(dataset_path, str(image_id) + '.mhd')
+            copy_image(name, new_filename)
 
             # Copy all segmentation files
             segmentation_filename = os.path.join(PROJECT_PATH, os.path.join('segmentations', os.path.join(str(self.task.id), str(segmented_image.id) + '.mhd')))
             new_segmentation_filename = os.path.join(dataset_path, str(image_id) + '_segmentation.mhd')
-            metaimage = MetaImage(filename=segmentation_filename)
-            metaimage.write(new_segmentation_filename)
+            copy_image(segmentation_filename, new_segmentation_filename)
 
 
         return True, path

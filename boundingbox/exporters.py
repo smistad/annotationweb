@@ -1,6 +1,6 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
-from common.utility import create_folder
+from common.utility import create_folder, copy_image
 from annotationweb.models import ProcessedImage, Dataset, Task, Label
 from boundingbox.models import BoundingBox
 from django import forms
@@ -60,12 +60,12 @@ class BoundingBoxExporter(Exporter):
             create_folder(os.path.join(path, 'labels'))
 
             # Copy image
-            metaimage = MetaImage(filename=name)
             image_id = image.image.pk
-            pil_image = metaimage.get_image()
-            pil_image.save(os.path.join(path, os.path.join('images', str(image_id) + '.png')))
+            new_filename = os.path.join(path, os.path.join('images', str(image_id) + '.png'))
+            copy_image(name, new_filename)
 
             # Write bounding boxes to labels folder
+            # TODO write label for each bounding box
             boxes = BoundingBox.objects.filter(image=image)
             with open(os.path.join(path, os.path.join('labels', str(image_id) + '.txt')), 'w') as f:
                 for box in boxes:
