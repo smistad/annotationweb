@@ -1,6 +1,6 @@
 import zlib
 import numpy as np
-import PIL
+import PIL, PIL.Image
 import os
 
 def tuple_to_string(tuple):

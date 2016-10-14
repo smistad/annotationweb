@@ -3,16 +3,13 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
 import common.exporter
+from common.utility import get_image_as_http_response
 
 import fnmatch
 import os
 
-import PIL, PIL.Image
-from io import BytesIO
-
 from .forms import *
 from .models import *
-from common.metaimage import MetaImage
 from common.user import is_annotater
 
 
@@ -142,14 +139,7 @@ def show_image(request, image_id):
     except Image.DoesNotExist:
         raise Http404('Image does not exist')
 
-    buffer = BytesIO()
-    pil_image = PIL.Image.open(image.filename)
-    pil_image.save(buffer, "PNG")
-
-    return HttpResponse(buffer.getvalue(), content_type="image/png")
-
-
-
+    return get_image_as_http_response(image.filename)
 
 
 @staff_member_required
@@ -295,12 +285,4 @@ def show_frame(request, image_sequence_id, frame_nr):
 
     filename = image_sequence.format.replace('#', str(frame_nr))
 
-    reader = MetaImage(filename=filename)
-
-
-    # Convert raw data to image, and then to a http response
-    buffer = BytesIO()
-    pil_image = reader.get_image()
-    pil_image.save(buffer, "PNG")
-
-    return HttpResponse(buffer.getvalue(), content_type="image/png")
+    return get_image_as_http_response(filename)

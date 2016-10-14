@@ -2,6 +2,26 @@ import os
 from common.metaimage import MetaImage
 import PIL
 from shutil import copyfile
+from io import BytesIO
+from django.http import HttpResponse
+
+
+def get_image_as_http_response(filename):
+    _, extension = os.path.splitext(filename)
+    if extension.lower() == '.mhd':
+        reader = MetaImage(filename=filename)
+        # Convert raw data to image, and then to a http response
+        buffer = BytesIO()
+        pil_image = reader.get_image()
+        pil_image.save(buffer, "PNG")
+    elif extension.lower() == '.png':
+        buffer = BytesIO()
+        pil_image = PIL.Image.open(filename)
+        pil_image.save(buffer, "PNG")
+    else:
+        raise Exception('Uknown output image extension ' + extension)
+
+    return HttpResponse(buffer.getvalue(), content_type="image/png")
 
 
 def copy_image(filename, new_filename):
