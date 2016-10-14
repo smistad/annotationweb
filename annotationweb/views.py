@@ -20,17 +20,15 @@ from common.user import is_annotater
 
 import numpy as np
 
+
 def get_task_statistics(tasks):
     for task in tasks:
         task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
         if(task.total_number_of_images == 0):
             task.percentage_finished = 0
-        elif task.type == Task.CLASSIFICATION:
-            task.percentage_finished = round(Image.objects.filter(classifiedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
-        elif task.type == Task.SEGMENTATION:
-            task.percentage_finished = round(Image.objects.filter(segmentedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
-        elif task.type == Task.BOUNDING_BOX:
-            task.percentage_finished = round(Image.objects.filter(completedimage__task=task.id).count()*100 / task.total_number_of_images, 1)
+        else:
+            task.percentage_finished = round(ProcessedImage.objects.filter(task=task.id).count()*100 / task.total_number_of_images, 1)
+
 
 def index(request):
     context = {}

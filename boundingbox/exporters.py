@@ -1,8 +1,8 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder
-from annotationweb.models import Dataset, Task, Label
-from boundingbox.models import CompletedImage, BoundingBox
+from annotationweb.models import ProcessedImage, Dataset, Task, Label
+from boundingbox.models import BoundingBox
 from django import forms
 import os
 from shutil import rmtree, copyfile
@@ -51,7 +51,7 @@ class BoundingBoxExporter(Exporter):
             except:
                 return False, 'Path does not exist: ' + path
 
-        images = CompletedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
         for image in images:
             name = image.image.filename
             image_filename = name[name.rfind('/')+1:]

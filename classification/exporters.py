@@ -1,6 +1,6 @@
 from common.exporter import Exporter
-from annotationweb.models import Dataset, Task, Label
-from classification.models import ClassifiedImage
+from annotationweb.models import ProcessedImage, Dataset, Task, Label
+from classification.models import ImageLabel
 from django import forms
 import os
 from shutil import rmtree, copyfile
@@ -68,7 +68,7 @@ class ClassificationExporter(Exporter):
 
         # Create file_list.txt file
         file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = ClassifiedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
         for labeled_image in labeled_images:
             name = labeled_image.image.filename
             image_filename = name[name.rfind('/')+1:]
@@ -79,8 +79,12 @@ class ClassificationExporter(Exporter):
                 pass
             new_filename = os.path.join(dataset_path, image_filename)
             copyfile(name, new_filename)
+
+            # Get image label
+            label = ImageLabel.objects.get(image=labeled_image)
+
             # TODO metaimage support
-            file_list.write(new_filename + ' ' + str(labelDict[labeled_image.label.name]) + '\n')
+            file_list.write(new_filename + ' ' + str(labelDict[label.label.name]) + '\n')
 
         file_list.close()
 

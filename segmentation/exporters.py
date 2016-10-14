@@ -1,7 +1,6 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
-from annotationweb.models import Dataset, Task, Label
-from segmentation.models import SegmentedImage
+from annotationweb.models import ProcessedImage, Dataset, Task, Label
 from django import forms
 import os
 from shutil import rmtree, copyfile
@@ -53,7 +52,7 @@ class SegmentationExporter(Exporter):
 
 
         # TODO non metaimage support
-        segmented_images = SegmentedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        segmented_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
         for segmented_image in segmented_images:
             name = segmented_image.image.filename
             image_filename = name[name.rfind('/')+1:]

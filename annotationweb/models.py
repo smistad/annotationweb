@@ -68,3 +68,10 @@ class KeyFrame(models.Model):
 
     def __str__(self):
         return str(self.frame_nr)
+
+
+class ProcessedImage(models.Model):
+    image = models.ForeignKey(Image, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User)

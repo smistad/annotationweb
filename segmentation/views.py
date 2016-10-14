@@ -4,19 +4,17 @@ from .forms import *
 from django.contrib import messages
 from django.http import HttpResponse, Http404, JsonResponse
 import random
-import os
 from io import StringIO, BytesIO
 import base64
-import PIL
 from annotationweb.settings import PROJECT_PATH
 from common.metaimage import *
 import numpy as np
-from shutil import copyfile, rmtree
+from annotationweb.models import Task, Image, ProcessedImage, Label
 
 
 def pick_random_image(task_id):
     # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(dataset__task=task_id).exclude(segmentedimage__task=task_id)
+    unlabeled_images = Image.objects.filter(dataset__task=task_id).exclude(processedimage__task=task_id)
     return unlabeled_images[random.randrange(0, len(unlabeled_images))]
 
 
@@ -41,7 +39,7 @@ def segment_image(request, task_id):
 
         context['image'] = image
         context['task'] = task
-        context['number_of_labeled_images'] = Image.objects.filter(segmentedimage__task=task_id).count()
+        context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
         context['total_number_of_images'] = Image.objects.filter(dataset__task=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
@@ -60,13 +58,15 @@ def save_segmentation(request):
 
     try:
         # Save to DB
-        result = SegmentedImage()
-        result.image_id = int(request.POST['image_id'])
-        result.task_id = int(request.POST['task_id'])
-        result.save()
+        processed_image = ProcessedImage()
+        processed_image.image_id = int(request.POST['image_id'])
+        processed_image.task_id = int(request.POST['task_id'])
+        processed_image.user = request.user
+        processed_image.save()
+
 
         # Save segmentation image to disk
-        base_path = PROJECT_PATH + '/segmentations/' + str(result.task_id) + '/'
+        base_path = PROJECT_PATH + '/segmentations/' + str(processed_image.task_id) + '/'
         try:
             os.makedirs(base_path)
         except:
@@ -79,7 +79,7 @@ def save_segmentation(request):
 
         # Store as png
         image = PIL.Image.open(image_string)
-        image.save(base_path + str(result.id) + '.png')
+        image.save(base_path + str(processed_image.id) + '.png')
 
         # Convert color image to single channel label image
         # Get all labels for this task
@@ -90,7 +90,7 @@ def save_segmentation(request):
         grayscaleimage = image.convert('L')
         X, Y = np.nonzero(np.asarray(grayscaleimage))
 
-        labels = Label.objects.filter(task__id=result.task_id)
+        labels = Label.objects.filter(task__id=processed_image.task_id)
         width = color_pixels.shape[0]
         height = color_pixels.shape[1]
         pixels = np.zeros((width, height)).astype(np.uint8)
@@ -109,7 +109,7 @@ def save_segmentation(request):
 
         # Store as metaimage
         writer = MetaImage(data=pixels)
-        writer.write(base_path + str(result.id) + '.mhd')
+        writer.write(base_path + str(processed_image.id) + '.mhd')
 
         response = {
             'success': 'true',

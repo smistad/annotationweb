@@ -1,21 +1,17 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from .models import *
+from annotationweb.models import Image, Task, ProcessedImage
 from .forms import *
 from django.contrib import messages
 from django.http import HttpResponse, Http404, JsonResponse
 import random
 import json
-import os
-from shutil import rmtree
-from common.metaimage import *
-from common.utility import *
-from annotationweb.settings import PROJECT_PATH
 
 
 def pick_random_image(task_id):
     # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(dataset__boundingboxtask=task_id).exclude(completedimage__task=task_id)
+    unlabeled_images = Image.objects.filter(dataset__task=task_id).exclude(processedimage__task=task_id)
     return unlabeled_images[random.randrange(0, len(unlabeled_images))]
 
 
@@ -40,8 +36,8 @@ def process_image(request, task_id):
 
         context['image'] = image
         context['task'] = task
-        context['number_of_labeled_images'] = Image.objects.filter(completedimage__task=task_id).count()
-        context['total_number_of_images'] = Image.objects.filter(dataset__boundingboxtask=task_id).count()
+        context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
+        context['total_number_of_images'] = Image.objects.filter(dataset__task=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
         print('Got the following random image: ', image.filename)
@@ -56,9 +52,10 @@ def save_boxes(request):
         raise Http404('')
 
     try:
-        image = CompletedImage()
+        image = ProcessedImage()
         image.image_id = int(request.POST['image_id'])
         image.task_id = int(request.POST['task_id'])
+        image.user = request.user
         image.save()
 
         # Store every box

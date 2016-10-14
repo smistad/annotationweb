@@ -7,11 +7,12 @@ from django.contrib.admin.views.decorators import staff_member_required
 import random
 
 from .models import *
+from annotationweb.models import Image, Task, ProcessedImage
 
 
 def pick_random_image(task_id):
     # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(dataset__task=task_id).exclude(classifiedimage__task=task_id)
+    unlabeled_images = Image.objects.filter(dataset__task=task_id).exclude(processedimage__task=task_id)
     return unlabeled_images[random.randrange(0, len(unlabeled_images))]
 
 
@@ -26,8 +27,14 @@ def label_images(request, task_id):
 
     if request.method == 'POST':
         # Save new label
-        labeled_image = ClassifiedImage()
-        labeled_image.image_id = request.POST['image_id']
+        processed_image = ProcessedImage()
+        processed_image.image_id = request.POST['image_id']
+        processed_image.task = task
+        processed_image.user = request.user
+        processed_image.save()
+
+        labeled_image = ImageLabel()
+        labeled_image.image = processed_image
         for label in labels:
             if request.POST.__contains__(label.name):
                 labeled_image.label = label
@@ -47,7 +54,7 @@ def label_images(request, task_id):
 
         context['image'] = image
         context['task'] = task
-        context['number_of_labeled_images'] = Image.objects.filter(classifiedimage__task=task_id).count()
+        context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
         context['total_number_of_images'] = Image.objects.filter(dataset__task=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
@@ -64,8 +71,8 @@ def label_images(request, task_id):
 
 def undo_image_label(request, task_id):
     try:
-        id_max = ClassifiedImage.objects.filter(task_id=task_id).aggregate(Max('id'))['id__max']
-        ClassifiedImage.objects.get(pk=id_max).delete()
+        id_max = ProcessedImage.objects.filter(task_id=task_id).aggregate(Max('id'))['id__max']
+        ProcessedImage.objects.get(pk=id_max).delete()
         return redirect('classification:label_image', task_id=task_id)
     except Task.DoesNotExist:
         raise Http404('Image label does not exist')
