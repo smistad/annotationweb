@@ -261,7 +261,6 @@ function addLabelButton(label_id, red, green, blue) {
     if(blue.length == 1) {
         blue = "0" + blue;
     }
-    console.log(red + green + blue);
     $("#labelButton" + label_id).css("background-color", "#" + red + green + blue);
 }
 

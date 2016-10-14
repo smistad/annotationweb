@@ -3,7 +3,7 @@
 {% block title %} Label image {% endblock %}
 
 
-{% block onload %}
+{% block javascript %}
 {% if image_sequence %}
 loadSequence(
     {{ image_sequence.id }},
@@ -14,6 +14,28 @@ loadSequence(
     {{ task.frames_after }}
 );
 {% endif %}
+
+// Assign color to label buttons
+{% for label in task.label.all %}
+var red = {{ label.color_red }};
+var green = {{ label.color_green }};
+var blue = {{ label.color_blue }};
+
+red = red.toString(16);
+if(red.length == 1) {
+    red = "0" + red;
+}
+green = green.toString(16);
+if(green.length == 1) {
+    green = "0" + green;
+}
+blue = blue.toString(16);
+if(blue.length == 1) {
+    blue = "0" + blue;
+}
+$("#labelButton" + {{ label.id }}).css("background-color", "#" + red + green + blue);
+
+{% endfor %}
 {% endblock %}
 
 {% block content %}
@@ -36,7 +58,7 @@ loadSequence(
         <div id="labelButtons">
             Assign one label to this image:<br>
             {% for label in labels %}
-            <input type="submit" name="{{label.name}}" value="{{label.name}}" class="labelButton">
+            <input type="submit" name="{{label.name}}" value="{{label.name}}" class="labelButton" id="labelButton{{ label.id }}">
             {% endfor %}
         </div>
         {% if image_sequence %}

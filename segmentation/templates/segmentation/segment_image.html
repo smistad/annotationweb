@@ -3,7 +3,7 @@
 {% block title %} Segment image {% endblock %}
 
 
-{% block onload %}
+{% block javascript %}
 {% if image_sequence %}
 loadSequence(
     {{ image_sequence.id }},
@@ -15,9 +15,7 @@ loadSequence(
 );
 loadSegmentation({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}})
 {% endif %}
-{% endblock %}
 
-{% block javascript %}
 {% for label in task.label.all %}
 
 addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
