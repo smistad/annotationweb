@@ -1,33 +1,29 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
-from django.db.models import Max
 from django.contrib.admin.views.decorators import staff_member_required
 import common.exporter
 
 import fnmatch
 import os
-import random
 
 import PIL, PIL.Image
 from io import BytesIO
-from shutil import copyfile, rmtree
 
 from .forms import *
 from .models import *
 from common.metaimage import MetaImage
 from common.user import is_annotater
 
-import numpy as np
-
 
 def get_task_statistics(tasks):
     for task in tasks:
         task.total_number_of_images = Image.objects.filter(dataset__task=task.id).count()
-        if(task.total_number_of_images == 0):
+        if task.total_number_of_images == 0:
             task.percentage_finished = 0
         else:
-            task.percentage_finished = round(ProcessedImage.objects.filter(task=task.id).count()*100 / task.total_number_of_images, 1)
+            task.percentage_finished = round(ProcessedImage.objects.filter(task=task.id).count()*100 /
+                                             task.total_number_of_images, 1)
 
 
 def index(request):
