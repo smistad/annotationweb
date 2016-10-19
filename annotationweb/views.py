@@ -27,7 +27,7 @@ def index(request):
     context = {}
 
     if is_annotater(request.user):
-        # Show only tasks own by this user
+        # Show only tasks assigned to this user
         tasks = Task.objects.filter(user=request.user)
         get_task_statistics(tasks)
         context['tasks'] = tasks
