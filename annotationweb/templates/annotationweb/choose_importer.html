@@ -1,0 +1,13 @@
+{% extends 'annotationweb/base.html' %}
+
+{% block content %}
+    <h2>Choose an importer</h2>
+
+    <form action="{% url 'import' dataset.id %}" method="post">
+        {% csrf_token %}
+        {% for importer in importers %}
+            <input type="radio" name="importer" value="{{ forloop.counter0 }}"> {{ importer.name }}<br>
+        {% endfor %}
+        <input type="submit" value="Submit" />
+    </form>
+{% endblock %}

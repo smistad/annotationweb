@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
 import common.exporter
 from common.utility import get_image_as_http_response
+from importers.importer import find_all_importers
 
 import fnmatch
 import os
@@ -99,38 +100,47 @@ def export_options(request, task_id, exporter_index):
     return render(request, 'annotationweb/export_options.html', {'form': form, 'exporter_index': exporter_index, 'task': task})
 
 
-# Crawl recursively in path to find all images and add them to db
-def import_images(path, dataset):
-    for root, dirnames, filenames in os.walk(path):
-        for filename in fnmatch.filter(filenames, '*.png'):
-            image = Image()
-            image.filename = os.path.join(root, filename)
-            image.dataset = dataset
-            image.save()
-            print('Saved image ', image.filename)
+@staff_member_required
+def import_data(request, dataset_id):
+    try:
+        dataset = Dataset.objects.get(pk=dataset_id)
+    except Dataset.DoesNotExist:
+        raise Http404('Dataset does not exist')
+
+    if request.method == 'POST':
+        importer_index = int(request.POST['importer'])
+        return redirect('import_options', dataset_id=dataset.id, importer_index=importer_index)
+    else:
+        available_importers = find_all_importers()
+        return render(request, 'annotationweb/choose_importer.html', {'importers': available_importers, 'dataset': dataset})
 
 
 @staff_member_required
-def import_local_dataset(request):
-    if request.method == 'POST':
-        # Process form
-        form = ImportLocalDatasetForm(request.POST)
-        if form.is_valid():
-            # Check if path exists
-            path = form.cleaned_data['path']
-            if os.path.isdir(path):
-                dataset = Dataset()
-                dataset.name = form.cleaned_data['name']
-                dataset.save()
-                import_images(path, dataset)
-                messages.success(request, 'Successfully imported dataset')
-                return redirect('index')
-            else:
-                form.add_error(field='path', error='The path doesn\'t exist.')
-    else:
-        form = ImportLocalDatasetForm() # Create blank form
+def import_options(request, dataset_id, importer_index):
+    try:
+        dataset = Dataset.objects.get(pk=dataset_id)
+    except Dataset.DoesNotExist:
+        raise Http404('Dataset does not exist')
 
-    return render(request, 'annotationweb/import_local_dataset.html', {'form': form})
+    available_importers = find_all_importers()
+    importer = available_importers[int(importer_index)]()
+    importer.dataset = dataset
+
+    if request.method == 'POST':
+        form = importer.get_form(data=request.POST)
+        if form.is_valid():
+            success, message = importer.import_data(form)
+            if success:
+                messages.success(request, 'Import finished: ' + message)
+            else:
+                messages.error(request, 'Import failed: ' + message)
+
+            return redirect('index')
+    else:
+        # Get unbound form
+        form = importer.get_form()
+
+    return render(request, 'annotationweb/import_options.html', {'form': form, 'importer_index': importer_index, 'dataset': dataset})
 
 
 def show_image(request, image_id):
