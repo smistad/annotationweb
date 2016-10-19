@@ -5,10 +5,12 @@ import os
 import fnmatch
 
 
-class DefaultExporterForm(forms.Form):
+class DefaultImporterForm(forms.Form):
     path = forms.CharField(label='Data path', max_length=1000)
 
-    def __init__(self, task, data=None):
+    # TODO validate path
+
+    def __init__(self, data=None):
         super().__init__(data)
 
 
@@ -17,7 +19,7 @@ class DefaultImporter(Importer):
     name = 'Default importer'
 
     def get_form(self, data=None):
-        return DefaultExporterForm(data)
+        return DefaultImporterForm(data)
 
     def import_data(self, form):
         # Crawl recursively in path to find all images and add them to db
@@ -28,3 +30,4 @@ class DefaultImporter(Importer):
                 image.dataset = self.dataset
                 image.save()
                 print('Saved image ', image.filename)
+        return True, form.cleaned_data['path']

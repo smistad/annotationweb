@@ -199,8 +199,19 @@ def new_dataset(request):
 
 
 @staff_member_required
-def delete_dataset(request):
-    pass
+def delete_dataset(request, dataset_id):
+    try:
+        dataset = Dataset.objects.get(pk=dataset_id)
+    except Dataset.DoesNotExist:
+        return Http404('Dataset not found')
+
+    if request.method == 'POST':
+        if request.POST['choice'] == 'Yes':
+            dataset.delete()
+            messages.success(request, 'Dataset ' + dataset.name + ' was deleted.')
+        return redirect('datasets')
+    else:
+        return render(request, 'annotationweb/delete_dataset.html', {'dataset': dataset})
 
 
 @staff_member_required

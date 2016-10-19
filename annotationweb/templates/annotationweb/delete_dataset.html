@@ -1,0 +1,9 @@
+{% extends 'annotationweb/base.html' %}
+
+{% block content %}
+<form action="{% url 'delete_dataset' dataset.id %}" method="post">
+    {% csrf_token %}
+    Are you sure you want to delete the dataset {{ dataset.name }} which has {{ dataset.image_set.count }} images?
+    <input type="submit" name="choice" value="Yes"> <input type="submit" name="choice" value="No">
+</form>
+{% endblock %}
