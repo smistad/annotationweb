@@ -168,11 +168,19 @@ def new_task(request):
 
 @staff_member_required
 def delete_task(request, task_id):
+    # TODO do cleanup after deleting task?
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        return Http404('Task not found')
+
     if request.method == 'POST':
-        Task.objects.get(pk = task_id).delete()
+        if request.POST['choice'] == 'Yes':
+            task.delete()
+            messages.success(request, 'The task ' + task.name + ' was deleted.')
         return redirect('index')
     else:
-        return render(request, 'annotationweb/delete_task.html', {'task_id': task_id})
+        return render(request, 'annotationweb/delete_task.html', {'task': task})
 
 
 @staff_member_required
