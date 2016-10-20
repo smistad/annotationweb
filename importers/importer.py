@@ -1,7 +1,7 @@
 from os.path import basename
 import importlib
 import glob
-from distutils import dirname
+from os.path import dirname
 
 importers = []
 
