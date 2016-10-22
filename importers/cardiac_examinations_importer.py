@@ -44,41 +44,46 @@ class CardiacExaminationsImporter(Importer):
         path = form.cleaned_data['path']
         # Go through each subfolder and create a subject for each
         for file in os.listdir(path):
-            if not os.path.isdir(file):
+            subject_dir = join(path, file)
+            if not os.path.isdir(subject_dir):
                 continue
+
 
             subject = Subject()
             subject.name = file
             subject.dataset = self.dataset
             subject.save()
 
-            for file2 in os.listdir(os.path.join(path, file)):
-                if not os.path.isdir(file2):
+            for file2 in os.listdir(subject_dir):
+                image_sequence_dir = join(subject_dir, file2)
+                if not os.path.isdir(image_sequence_dir):
                     continue
 
                 frames = []
-                for file3 in os.listdir(join(join(path, file), file2)):
-                    if not os.path.isfile(file3):
+                for file3 in os.listdir(image_sequence_dir):
+                    image_filename = join(image_sequence_dir, file3)
+                    if not os.path.isfile(image_filename):
                         continue
 
-                    image = Image()
-                    image.subject = subject
-                    image.filename = join(join(join(path, file), file2), file3)
-                    image.save()
-                    frames.append(image)
+                    frames.append(image_filename)
 
                 image_sequence = ImageSequence()
-                image_sequence.format = 'US_2D_#.png' # TODO How to determine this??
+                image_sequence.format = join(image_sequence_dir, 'US-2D_#.png') # TODO How to determine this??
                 image_sequence.subject = subject
                 image_sequence.nr_of_frames = len(frames)
                 image_sequence.save()
 
                 # Create key frame
-                key_frame_nr = len(frames)/2
+                key_frame_nr = int(len(frames)/2)
+                image = Image()
+                image.filename = frames[key_frame_nr]
+                image.subject = subject
+                image.save()
+
                 key_frame = KeyFrame()
                 key_frame.image_sequence = image_sequence
                 key_frame.frame_nr = key_frame_nr
-                key_frame.image = frames[key_frame_nr]
+                key_frame.image = image
                 key_frame.save()
 
 
