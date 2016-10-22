@@ -1,0 +1,13 @@
+{% extends 'annotationweb/base.html' %}
+
+{% block content %}
+<h2>Add a subject to the dataset {{ dataset.name }}</h2>
+
+<form action="{% url 'new_subject' dataset.id %}" method="post">
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+{% endblock %}

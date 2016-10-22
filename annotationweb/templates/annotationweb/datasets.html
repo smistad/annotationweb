@@ -13,7 +13,7 @@
 <ul>
     {% for dataset in datasets %}
     <li>{{ dataset.name }} -
-        <a href="{%  url 'dataset_details' dataset.id %}">Details</a>
+        <a href="{%  url 'dataset_details' dataset.id %}">Details</a> -
         <a href="{% url 'import' dataset.id %}">Import data</a> -
         <a href="{% url 'delete_dataset' dataset.id %}">Delete</a>
     </li>

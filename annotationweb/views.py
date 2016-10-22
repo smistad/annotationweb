@@ -317,6 +317,7 @@ def show_frame(request, image_sequence_id, frame_nr):
     return get_image_as_http_response(filename)
 
 
+@staff_member_required()
 def dataset_details(request, dataset_id):
     try:
         dataset = Dataset.objects.get(pk=dataset_id)
@@ -326,9 +327,39 @@ def dataset_details(request, dataset_id):
     return render(request, 'annotationweb/dataset_details.html', {'dataset': dataset})
 
 
+@staff_member_required()
 def new_subject(request, dataset_id):
-    raise NotImplementedError()
+    try:
+        dataset = Dataset.objects.get(pk=dataset_id)
+    except Dataset.DoesNotExist:
+        return Http404('The dataset does not exist')
+
+    if request.method == 'POST':
+        form = SubjectForm(request.POST)
+        if form.is_valid():
+            subject = form.save(commit=False)
+            subject.dataset = dataset
+            subject.save()
+            messages.success(request, 'Subject added')
+            return redirect('dataset_details', dataset.id)
+    else:
+        form = SubjectForm()
+
+    return render(request, 'annotationweb/new_subject.html', {'dataset': dataset, 'form': form})
 
 
+@staff_member_required()
 def delete_subject(request, subject_id):
-    raise NotImplementedError()
+    try:
+        subject = Subject.objects.get(pk=subject_id)
+    except Subject.DoesNotExist:
+        return Http404('The subject does not exist')
+
+    if request.method == 'POST':
+        if request.POST['choice'] == 'Yes':
+            subject.delete()
+            messages.success(request, 'The subject ' + subject.name + ' was deleted.')
+        return redirect('dataset_details', subject.dataset.id)
+    else:
+        return render(request, 'annotationweb/delete_subject.html', {'subject': subject})
+
