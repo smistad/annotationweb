@@ -315,3 +315,20 @@ def show_frame(request, image_sequence_id, frame_nr):
     filename = image_sequence.format.replace('#', str(frame_nr))
 
     return get_image_as_http_response(filename)
+
+
+def dataset_details(request, dataset_id):
+    try:
+        dataset = Dataset.objects.get(pk=dataset_id)
+    except Dataset.DoesNotExist:
+        return Http404('The dataset does not exist')
+
+    return render(request, 'annotationweb/dataset_details.html', {'dataset': dataset})
+
+
+def new_subject(request, dataset_id):
+    raise NotImplementedError()
+
+
+def delete_subject(request, subject_id):
+    raise NotImplementedError()

@@ -48,7 +48,6 @@ class CardiacExaminationsImporter(Importer):
             if not os.path.isdir(subject_dir):
                 continue
 
-
             subject = Subject()
             subject.name = file
             subject.dataset = self.dataset
@@ -85,6 +84,5 @@ class CardiacExaminationsImporter(Importer):
                 key_frame.frame_nr = key_frame_nr
                 key_frame.image = image
                 key_frame.save()
-
 
         return True, path
