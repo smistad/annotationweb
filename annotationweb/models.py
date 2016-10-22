@@ -9,9 +9,17 @@ class Dataset(models.Model):
         return self.name
 
 
+class Subject(models.Model):
+    name = models.CharField(max_length=200, help_text='Use anonymized id')
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
 class Image(models.Model):
     filename = models.CharField(max_length=255)
-    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.filename
@@ -54,7 +62,7 @@ class Task(models.Model):
 
 class ImageSequence(models.Model):
     format = models.CharField(max_length=1024)
-    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     nr_of_frames = models.PositiveIntegerField()
 
     def __str__(self):

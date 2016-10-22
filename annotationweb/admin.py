@@ -4,6 +4,7 @@ from .models import *
 
 # Register your models here.
 admin.site.register(Dataset)
+admin.site.register(Subject)
 admin.site.register(Image)
 admin.site.register(Task)
 admin.site.register(Label)

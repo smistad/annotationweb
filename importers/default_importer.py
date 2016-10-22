@@ -17,11 +17,15 @@ class DefaultImporterForm(forms.Form):
 class DefaultImporter(Importer):
 
     name = 'Default importer'
+    dataset = None
 
     def get_form(self, data=None):
         return DefaultImporterForm(data)
 
     def import_data(self, form):
+        if self.dataset is None:
+            raise Exception('Dataset must be given to importer')
+
         # Crawl recursively in path to find all images and add them to db
         for root, dirnames, filenames in os.walk(form.cleaned_data['path']):
             for filename in fnmatch.filter(filenames, '*.png'):

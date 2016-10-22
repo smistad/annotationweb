@@ -14,7 +14,7 @@ from annotationweb.models import Task, Image, ProcessedImage, Label
 
 def pick_random_image(task_id):
     # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(dataset__task=task_id).exclude(processedimage__task=task_id)
+    unlabeled_images = Image.objects.filter(subject__dataset__task=task_id).exclude(processedimage__task=task_id)
     return unlabeled_images[random.randrange(0, len(unlabeled_images))]
 
 
@@ -40,7 +40,7 @@ def segment_image(request, task_id):
         context['image'] = image
         context['task'] = task
         context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
-        context['total_number_of_images'] = Image.objects.filter(dataset__task=task_id).count()
+        context['total_number_of_images'] = Image.objects.filter(subject__dataset__task=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
 
         print('Got the following random image: ', image.filename)
