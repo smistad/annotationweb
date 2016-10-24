@@ -32,17 +32,25 @@ def find_all_importers():
 
     modules = glob.glob(dirname(__file__) + "/*.py")
     for module in modules:
-        module = basename(module)[:-3]
-        print('Found importers module: ', module)
-        spec = importlib.util.find_spec('importers.' + module)
-        if spec is not None:
-            print('Importing..')
-            importers.clear()
-            foo = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(foo)
-            for importer in importers:
-                result.append(importer)
-        else:
-            print('Spec was none in ', module)
+        print('Importing..')
+        importers.clear()
+        module_name = basename(module)[:-3]
+        foo = importlib.machinery.SourceFileLoader(module_name, module).load_module()
+        for importer in importers:
+            result.append(importer)
+
+        # Python 3.5:
+        # print('Found importers module: ', module)
+        #
+        # spec = importlib.util.find_spec('importers.' + module)
+        # if spec is not None:
+        #     print('Importing..')
+        #     importers.clear()
+        #     #foo = importlib.util.module_from_spec(spec) # Python 3.5 only
+        #     spec.loader.exec_module(foo)
+        #     for importer in importers:
+        #         result.append(importer)
+        # else:
+        #     print('Spec was none in ', module)
 
     return result
