@@ -53,7 +53,8 @@ class Task(models.Model):
     frames_before = models.PositiveIntegerField(help_text='How many frames to allow user to see before a key frame', default=0)
     frames_after = models.PositiveIntegerField(help_text='How many frames to allow user to see after a key frame', default=0)
     type = models.CharField(max_length=50, choices=TASK_TYPES)
-    label = models.ManyToManyField(Label)
+    label = models.ManyToManyField(Label,
+           help_text='<button onclick="window.open(\'/new-label/\', \'Add new label\', \'width=400,height=200,scrollbars=no\');" type="button">Add new label</button>')
     user = models.ManyToManyField(User)
 
     def __str__(self):

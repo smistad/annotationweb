@@ -1,0 +1,37 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>
+        Annotation Web
+    </title>
+    <link rel="stylesheet" type="text/css" href="{% static 'annotationweb/style.css' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $("form").submit(function() {
+        // submit form
+        $.post($("form").attr('action'), $("form").serializeArray());
+
+        // close window
+        window.close();
+
+        // return
+        return false;
+      });
+    });
+</script>
+</head>
+<body>
+
+<form action="{% url 'new_label' %}" method="post">
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <input type="submit" value="Add" />
+</form>
+
+</body>
+</html>

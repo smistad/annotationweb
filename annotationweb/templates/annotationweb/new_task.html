@@ -1,5 +1,20 @@
 {% extends 'annotationweb/base.html' %}
 
+{% block javascript %}
+// This script refresh page when it gets focus back after lost it
+var refresh = false;
+$(window).focus(function() {
+    if(refresh) {
+        location.reload();
+    }
+    refresh = false;
+});
+$(window).blur(function() {
+    refresh = true;
+});
+{% endblock %}
+
+
 {% block content %}
 <h2>New task</h2>
 

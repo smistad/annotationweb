@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^delete-task/(?P<task_id>[0-9]+)/$', views.delete_task, name='delete_task'),
     url(r'^show-image/(?P<image_id>[0-9]+)/$', views.show_image, name='show_image'),
     url(r'^new-task/$', views.new_task, name='new_task'),
+    url(r'^new-label/$', views.new_label, name='new_label'),
     url(r'^export/(?P<task_id>[0-9]+)/$', views.export, name='export'),
     url(r'^export-options/(?P<task_id>[0-9]+)/(?P<exporter_index>[0-9]+)/$', views.export_options, name='export_options'),
     url(r'^import/(?P<dataset_id>[0-9]+)/$', views.import_data, name='import'),

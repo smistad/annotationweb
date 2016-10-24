@@ -167,6 +167,20 @@ def new_task(request):
 
 
 @staff_member_required
+def new_label(request):
+    if request.method == 'POST':
+        form = LabelForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+    else:
+        form = LabelForm()
+    context = {'form': form}
+
+    return render(request, 'annotationweb/new_label.html', context)
+
+
+@staff_member_required
 def delete_task(request, task_id):
     # TODO do cleanup after deleting task?
     try:

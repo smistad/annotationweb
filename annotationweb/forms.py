@@ -29,3 +29,9 @@ class ImageSequenceForm(forms.ModelForm):
     class Meta:
         model = ImageSequence
         fields = ['format', 'nr_of_frames']
+
+
+class LabelForm(forms.ModelForm):
+    class Meta:
+        model = Label
+        fields = ['name', 'color_red', 'color_blue', 'color_green']
