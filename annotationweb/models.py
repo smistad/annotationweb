@@ -58,7 +58,7 @@ class Task(models.Model):
                      'window.open(\'/new-label/\', \'Add new label\', \'width=400,height=200,scrollbars=no\');"'
                      ' type="button">Add new label</button>')
     user = models.ManyToManyField(User)
-    #description = models.TextField(default='')
+    description = models.TextField(default='')
 
     def __str__(self):
         return self.name

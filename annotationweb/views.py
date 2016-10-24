@@ -5,6 +5,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 import common.exporter
 from common.utility import get_image_as_http_response
 from importers.importer import find_all_importers
+from django.core.urlresolvers import reverse
 
 import fnmatch
 import os
@@ -377,3 +378,20 @@ def delete_subject(request, subject_id):
     else:
         return render(request, 'annotationweb/delete_subject.html', {'subject': subject})
 
+
+def task_description(request, task_id):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        return Http404('The task does not exist')
+
+    if task.type == task.CLASSIFICATION:
+        url = reverse('classification:label_image', args=[task_id])
+    elif task.type == task.SEGMENTATION:
+        url = reverse('segmentation:segment_image', args=[task_id])
+    elif task.type == task.BOUNDING_BOX:
+        url = reverse('boundingbox:process_image', args=[task_id])
+    else:
+        raise NotImplementedError()
+
+    return render(request, 'annotationweb/task_description.html', {'task': task, 'continue_url': url})
