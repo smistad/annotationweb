@@ -1,5 +1,9 @@
+from os.path import basename
+
 from annotationweb import settings
 from annotationweb.models import Task
+from os.path import join
+import os
 import importlib
 
 exporters = []
@@ -31,19 +35,32 @@ def find_all_exporters(task_type):
     for app in settings.INSTALLED_APPS:
         if app[:7] == 'django.':
             continue
-        spec = importlib.util.find_spec(app + '.exporters')
-        if spec is not None:
-            print('Found exporters module in ', app)
-            print('Importing..')
-            exporters.clear()
-            foo = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(foo)
-            for exporter in exporters:
-                if exporter.task_type == task_type:
-                    result.append(exporter)
-                else:
-                    print('Exporter not correct type')
-        else:
-            print('No exporters module found in ', app)
+        exporters.clear()
+        module_filename = join(settings.PROJECT_PATH, join(app, 'exporters.py'))
+        if not os.path.isfile(module_filename):
+            continue
+        module_name = basename(app + '.exporters')
+        foo = importlib.machinery.SourceFileLoader(module_name, module_filename).load_module()
+        for exporter in exporters:
+            if exporter.task_type == task_type:
+                result.append(exporter)
+            else:
+                print('Exporter not correct type')
+
+        # Python 3.5
+        # spec = importlib.util.find_spec(app + '.exporters')
+        # if spec is not None:
+        #     print('Found exporters module in ', app)
+        #     print('Importing..')
+        #     exporters.clear()
+        #     foo = importlib.util.module_from_spec(spec)
+        #     spec.loader.exec_module(foo)
+        #     for exporter in exporters:
+        #         if exporter.task_type == task_type:
+        #             result.append(exporter)
+        #         else:
+        #             print('Exporter not correct type')
+        # else:
+        #     print('No exporters module found in ', app)
 
     return result
