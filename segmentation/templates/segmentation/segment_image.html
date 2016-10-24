@@ -1,56 +1,35 @@
-{% extends 'annotationweb/base.html' %}
+{% extends 'annotationweb/do_task.html' %}
 
-{% block title %} Segment image {% endblock %}
-
-
-{% block javascript %}
+{% block task_javascript %}
 {% if image_sequence %}
-loadSequence(
-    {{ image_sequence.id }},
-    {{ image_sequence.nr_of_frames }},
-    {{ frame_nr }},
-    {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
-    {{ task.frames_before }},
-    {{ task.frames_after }}
-);
 loadSegmentation({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}})
 {% endif %}
 
 {% for label in task.label.all %}
-
 addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
-
-{% endfor %}
-{% endblock %}
-
-{% block content %}
-<h2>Segment the following image</h2>
-
-{% for message in messages %}
-<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
 {% endfor %}
 
-{{ number_of_labeled_images }} of {{ total_number_of_images}} images has been labeled ({{ percentage_finished }}%).<br />
-{% if image_sequence %}
-<div id="message"></div>
-<div id="progressbar"><div class="progress-label">Loading...</div></div>
-<div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
-<div id="slider"></div>
+{% endblock task_javascript %}
+
+
+{% block task_content %}
+
 <div id="actionButtons">
     <button id="goToTargetFrame">Go to target frame</button>
     <button id="clearButton">Clear</button>
     <button id="saveButton">Save</button>
 </div>
+
 <div id="labelButtons">
 {% for label in task.label.all %}
     <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
 {% endfor %}
 </div>
+
+{% if image_sequence %}
 <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 {% else %}
 <img src="{% url 'show_image' image.id %}/" alt="" width="512"/>
 {% endif %}
-<br />
-<br />
 
-{% endblock %}
+{% endblock task_content %}

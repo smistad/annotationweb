@@ -1,18 +1,7 @@
-{% extends 'annotationweb/base.html' %}
+{% extends 'annotationweb/do_task.html' %}
 
-{% block title %} Bounding box {% endblock %}
-
-
-{% block javascript %}
+{% block task_javascript %}
 {% if image_sequence %}
-loadSequence(
-    {{ image_sequence.id }},
-    {{ image_sequence.nr_of_frames }},
-    {{ frame_nr }},
-    {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
-    {{ task.frames_before }},
-    {{ task.frames_after }}
-);
 loadBBTask({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}});
 {% endif %}
 
@@ -23,34 +12,20 @@ addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {
 {% endfor %}
 {% endblock %}
 
-{% block content %}
-<h2>Add bounding boxes for the following image</h2>
+{% block task_content %}
 
-{% for message in messages %}
-<div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
-{% endfor %}
-
-{{ number_of_labeled_images }} of {{ total_number_of_images}} images has been processed ({{ percentage_finished }}%).<br />
-{% if image_sequence %}
-<div id="message"></div>
-<div id="progressbar"><div class="progress-label">Loading...</div></div>
-<div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
-<div id="slider"></div>
 <div id="actionButtons">
     <button id="goToTargetFrame">Go to target frame</button>
     <button id="clearButton">Clear</button>
     <button id="saveButton">Save</button>
 </div>
+
 <div id="labelButtons">
 {% for label in task.label.all %}
     <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
 {% endfor %}
 </div>
-<canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
-{% else %}
-<img src="/annotation/show-image/{{ image.id }}/" alt="" width="512"/>
-{% endif %}
-<br />
-<br />
 
-{% endblock %}
+<canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+
+{% endblock task_content %}
