@@ -1,9 +1,10 @@
 from common.exporter import Exporter
-from common.utility import copy_image
+from common.utility import copy_image, create_folder
 from annotationweb.models import ProcessedImage, Dataset, Task, Label, Subject, ImageSequence
 from classification.models import ImageLabel
 from django import forms
 import os
+from os.path import join
 from shutil import rmtree, copyfile
 from common.metaimage import MetaImage
 
@@ -139,54 +140,55 @@ class CardiacExaminationsExporter(Exporter):
                 # Folder does not exist
                 pass
 
-            # Create folder again
-            try:
-                os.mkdir(path)
-            except:
-                return False, 'Failed to create directory at ' + path
-        else:
-            # Check that folder exist
-            try:
-                os.stat(path)
-            except:
-                return False, 'Path does not exist: ' + path
+        # Create folder if it doesn't exist
+        create_folder(path)
+        try:
+            os.stat(path)
+        except:
+            return False, 'Failed to create directory at ' + path
 
+
+        # Create training folder
+        training_path = join(path, 'training')
+        create_folder(training_path)
+        validation_path = join(path, 'validation')
+        create_folder(validation_path)
+
+        self.add_subjects_to_path(training_path, form.cleaned_data['subjects_training'])
+        self.add_subjects_to_path(validation_path, form.cleaned_data['subjects_validation'])
+
+        return True, path
+
+    def add_subjects_to_path(self, path, data):
+
+        # TODO hdf5, add each frame in the sequence as channels: issue; varying lengths, Pad up to max?
 
         # Create label file
-        label_file = open(os.path.join(path, 'labels.txt'), 'w')
+        label_file = open(join(path, 'labels.txt'), 'w')
         labels = Label.objects.filter(task=self.task)
-        labelDict = {}
+        label_dict = {}
         counter = 0
         for label in labels:
             label_file.write(label.name + '\n')
-            labelDict[label.name] = counter
+            label_dict[label.name] = counter
             counter += 1
         label_file.close()
 
-        # Create file_list.txt file
-        # TODO FINISH
-        datasets = form.cleaned_data['dataset']
+        # Create file_list.txt file and copy images
         file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject__in=data)
         for labeled_image in labeled_images:
+            label = ImageLabel.objects.get(image=labeled_image)
             name = labeled_image.image.filename
-            dataset_path = os.path.join(path, labeled_image.image.dataset.name)
-            try:
-                os.mkdir(dataset_path) # Make dataset path if doesn't exist
-            except:
-                pass
+            dataset_path = join(path, label.label.name)
+            create_folder(dataset_path)
 
             image_id = labeled_image.image.id
-            new_extension = form.cleaned_data['output_image_format']
+            new_extension = 'png'
             new_filename = os.path.join(dataset_path, str(image_id) + '.' + new_extension)
             copy_image(name, new_filename)
 
-            # Get image label
-            label = ImageLabel.objects.get(image=labeled_image)
-
-            file_list.write(new_filename + ' ' + str(labelDict[label.label.name]) + '\n')
+            file_list.write(new_filename + ' ' + str(label_dict[label.label.name]) + '\n')
 
         file_list.close()
-
-        return True, path
 

@@ -7,21 +7,21 @@
         Annotation Web
     </title>
     <link rel="stylesheet" type="text/css" href="{% static 'annotationweb/style.css' %}">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-    $("form").submit(function() {
-        // submit form
-        $.post($("form").attr('action'), $("form").serializeArray()).done(function() {
-            // close window
-            window.close();
-        });
+    <script src="{% static 'annotationweb/jquery.min.js' %}"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $("form").submit(function() {
+            // submit form
+            $.post($("form").attr('action'), $("form").serializeArray()).done(function() {
+                // close window
+                window.close();
+            });
 
-        // return
-        return false;
-      });
+            // return
+            return false;
+        });
     });
-</script>
+    </script>
 </head>
 <body>
 
