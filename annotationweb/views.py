@@ -15,7 +15,7 @@ from .models import *
 from common.user import is_annotater
 
 
-def get_task_statistics(tasks):
+def get_task_statistics(tasks, user):
     for task in tasks:
         task.total_number_of_images = Image.objects.filter(subject__dataset__task=task.id).count()
         if task.total_number_of_images == 0:
@@ -23,6 +23,8 @@ def get_task_statistics(tasks):
         else:
             task.percentage_finished = round(ProcessedImage.objects.filter(task=task.id).count()*100 /
                                              task.total_number_of_images, 1)
+        # Check if user has processed any
+        task.started = ProcessedImage.objects.filter(task=task, user=user).count() > 0
 
 
 def index(request):
@@ -31,24 +33,24 @@ def index(request):
     if is_annotater(request.user):
         # Show only tasks assigned to this user
         tasks = Task.objects.filter(user=request.user)
-        get_task_statistics(tasks)
+        get_task_statistics(tasks, request.user)
         context['tasks'] = tasks
         return render(request, 'annotationweb/index_annotater.html', context)
     else:
         # Admin page
         # Classification tasks
         tasks = Task.objects.filter(type=Task.CLASSIFICATION)
-        get_task_statistics(tasks)
+        get_task_statistics(tasks, request.user)
         context['tasks'] = tasks
 
         # Segmentation tasks
         segmentation_tasks = Task.objects.filter(type=Task.SEGMENTATION)
-        get_task_statistics(segmentation_tasks)
+        get_task_statistics(segmentation_tasks, request.user)
         context['segmentation_tasks'] = segmentation_tasks
 
         # Bounding box tasks
         bb_tasks = Task.objects.filter(type=Task.BOUNDING_BOX)
-        get_task_statistics(bb_tasks)
+        get_task_statistics(bb_tasks, request.user)
         context['boundingbox_tasks'] = bb_tasks
 
         return render(request, 'annotationweb/index_admin.html', context)
