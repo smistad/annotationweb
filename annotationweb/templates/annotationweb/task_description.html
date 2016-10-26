@@ -4,7 +4,9 @@
     <h1>{{ task.name }} - Description</h1>
 
     <div>
+        {% autoescape off %}
         {{ task.description }}
+        {% endautoescape %}
     </div>
 
     <button onclick="javascript:window.location.href='{{ continue_url }}';">Continue</button>

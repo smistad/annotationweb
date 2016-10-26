@@ -38,6 +38,9 @@ loadSequence(
 {% endblock %}
 
 <h2>Task description</h2>
+
+{% autoescape off %}
 {{ task.description }}
+{% endautoescape %}
 
 {% endblock content %}
