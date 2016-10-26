@@ -1,12 +1,12 @@
 {% extends 'annotationweb/base.html' %}
 {% block content %}
-<h2>Add an image sequence to {{ dataset.name }}</h2>
+<h2>Add an image sequence to subject {{ subject.name }} in dataset {{ subject.dataset.name }}</h2>
 
 {% for message in messages %}
 <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
 {% endfor %}
 
-<form action="{% url 'add_image_sequence' dataset.id %}" method="post">
+<form action="{% url 'add_image_sequence' subject.id %}" method="post">
     {% csrf_token %}
     <table>
         {{ form.as_table }}
@@ -16,7 +16,8 @@
             </th>
             <td>
                 <input type="radio" name="frame_selection" value="manual" checked> Manual frame selection<br>
-                <input type="radio" name="frame_selection" value="every_n_frame"> Every <input type="text" name="frame_step"> frame
+                <input type="radio" name="frame_selection" value="every_n_frame"> Every <input type="text" name="frame_step"> frame,
+                    starting with frame <input type="text" name="frame_start" value="0">
             </td>
         </tr>
     </table>

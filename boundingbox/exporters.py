@@ -1,10 +1,11 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
-from annotationweb.models import ProcessedImage, Dataset, Task, Label
+from annotationweb.models import ProcessedImage, Dataset, Task, Label, Subject
 from boundingbox.models import BoundingBox
 from django import forms
 import os
+from os.path import join
 from shutil import rmtree, copyfile
 
 
@@ -14,7 +15,10 @@ class BoundingBoxExporterForm(forms.Form):
 
     def __init__(self, task, data=None):
         super().__init__(data)
-        self.fields['dataset'] = forms.ModelMultipleChoiceField(queryset=Dataset.objects.filter(task=task))
+        self.fields['subjects_training'] = forms.ModelMultipleChoiceField(
+            queryset=Subject.objects.filter(dataset__task=task))
+        self.fields['subjects_validation'] = forms.ModelMultipleChoiceField(
+            queryset=Subject.objects.filter(dataset__task=task))
 
 
 class BoundingBoxExporter(Exporter):
@@ -29,49 +33,72 @@ class BoundingBoxExporter(Exporter):
         return BoundingBoxExporterForm(self.task, data=data)
 
     def export(self, form):
-
-        datasets = form.cleaned_data['dataset']
         delete_existing_data = form.cleaned_data['delete_existing_data']
         # Create dir, delete old if it exists
         path = form.cleaned_data['path']
         if delete_existing_data:
+            # Delete path
             try:
                 os.stat(path)
                 rmtree(path)
             except:
+                # Folder does not exist
                 pass
 
-            try:
-                os.mkdir(path)
-            except:
-                return False, 'Failed to create directory at ' + path
-        else:
-            try:
-                os.stat(path)
-            except:
-                return False, 'Path does not exist: ' + path
+        # Create folder if it doesn't exist
+        create_folder(path)
+        try:
+            os.stat(path)
+        except:
+            return False, 'Failed to create directory at ' + path
 
-        images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        # Create training folder
+        training_path = join(path, 'training')
+        create_folder(training_path)
+        validation_path = join(path, 'validation')
+        create_folder(validation_path)
+
+        # TODO check that training and validation subjects are not overlapping
+
+        self.add_subjects_to_path(training_path, form.cleaned_data['subjects_training'])
+        self.add_subjects_to_path(validation_path, form.cleaned_data['subjects_validation'])
+
+        return True, path
+
+    def add_subjects_to_path(self, path, data):
+
+        # Get labels for this task and write it to labels.txt
+        label_file = open(join(path, 'labels.txt'), 'w')
+        labels = Label.objects.filter(task=self.task)
+        label_dict = {}
+        counter = 0
+        for label in labels:
+            label_file.write(label.name + '\n')
+            label_dict[label.id] = counter
+            counter += 1
+        label_file.close()
+
+        images = ProcessedImage.objects.filter(task=self.task, image__subject__in=data)
         for image in images:
             name = image.image.filename
             image_filename = name[name.rfind('/')+1:]
-            create_folder(path)
-            create_folder(os.path.join(path, 'images'))
-            create_folder(os.path.join(path, 'labels'))
+            create_folder(join(path, 'images'))
+            create_folder(join(path, 'labels'))
 
-            # Copy image
+            # Copy image to images folder
             image_id = image.image.pk
-            new_filename = os.path.join(path, os.path.join('images', str(image_id) + '.png'))
+            new_filename = join(path, join('images', str(image_id) + '.png'))
             copy_image(name, new_filename)
 
             # Write bounding boxes to labels folder
             # TODO write label for each bounding box
             boxes = BoundingBox.objects.filter(image=image)
-            with open(os.path.join(path, os.path.join('labels', str(image_id) + '.txt')), 'w') as f:
+            with open(join(path, join('labels', str(image_id) + '.txt')), 'w') as f:
                 for box in boxes:
                     center_x = round(box.x + box.width*0.5)
                     center_y = round(box.y + box.height*0.5)
-                    f.write('{} {} {} {}\n'.format(center_x, center_y, box.width, box.height))
+                    label = label_dict[box.label.id]
+                    f.write('{} {} {} {} {}\n'.format(label, center_x, center_y, box.width, box.height))
 
         return True, path
 

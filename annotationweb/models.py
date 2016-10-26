@@ -14,7 +14,7 @@ class Subject(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return self.dataset.name + ' - ' + self.name
 
 
 class Image(models.Model):
