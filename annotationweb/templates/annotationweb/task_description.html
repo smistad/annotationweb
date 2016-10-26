@@ -3,7 +3,9 @@
 {% block content %}
     <h1>{{ task.name }} - Description</h1>
 
-    {{ task.description }}
+    <div>
+        {{ task.description }}
+    </div>
 
     <button onclick="javascript:window.location.href='{{ continue_url }}';">Continue</button>
 {% endblock content %}
