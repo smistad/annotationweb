@@ -8,7 +8,8 @@ loadSequence(
     {{ frame_nr }},
     {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
     {{ task.frames_before }},
-    {{ task.frames_after }}
+    {{ task.frames_after }},
+    {% if task.auto_play %}true{% else %}false{% endif %}
 );
 {% endif %}
 
@@ -32,6 +33,7 @@ loadSequence(
 <div id="progressbar"><div class="progress-label">Loading...</div></div>
 <div id="sliderText">Drag the slider to view the other frames in the sequence:</div>
 <div id="slider"></div>
+<button id="playButton" type="button">Play</button>
 {% endif %}
 
 {% block task_content %}

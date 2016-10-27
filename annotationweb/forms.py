@@ -11,7 +11,7 @@ class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = ['name', 'dataset', 'show_entire_sequence', 'frames_before',
-                  'frames_after', 'type', 'label', 'user', 'description']
+                  'frames_after', 'auto_play', 'type', 'label', 'user', 'description']
 
 
 class DatasetForm(forms.ModelForm):

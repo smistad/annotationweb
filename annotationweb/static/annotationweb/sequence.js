@@ -6,6 +6,7 @@ var currentFrameNr;
 var startFrame;
 var progressbar;
 var framesLoaded;
+var is_playing = true;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -15,8 +16,33 @@ function min(a, b) {
     return a < b ? a : b;
 }
 
-function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after) {
+function incrementFrame() {
+    currentFrameNr = ((currentFrameNr-startFrame) + 1) % framesLoaded + startFrame;
+    $('#slider').slider('value', currentFrameNr); // Update slider
+    redrawSequence();
+    if(is_playing)
+        window.setTimeout(incrementFrame, 50);
+}
+
+function setPlayButtonText() {
+    if(is_playing) {
+        $("#playButton").html('Pause');
+    } else {
+        $("#playButton").html('Play');
+    }
+}
+
+function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
     console.log('In load sequence');
+    is_playing = auto_play;
+    // Create play/pause button
+    setPlayButtonText();
+    $("#playButton").click(function() {
+        is_playing = !is_playing;
+        setPlayButtonText();
+        if(is_playing) // Start it again
+            incrementFrame();
+    });
 
     // Create canvas
     var canvas = document.getElementById('canvas');
@@ -72,6 +98,8 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
             progressLabel.text( "Finished loading!" );
             progressbar.hide();
             redrawSequence();
+            if(is_playing)
+                incrementFrame();
       }
     });
 
@@ -107,10 +135,10 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
 
         sequence.push(image);
     }
+
 }
 
 function redrawSequence() {
     var index = currentFrameNr - startFrame;
-    console.log('index: ' + index)
     context.drawImage(sequence[index], 0, 0, canvasWidth, canvasHeight); // Draw background image
 }

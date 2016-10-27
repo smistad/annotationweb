@@ -52,6 +52,7 @@ class Task(models.Model):
     show_entire_sequence = models.BooleanField(help_text='Allow user to see entire sequence.', default=False)
     frames_before = models.PositiveIntegerField(help_text='How many frames to allow user to see before a key frame', default=0)
     frames_after = models.PositiveIntegerField(help_text='How many frames to allow user to see after a key frame', default=0)
+    auto_play = models.BooleanField(help_text='Auto play image sequences', default=True)
     type = models.CharField(max_length=50, choices=TASK_TYPES)
     label = models.ManyToManyField(Label,
            help_text='<button onclick="'
