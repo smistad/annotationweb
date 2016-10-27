@@ -20,6 +20,14 @@ addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {
     <button id="saveButton">Save</button>
 </div>
 
+<div id="imageQuality">
+<form>
+{% for quality_id, quality_name in image_quality_choices %}
+    <input type="radio" name="quality" value="{{ quality_id }}" required> {{ quality_name }}
+{% endfor %}
+</form>
+</div>
+
 <div id="labelButtons">
 {% for label in task.label.all %}
     <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>

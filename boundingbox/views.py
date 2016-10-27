@@ -39,12 +39,13 @@ def process_image(request, task_id):
         context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
         context['total_number_of_images'] = Image.objects.filter(subject__dataset__task=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
+        context['image_quality_choices'] = ProcessedImage.IMAGE_QUALITY_CHOICES
 
         print('Got the following random image: ', image.filename)
         return render(request, 'boundingbox/process_image.html', context)
     except ValueError:
         messages.info(request, 'This task is finished, no more images to segment.')
-        return redirect('annotation:index')
+        return redirect('index')
 
 
 def save_boxes(request):
@@ -52,10 +53,13 @@ def save_boxes(request):
         raise Http404('')
 
     try:
+        if 'quality' not in request.POST:
+            raise Exception('ERROR: You must select image quality.')
         image = ProcessedImage()
         image.image_id = int(request.POST['image_id'])
         image.task_id = int(request.POST['task_id'])
         image.user = request.user
+        image.image_quality = request.POST['quality']
         image.save()
 
         # Store every box

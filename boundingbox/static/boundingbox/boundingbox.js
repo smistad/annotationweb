@@ -98,7 +98,7 @@ function setupSegmentation(task_id, image_id) {
                 // Refresh page
                 location.reload();
             } else {
-                messageBox.innerHTML = '<span class="error">Save failed!</span>';
+                messageBox.innerHTML = '<span class="error">Save failed! ' + data.message + '</span>';
             }
             console.log(data.message);
         }).fail(function(data) {
@@ -149,6 +149,7 @@ function sendDataForSave(task_id, image_id) {
             image_id: image_id,
             boxes: JSON.stringify(boxes),
             task_id: task_id,
+            quality: $('input[name=quality]:checked').val(),
         },
         dataType: "json" // Need this do get result back as JSON
     });

@@ -88,3 +88,13 @@ class ProcessedImage(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User)
+
+    QUALITY_POOR = 'poor'
+    QUALITY_OK = 'ok'
+    QUALITY_GOOD = 'good'
+    IMAGE_QUALITY_CHOICES = (
+        (QUALITY_POOR, 'Poor'),
+        (QUALITY_OK, 'OK'),
+        (QUALITY_GOOD, 'Good'),
+    )
+    image_quality = models.CharField(max_length=50, choices=IMAGE_QUALITY_CHOICES)

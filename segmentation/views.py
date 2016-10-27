@@ -42,6 +42,7 @@ def segment_image(request, task_id):
         context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
         context['total_number_of_images'] = Image.objects.filter(subject__dataset__task=task_id).count()
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
+        context['image_quality_choices'] = ProcessedImage.IMAGE_QUALITY_CHOICES
 
         print('Got the following random image: ', image.filename)
         return render(request, 'segmentation/segment_image.html', context)
@@ -57,11 +58,14 @@ def save_segmentation(request):
     # Save the image
 
     try:
+        if 'quality' not in request.POST:
+            raise Exception('ERROR: You must select image quality.')
         # Save to DB
         processed_image = ProcessedImage()
         processed_image.image_id = int(request.POST['image_id'])
         processed_image.task_id = int(request.POST['task_id'])
         processed_image.user = request.user
+        processed_image.image_quality = request.POST['quality']
         processed_image.save()
 
 
