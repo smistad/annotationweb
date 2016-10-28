@@ -275,8 +275,9 @@ class CardiacHDFExaminationsExporter(Exporter):
                     image = PIL.Image.open(filename)
                     # Resize
                     image = image.resize((width, height), PIL.Image.BILINEAR)
-                    # Convert to numpy array
-                    image_array = np.array(image)
+                    # Convert to numpy array and normalize
+                    image_array = np.array(image).astype(np.float32)
+                    image_array /= 255
                     sequence_frames.append(image_array)
 
                 # Sample minisequences from sequence
