@@ -2,9 +2,9 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
-import common.exporter
+from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
-from importers.importer import find_all_importers
+from common.importer import find_all_importers
 from django.core.urlresolvers import reverse
 
 import fnmatch
@@ -67,7 +67,7 @@ def export(request, task_id):
         exporter_index = int(request.POST['exporter'])
         return redirect('export_options', task_id=task.id, exporter_index=exporter_index)
     else:
-        available_exporters = common.exporter.find_all_exporters(task.type)
+        available_exporters = find_all_exporters(task.type)
         # If only 1 exporter exists for this type, use that one
         if len(available_exporters) == 1:
             return redirect('export_options', task_id=task.id, exporter_index=0)
@@ -82,7 +82,7 @@ def export_options(request, task_id, exporter_index):
     except Task.DoesNotExist:
         raise Http404('Task does not exist')
 
-    available_exporters = common.exporter.find_all_exporters(task.type)
+    available_exporters = find_all_exporters(task.type)
     exporter = available_exporters[int(exporter_index)]()
     exporter.task = task
 

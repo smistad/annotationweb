@@ -1,10 +1,9 @@
 from os.path import basename
 
-from annotationweb import settings
-from annotationweb.models import Task
-from os.path import join
-import os
 import importlib
+import glob
+import os
+from annotationweb.settings import PROJECT_PATH
 
 exporters = []
 
@@ -31,36 +30,16 @@ class Exporter(metaclass=MetaExporter):
 def find_all_exporters(task_type):
     result = []
 
-    # Go through each app and see if there is an exporters.py file
-    for app in settings.INSTALLED_APPS:
-        if app[:7] == 'django.':
-            continue
+    modules = glob.glob(os.path.join(PROJECT_PATH, 'exporters') + '/*.py')
+    for module in modules:
+        print('Importing..')
         exporters.clear()
-        module_filename = join(settings.PROJECT_PATH, join(app, 'exporters.py'))
-        if not os.path.isfile(module_filename):
-            continue
-        module_name = basename(app + '.exporters')
-        foo = importlib.machinery.SourceFileLoader(module_name, module_filename).load_module()
+        module_name = basename(module)[:-3]
+        foo = importlib.machinery.SourceFileLoader(module_name, module).load_module()
         for exporter in exporters:
             if exporter.task_type == task_type:
                 result.append(exporter)
             else:
                 print('Exporter not correct type')
-
-        # Python 3.5
-        # spec = importlib.util.find_spec(app + '.exporters')
-        # if spec is not None:
-        #     print('Found exporters module in ', app)
-        #     print('Importing..')
-        #     exporters.clear()
-        #     foo = importlib.util.module_from_spec(spec)
-        #     spec.loader.exec_module(foo)
-        #     for exporter in exporters:
-        #         if exporter.task_type == task_type:
-        #             result.append(exporter)
-        #         else:
-        #             print('Exporter not correct type')
-        # else:
-        #     print('No exporters module found in ', app)
 
     return result

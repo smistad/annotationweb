@@ -1,4 +1,4 @@
-from importers.importer import Importer
+from common.importer import Importer
 from django import forms
 from annotationweb.models import Image
 import os

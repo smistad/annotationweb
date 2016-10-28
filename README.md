@@ -7,6 +7,7 @@ Requirements
 * django 1.9
 * numpy
 * pillow (PIL)
+* +++ see requirements.txt
 
 Setup
 ------------------------------------
