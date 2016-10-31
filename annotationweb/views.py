@@ -6,6 +6,7 @@ from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 import fnmatch
 import os
@@ -399,3 +400,25 @@ def task_description(request, task_id):
         raise NotImplementedError()
 
     return render(request, 'annotationweb/task_description.html', {'task': task, 'continue_url': url})
+
+
+def task(request, task_id):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        return Http404('The task does not exist')
+
+    # Get all processed images for given task
+    paginator = Paginator(ProcessedImage.objects.filter(task=task), 15)
+    page = request.GET.get('page')
+    try:
+        processed_images = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        processed_images = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        processed_images = paginator.page(paginator.num_pages)
+
+    return render(request, 'annotationweb/task.html', {'processed_images': processed_images, 'task': task})
+

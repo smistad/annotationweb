@@ -1,0 +1,40 @@
+{% extends 'annotationweb/base.html' %}
+
+{% block content %}
+
+<h1>{{ task.name }}</h1>
+
+<h2>Processed images</h2>
+{% for image in processed_images %}
+    <div style="float: left; width: 20%">
+        <img src="{% url 'show_image' image.image.id %}" width="100%">
+        {{ image.date|date:"d-m-Y H:i" }}<br>
+        {{ user.username }}<br>
+        {% if task.type == 'classification' %}
+            {# Get all labels if task is classification task #}
+            {% for label in image.imagelabel_set.all %}
+            {{ label.label.name }}<br>
+            {% endfor %}
+        {% endif %}
+        <a href="">Edit</a> <a href="">Delete</a>
+
+    </div>
+{% endfor %}
+
+<div class="pagination" style="clear: both; border-top: 1px solid #000000;">
+    <span class="step-links">
+        {% if processed_images.has_previous %}
+            <a href="?page={{ processed_images.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ processed_images.number }} of {{ processed_images.paginator.num_pages }}.
+        </span>
+
+        {% if processed_images.has_next %}
+            <a href="?page={{ processed_images.next_page_number }}">Next</a>
+        {% endif %}
+    </span>
+</div>
+
+{% endblock content %}
