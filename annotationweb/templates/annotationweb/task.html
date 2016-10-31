@@ -5,34 +5,50 @@
 <h1>{{ task.name }}</h1>
 
 <h2>Processed images</h2>
-{% for image in processed_images %}
-    <div style="float: left; width: 20%">
-        <img src="{% url 'show_image' image.image.id %}" width="100%">
-        {{ image.date|date:"d-m-Y H:i" }}<br>
-        {{ user.username }}<br>
+{% for image in images %}
+    <div style="float: left; width: 25%; height: 300px">
+        <img src="{% url 'show_image' image.id %}" width="100%">
+
+        {% if image.processedimage_set.count == 0 %}
+            Not annotated.<br>
+            <a href="">Annotate</a>
+        {% else %}
+        {% for processed_image in image.processedimage_set.all %}
+        {% if processed_image.task_id == task.id %}
+
+        Date: {{ processed_image.date|date:"d-m-Y H:i" }}<br>
+        User: {{ processed_image.user.username }}<br>
+        Image quality: {{ processed_image.image_quality }}<br>
+
         {% if task.type == 'classification' %}
             {# Get all labels if task is classification task #}
-            {% for label in image.imagelabel_set.all %}
+            {% for label in processed_image.imagelabel_set.all %}
             {{ label.label.name }}<br>
             {% endfor %}
+            <a href="{% url 'classification:label_image' task.id image.id %}">Edit</a> <a href="">Delete</a>
+        {% elif task.type == 'boundingbox' %}
+            Boxes added {{ processed_image.boundingbox_set.count }}<br>
         {% endif %}
-        <a href="">Edit</a> <a href="">Delete</a>
+
+        {% endif %}
+        {% endfor %}
+        {% endif %}
 
     </div>
 {% endfor %}
 
 <div class="pagination" style="clear: both; border-top: 1px solid #000000;">
     <span class="step-links">
-        {% if processed_images.has_previous %}
-            <a href="?page={{ processed_images.previous_page_number }}">Previous</a>
+        {% if images.has_previous %}
+            <a href="?page={{ images.previous_page_number }}">Previous</a>
         {% endif %}
 
         <span class="current">
-            Page {{ processed_images.number }} of {{ processed_images.paginator.num_pages }}.
+            Page {{ images.number }} of {{ images.paginator.num_pages }}.
         </span>
 
-        {% if processed_images.has_next %}
-            <a href="?page={{ processed_images.next_page_number }}">Next</a>
+        {% if images.has_next %}
+            <a href="?page={{ images.next_page_number }}">Next</a>
         {% endif %}
     </span>
 </div>

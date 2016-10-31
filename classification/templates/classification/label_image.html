@@ -26,15 +26,20 @@ $("#labelButton" + {{ label.id }}).css("background-color", "#" + red + green + b
 
 {% block task_content %}
     <div id="actionButtons">
+        {% if previous_image_id %}
+        <button onclick="javascript:window.location.href='{% url 'classification:label_image' task.id previous_image_id %}'">Previous</button>
+        {% endif %}
+        {% if next_image_id %}
+        <button onclick="javascript:window.location.href='{% url 'classification:label_image' task.id next_image_id %}'">Next</button>
+        {% endif %}
         {% if image_sequence %}
         <button id="goToTargetFrame">Go to target frame</button>
         {% endif %}
-        <button onclick="javascript:window.location.href='{% url 'classification:undo_image_label' task.id %}'">Undo previous labeled image</button>
     </div>
-    <form id="label-form" method="post" action="{% url 'classification:label_image'  task.id %}">
+    <form id="label-form" method="post" action="{% url 'classification:label_image'  task.id image.id %}">
         <div id="imageQuality">
             {% for quality_id, quality_name in image_quality_choices %}
-            <input type="radio" name="quality" value="{{ quality_id }}" required> {{ quality_name }}
+            <input type="radio" name="quality" value="{{ quality_id }}" required{% if chosen_quality == quality_id %} checked="checked"{% endif %}> {{ quality_name }}
             {% endfor %}
         </div>
         <input type="hidden" value="{{ image.id }}" name="image_id" />
@@ -42,7 +47,8 @@ $("#labelButton" + {{ label.id }}).css("background-color", "#" + red + green + b
         <div id="labelButtons">
             Assign one label to this image:<br>
             {% for label in labels %}
-            <input type="submit" name="{{label.name}}" value="{{label.name}}" class="labelButton" id="labelButton{{ label.id }}">
+            <input type="submit" name="{{label.name}}" value="{{label.name}}" id="labelButton{{ label.id }}"
+            {% if chosen_label == label.id %} class="labelButton activeLabel"{% else %} class="labelButton"{% endif %}>
             {% endfor %}
         </div>
         {% if image_sequence %}

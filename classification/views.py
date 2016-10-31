@@ -3,19 +3,17 @@ from django.shortcuts import render, redirect
 from django.http import Http404
 from django.db.models import Max
 
-import random
+from common.task import get_next_unprocessed_image, get_next_image, get_previous_image
 
 from .models import *
 from annotationweb.models import Image, Task, ProcessedImage
 
 
-def pick_random_image(task_id):
-    # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(subject__dataset__task=task_id).exclude(processedimage__task=task_id)
-    return unlabeled_images[random.randrange(0, len(unlabeled_images))]
+def label_next_image(request, task_id):
+    return label_image(request, task_id, None)
 
 
-def label_images(request, task_id):
+def label_image(request, task_id, image_id):
     context = {}
     context['dark_style'] = 'yes'
     try:
@@ -24,16 +22,24 @@ def label_images(request, task_id):
     except Task.DoesNotExist:
         raise Http404("Task does not exist or user has no access to the task")
 
-    show_image = None
     if request.method == 'POST':
         # Check that quality is checked
         if 'quality' not in request.POST:
             messages.error(request, 'ERROR: You must select image quality.')
-            show_image = request.POST['image_id']
         else:
             # Save new label
+
+            # Delete any previous labelings
+            previous_labels = ImageLabel.objects.filter(image__image_id=image_id, image__task=task, image__user=request.user)
+            previous_labels.delete()
+            try:
+                previous_processed_image = ProcessedImage.objects.get(image_id=image_id, task=task, user=request.user)
+                previous_processed_image.delete()
+            except:
+                pass
+
             processed_image = ProcessedImage()
-            processed_image.image_id = request.POST['image_id']
+            processed_image.image_id = image_id
             processed_image.task = task
             processed_image.user = request.user
             processed_image.image_quality = request.POST['quality']
@@ -48,13 +54,25 @@ def label_images(request, task_id):
                     labeled_image.task = task
 
             labeled_image.save()
+            image_id = get_next_image(task, image_id)
 
     # Get random unlabeled image
     try:
-        if show_image is None:
-            image = pick_random_image(task_id)
+        if image_id is None:
+            image = get_next_unprocessed_image(task)
         else:
-            image = Image.objects.get(pk=show_image)
+            image = Image.objects.get(pk=image_id)
+        print('Got the following image: ', image.id, image.filename)
+
+        # Check if image has been labeled
+        processed = ImageLabel.objects.filter(image__image=image, image__task=task)
+        if processed.exists():
+            context['chosen_label'] = processed[0].label.id
+            context['chosen_quality'] = processed[0].image.image_quality
+            print('Chosen label: ', context['chosen_label'])
+        else:
+            context['chosen_label'] = -1
+            context['chosen_quality'] = -1
 
         # Check if image belongs to an image sequence
         if hasattr(image, 'keyframe'):
@@ -62,6 +80,8 @@ def label_images(request, task_id):
             context['image_sequence'] = image.keyframe.image_sequence
             context['frame_nr'] = image.keyframe.frame_nr
 
+        context['next_image_id'] = get_next_image(task, image.id)
+        context['previous_image_id'] = get_previous_image(task, image.id)
         context['image'] = image
         context['task'] = task
         context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
@@ -73,17 +93,7 @@ def label_images(request, task_id):
         if len(labels) == 0:
             raise Http404('No labels found!')
         context['labels'] = labels
-        print('Got the following random image: ', image.filename)
         return render(request, 'classification/label_image.html', context)
     except ValueError:
         messages.info(request, 'This task is finished, no more images to label.')
         return redirect('index')
-
-
-def undo_image_label(request, task_id):
-    try:
-        id_max = ProcessedImage.objects.filter(task_id=task_id, user=request.user).aggregate(Max('id'))['id__max']
-        ProcessedImage.objects.get(pk=id_max).delete()
-        return redirect('classification:label_image', task_id=task_id)
-    except ProcessedImage.DoesNotExist:
-        raise Http404('Does not exist')

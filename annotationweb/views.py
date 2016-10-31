@@ -409,16 +409,16 @@ def task(request, task_id):
         return Http404('The task does not exist')
 
     # Get all processed images for given task
-    paginator = Paginator(ProcessedImage.objects.filter(task=task), 15)
+    paginator = Paginator(Image.objects.filter(subject__dataset__task=task), 12)
     page = request.GET.get('page')
     try:
-        processed_images = paginator.page(page)
+        images = paginator.page(page)
     except PageNotAnInteger:
         # If page is not an integer, deliver first page.
-        processed_images = paginator.page(1)
+        images = paginator.page(1)
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
-        processed_images = paginator.page(paginator.num_pages)
+        images = paginator.page(paginator.num_pages)
 
-    return render(request, 'annotationweb/task.html', {'processed_images': processed_images, 'task': task})
+    return render(request, 'annotationweb/task.html', {'images': images, 'task': task})
 
