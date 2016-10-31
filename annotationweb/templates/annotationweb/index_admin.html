@@ -24,7 +24,8 @@
 <h3>Segmentation tasks</h3>
 <ul>
 {% for task in segmentation_tasks %}
-    <li><a href="{% url 'segmentation:segment_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+    <li><a href="{% url 'task' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+        <a href="{% url 'segmentation:segment_image' task.id %}">Annotate</a>
         <a href="{% url 'export' task.id %}">Export</a>
         <a href="{% url 'delete_task' task.id %}">Delete</a>
     </li>
@@ -34,7 +35,8 @@
 <h3>Bounding box tasks</h3>
 <ul>
 {% for task in boundingbox_tasks %}
-    <li><a href="{% url 'boundingbox:process_image' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+    <li><a href="{% url 'task' task.id %}">{{ task.name }}</a> ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
+        <a href="{% url 'boundingbox:process_image' task.id %}">Annotate</a>
         <a href="{% url 'export' task.id %}">Export</a>
         <a href="{% url 'delete_task' task.id %}">Delete</a>
     </li>

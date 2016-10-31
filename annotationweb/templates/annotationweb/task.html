@@ -30,6 +30,9 @@
             Boxes added {{ processed_image.boundingbox_set.count }}<br>
         {% endif %}
 
+        {% else %}
+            Not annotated.<br>
+            <a href="">Annotate</a>
         {% endif %}
         {% endfor %}
         {% endif %}

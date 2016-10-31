@@ -7,15 +7,14 @@ from django.contrib import messages
 from django.http import HttpResponse, Http404, JsonResponse
 import random
 import json
+from common.task import get_previous_image, get_next_image, get_next_unprocessed_image
 
 
-def pick_random_image(task_id):
-    # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(subject__dataset__task=task_id).exclude(processedimage__task=task_id)
-    return unlabeled_images[random.randrange(0, len(unlabeled_images))]
+def process_next_image(request, task_id):
+    return process_image(request, task_id, None)
 
 
-def process_image(request, task_id):
+def process_image(request, task_id, image_id):
     context = {}
     context['dark_style'] = 'yes'
     context['javascript_files'] = ['boundingbox/boundingbox.js']
@@ -24,9 +23,11 @@ def process_image(request, task_id):
     except Task.DoesNotExist:
         raise Http404("Task does not exist")
 
-    # Get random unlabeled image
     try:
-        image = pick_random_image(task_id)
+        if image_id == None:
+            image = get_next_unprocessed_image(task)
+        else:
+            image = Image.objects.get(pk=image_id)
 
         # Check if image belongs to an image sequence
         if hasattr(image, 'keyframe'):
@@ -34,6 +35,8 @@ def process_image(request, task_id):
             context['image_sequence'] = image.keyframe.image_sequence
             context['frame_nr'] = image.keyframe.frame_nr
 
+        context['next_image_id'] = get_next_image(task, image.id)
+        context['previous_image_id'] = get_previous_image(task, image.id)
         context['image'] = image
         context['task'] = task
         context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
@@ -41,7 +44,8 @@ def process_image(request, task_id):
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
         context['image_quality_choices'] = ProcessedImage.IMAGE_QUALITY_CHOICES
 
-        print('Got the following random image: ', image.filename)
+        # TODO load boxes if they exist
+
         return render(request, 'boundingbox/process_image.html', context)
     except ValueError:
         messages.info(request, 'This task is finished, no more images to segment.')
@@ -55,6 +59,9 @@ def save_boxes(request):
     try:
         if 'quality' not in request.POST:
             raise Exception('ERROR: You must select image quality.')
+
+        # TODO Delete previous
+
         image = ProcessedImage()
         image.image_id = int(request.POST['image_id'])
         image.task_id = int(request.POST['task_id'])
