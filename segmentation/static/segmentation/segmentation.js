@@ -3,6 +3,7 @@ var previousY;
 var backgroundImageData;
 var imageData;
 var image;
+var segmentation;
 var backgroundImage;
 var segmentationData;
 var paint = false;
@@ -92,7 +93,7 @@ function setupSegmentation(task_id, image_id) {
     imageData = image.data;
 
     // Create segmentation image
-    var segmentation = context.createImageData(canvasWidth, canvasHeight);
+    segmentation = context.createImageData(canvasWidth, canvasHeight);
     segmentationData = segmentation.data;
     for(var i = 0; i < canvasWidth*canvasHeight; i++) {
         segmentationData[i*4+3] = 255;
