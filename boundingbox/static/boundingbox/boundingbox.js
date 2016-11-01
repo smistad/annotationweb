@@ -55,14 +55,14 @@ function setupSegmentation(task_id, image_id) {
 
     $('#canvas').mouseup(function(e){
         paint = false;
-        addBox(BBx, BBy, BBx2, BBy2, label);
+        addBox(BBx, BBy, BBx2, BBy2, currentLabel);
         console.log('finished BB on ' + BBx + ' ' + BBy);
         //segmentationHistory.push(currentAction); // Add action to history
     });
 
     $('#canvas').mouseleave(function(e){
         if(paint) {
-            addBox(BBx, BBy, BBx2, BBy2, label);
+            addBox(BBx, BBy, BBx2, BBy2, currentLabel);
             redraw();
             paint = false;
             //segmentationHistory.push(currentAction); // Add action to history
@@ -193,7 +193,7 @@ function redraw(){
     if(paint) {
         context.beginPath();
         context.lineWidth = 2;
-        var box = createBox();
+        var box = createBox(BBx, BBy, BBx2, BBy2, currentLabel);
         var label = labelButtons[box.label];
         context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         context.rect(box.x, box.y, box.width, box.height);
