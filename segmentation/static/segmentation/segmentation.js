@@ -11,6 +11,77 @@ var currentColor = null;
 var labelButtons = new Array();
 var currentLabel = 0;
 
+function colorDistance(labelColor, colorArray) {
+    var red = labelColor.red - colorArray[0];
+    var green = labelColor.green - colorArray[1];
+    var blue = labelColor.blue - colorArray[2];
+
+    return red*red + green*green + blue*blue;
+}
+
+function loadOldSegmentation(task_id, image_id) {
+    var oldSegmentationImage = new Image();
+    oldSegmentationImage.src = '/segmentation/show/' + task_id + '/' + image_id + '/';
+    oldSegmentationImage.onload = function() {
+        // Transfer pixels to segmentationData
+        console.log("Old segmentation was found");
+        // Create dummy canvas to get access to pixels
+        var dummyCanvas = document.createElement('canvas');
+        dummyCanvas.setAttribute('width', canvasWidth);
+        dummyCanvas.setAttribute('height', canvasHeight);
+        // IE stuff
+        if(typeof G_vmlCanvasManager != 'undefined') {
+            dummyCanvas = G_vmlCanvasManager.initElement(dummyCanvas);
+        }
+
+        // Put segmentation into canvas
+        var ctx = dummyCanvas.getContext('2d');
+        ctx.drawImage(this, 0, 0, canvasWidth, canvasHeight);
+        var oldSegmentationData = ctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+
+        // Remove any non-label pixels from segmentation data (may happen if some smoothing of png occurs in browser)
+        for(var i = 0; i < canvasWidth*canvasHeight; i++) {
+            var color = [oldSegmentationData[i*4], oldSegmentationData[i*4+1], oldSegmentationData[i*4+2]];
+            var useColor = {
+                red: 0,
+                green: 0,
+                blue: 0
+            };
+            if(colorDistance(useColor, color) > 20) {
+                // For each label, find closest color
+                var currentMinDistance = 1000000;
+                for (var l = 0; l < labelButtons.length; l++) {
+                    var labelButton = labelButtons[l];
+                    if (colorDistance(labelButton, color) < currentMinDistance) {
+                        currentMinDistance = colorDistance(labelButton, color);
+                        useColor.red = labelButton.red;
+                        useColor.green = labelButton.green;
+                        useColor.blue = labelButton.blue;
+                    }
+                }
+            }
+
+            oldSegmentationData[i*4] = useColor.red;
+            oldSegmentationData[i*4+1] = useColor.green;
+            oldSegmentationData[i*4+2] = useColor.blue;
+        }
+
+        // Put pixels into imageData and segmentationData
+        for(var i = 0; i < canvasWidth*canvasHeight; i++) {
+            if(oldSegmentationData[i*4] > 0 || oldSegmentationData[i*4+1] > 0 || oldSegmentationData[i*4+2] > 0) {
+                imageData[i*4] = oldSegmentationData[i*4];
+                imageData[i*4+1] = oldSegmentationData[i*4+1];
+                imageData[i*4+2] = oldSegmentationData[i*4+2];
+                segmentationData[i*4] = oldSegmentationData[i*4];
+                segmentationData[i*4+1] = oldSegmentationData[i*4+1];
+                segmentationData[i*4+2] = oldSegmentationData[i*4+2];
+            }
+        }
+
+        redraw();
+    };
+}
+
 function setupSegmentation(task_id, image_id) {
     // Initialize canvas with background image
     context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
@@ -21,11 +92,13 @@ function setupSegmentation(task_id, image_id) {
     imageData = image.data;
 
     // Create segmentation image
-    segmentation = context.createImageData(canvasWidth, canvasHeight);
+    var segmentation = context.createImageData(canvasWidth, canvasHeight);
     segmentationData = segmentation.data;
     for(var i = 0; i < canvasWidth*canvasHeight; i++) {
         segmentationData[i*4+3] = 255;
     }
+    loadOldSegmentation(task_id, image_id);
+
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {

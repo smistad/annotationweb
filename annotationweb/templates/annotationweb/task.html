@@ -4,7 +4,6 @@
 
 <h1>{{ task.name }}</h1>
 
-<h2>Processed images</h2>
 {% for image in images %}
     <div style="float: left; width: 25%; height: 300px">
         <img src="{% url 'show_image' image.id %}" width="100%">
@@ -29,6 +28,8 @@
         {% elif task.type == 'boundingbox' %}
             Boxes added {{ processed_image.boundingbox_set.count }}<br>
             <a href="{% url 'boundingbox:process_image' task.id image.id %}">Edit</a>
+        {% elif task.type == 'segmentation' %}
+            <a href="{% url 'segmentation:segment_image' task.id image.id %}">Edit</a>
         {% endif %}
 
         {% else %}
@@ -44,15 +45,15 @@
 <div class="pagination" style="clear: both; border-top: 1px solid #000000;">
     <span class="step-links">
         {% if images.has_previous %}
-            <a href="?page={{ images.previous_page_number }}">Previous</a>
+            <a href="?page={{ images.previous_page_number }}">Previous</a> -
         {% endif %}
 
         <span class="current">
-            Page {{ images.number }} of {{ images.paginator.num_pages }}.
+            Page {{ images.number }} of {{ images.paginator.num_pages }}
         </span>
 
         {% if images.has_next %}
-            <a href="?page={{ images.next_page_number }}">Next</a>
+            - <a href="?page={{ images.next_page_number }}">Next</a>
         {% endif %}
     </span>
 </div>

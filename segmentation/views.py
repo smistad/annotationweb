@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from .forms import *
@@ -10,15 +11,15 @@ from annotationweb.settings import PROJECT_PATH
 from common.metaimage import *
 import numpy as np
 from annotationweb.models import Task, Image, ProcessedImage, Label
+from common.task import get_previous_image, get_next_image, get_next_unprocessed_image
+from common.utility import get_image_as_http_response
 
 
-def pick_random_image(task_id):
-    # Want to get an image which is not labeled yet for a given task
-    unlabeled_images = Image.objects.filter(subject__dataset__task=task_id).exclude(processedimage__task=task_id)
-    return unlabeled_images[random.randrange(0, len(unlabeled_images))]
+def segment_next_image(request, task_id):
+    return segment_image(request, task_id, None)
 
 
-def segment_image(request, task_id):
+def segment_image(request, task_id, image_id):
     context = {}
     context['dark_style'] = 'yes'
     context['javascript_files'] = ['segmentation/segmentation.js']
@@ -29,7 +30,10 @@ def segment_image(request, task_id):
 
     # Get random unlabeled image
     try:
-        image = pick_random_image(task_id)
+        if image_id is None:
+            image = get_next_unprocessed_image(task)
+        else:
+            image = Image.objects.get(pk=image_id)
 
         # Check if image belongs to an image sequence
         if hasattr(image, 'keyframe'):
@@ -37,6 +41,8 @@ def segment_image(request, task_id):
             context['image_sequence'] = image.keyframe.image_sequence
             context['frame_nr'] = image.keyframe.frame_nr
 
+        context['next_image_id'] = get_next_image(task, image.id)
+        context['previous_image_id'] = get_previous_image(task, image.id)
         context['image'] = image
         context['task'] = task
         context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
@@ -44,7 +50,16 @@ def segment_image(request, task_id):
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
         context['image_quality_choices'] = ProcessedImage.IMAGE_QUALITY_CHOICES
 
-        print('Got the following random image: ', image.filename)
+        # Check if image has been annotated
+        processed = ProcessedImage.objects.filter(image=image, task=task)
+        if processed.exists():
+            context['chosen_quality'] = processed[0].image_quality
+        else:
+            context['chosen_quality'] = -1
+
+        # TODO load previous segmentation
+        # Is stored in: segmentations/<task_id>/<processed_image_id>.png/mhd
+
         return render(request, 'segmentation/segment_image.html', context)
     except ValueError:
         messages.info(request, 'This task is finished, no more images to segment.')
@@ -60,6 +75,9 @@ def save_segmentation(request):
     try:
         if 'quality' not in request.POST:
             raise Exception('ERROR: You must select image quality.')
+
+        # TODO delete old segmentation if it exists
+
         # Save to DB
         processed_image = ProcessedImage()
         processed_image.image_id = int(request.POST['image_id'])
@@ -128,3 +146,13 @@ def save_segmentation(request):
 
     return JsonResponse(response)
 
+
+def show_segmentation(request, task_id, image_id):
+    try:
+        processed_image = ProcessedImage.objects.get(task_id=task_id, image_id=image_id)
+    except ProcessedImage.DoesNotExist:
+        return Http404('')
+
+    filename = os.path.join(os.path.join(os.path.join(settings.PROJECT_PATH, 'segmentations'), str(task_id)), str(processed_image.id) + '.png')
+    print(filename)
+    return get_image_as_http_response(filename)
