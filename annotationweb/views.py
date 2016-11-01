@@ -420,6 +420,14 @@ def task(request, task_id):
         # If page is out of range (e.g. 9999), deliver last page of results.
         images = paginator.page(paginator.num_pages)
 
+    for image in images:
+        # Check if image is annotated
+        try:
+            annotation = ProcessedImage.objects.get(image=image, task=task)
+            image.annotation = annotation
+        except:
+            pass
+
     return render(request, 'annotationweb/task.html', {'images': images, 'task': task})
 
 

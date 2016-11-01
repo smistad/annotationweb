@@ -8,33 +8,26 @@
     <div style="float: left; width: 25%; height: 300px">
         <img src="{% url 'show_image' image.id %}" width="100%">
 
-        {% if image.processedimage_set.count == 0 %}
-            Not annotated.<br>
-            <a href="">Annotate</a>
-        {% else %}
-        {% for processed_image in image.processedimage_set.all %}
-        {% if processed_image.task_id == task.id %}
+        {% if image.annotation %}
 
-        Date: {{ processed_image.date|date:"d-m-Y H:i" }}<br>
-        User: {{ processed_image.user.username }}<br>
-        Image quality: {{ processed_image.image_quality }}<br>
+        Date: {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
+        User: {{ image.annotation.user.username }}<br>
+        Image quality: {{ image.annotation.image_quality }}<br>
 
         {% if task.type == 'classification' %}
             {# Get all labels if task is classification task #}
-            {% for label in processed_image.imagelabel_set.all %}
+            {% for label in image.annotation.imagelabel_set.all %}
             {{ label.label.name }}<br>
             {% endfor %}
         {% elif task.type == 'boundingbox' %}
-            Boxes added {{ processed_image.boundingbox_set.count }}<br>
+            Boxes added {{ image.annotation.boundingbox_set.count }}<br>
         {% elif task.type == 'segmentation' %}
         {% endif %}
         <a href="{% url 'annotate' task.id image.id %}">Edit</a>
 
         {% else %}
             Not annotated.<br>
-            <a href="">Annotate</a>
-        {% endif %}
-        {% endfor %}
+            <a href="{% url 'annotate' task.id image.id %}">Annotate</a>
         {% endif %}
 
     </div>
