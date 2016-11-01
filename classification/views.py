@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.db.models import Max
@@ -16,45 +17,12 @@ def label_next_image(request, task_id):
 def label_image(request, task_id, image_id):
     context = {}
     context['dark_style'] = 'yes'
+    context['javascript_files'] = ['classification/classification.js']
     try:
         task = Task.objects.get(pk=task_id, user=request.user)
         labels = Label.objects.filter(task=task)
     except Task.DoesNotExist:
         raise Http404("Task does not exist or user has no access to the task")
-
-    if request.method == 'POST':
-        # Check that quality is checked
-        if 'quality' not in request.POST:
-            messages.error(request, 'ERROR: You must select image quality.')
-        else:
-            # Save new label
-
-            # Delete any previous labelings
-            previous_labels = ImageLabel.objects.filter(image__image_id=image_id, image__task=task, image__user=request.user)
-            previous_labels.delete()
-            try:
-                previous_processed_image = ProcessedImage.objects.get(image_id=image_id, task=task, user=request.user)
-                previous_processed_image.delete()
-            except:
-                pass
-
-            processed_image = ProcessedImage()
-            processed_image.image_id = image_id
-            processed_image.task = task
-            processed_image.user = request.user
-            processed_image.image_quality = request.POST['quality']
-            processed_image.save()
-
-            # Task specific
-            labeled_image = ImageLabel()
-            labeled_image.image = processed_image
-            for label in labels:
-                if request.POST.__contains__(label.name):
-                    labeled_image.label = label
-                    labeled_image.task = task
-
-            labeled_image.save()
-            image_id = get_next_image(task, image_id)
 
     # Get random unlabeled image
     try:
@@ -70,7 +38,6 @@ def label_image(request, task_id, image_id):
             context['chosen_label'] = processed[0].label.id
             context['chosen_quality'] = processed[0].image.image_quality
         else:
-            context['chosen_label'] = -1
             context['chosen_quality'] = -1
 
         # Check if image belongs to an image sequence
@@ -96,3 +63,51 @@ def label_image(request, task_id, image_id):
     except ValueError:
         messages.info(request, 'This task is finished, no more images to label.')
         return redirect('index')
+
+
+def save_labels(request):
+    if request.method != 'POST':
+        raise Http404('')
+
+    try:
+        if 'quality' not in request.POST:
+            raise Exception('ERROR: You must select image quality.')
+
+        image_id = int(request.POST['image_id'])
+        task_id = int(request.POST['task_id'])
+        label_id = int(request.POST['label_id'])
+
+        task = Task.objects.get(pk=task_id, user=request.user)
+        label = Label.objects.get(pk=label_id)
+
+        previous_processed_image = ProcessedImage.objects.filter(image_id=image_id, task=task_id)
+        previous_processed_image.delete()
+
+        processed_image = ProcessedImage()
+        processed_image.image_id = image_id
+        processed_image.task = task
+        processed_image.user = request.user
+        processed_image.image_quality = request.POST['quality']
+        processed_image.save()
+
+        # Task specific
+        labeled_image = ImageLabel()
+        labeled_image.image = processed_image
+        labeled_image.label = label
+        labeled_image.task = task
+
+        labeled_image.save()
+
+        response = {
+            'success': 'true',
+            'message': 'Completed'
+        }
+        messages.success(request, 'Classification saved')
+    except Exception as e:
+        response = {
+            'success': 'false',
+            'message': str(e)
+        }
+
+    return JsonResponse(response)
+
