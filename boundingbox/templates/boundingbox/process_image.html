@@ -14,24 +14,4 @@ addBox({{ box.x }}, {{ box.y }}, {{ box.x }} + {{ box.width }}, {{ box.y }} + {{
 {% endfor %}
 redraw();
 
-{% endblock %}
-
-{% block task_content %}
-
-<div id="imageQuality">
-<form>
-{% for quality_id, quality_name in image_quality_choices %}
-    <input type="radio" name="quality" value="{{ quality_id }}" required{% if chosen_quality == quality_id %} checked="checked"{% endif %}> {{ quality_name }}
-{% endfor %}
-</form>
-</div>
-
-<div id="labelButtons">
-{% for label in task.label.all %}
-    <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
-{% endfor %}
-</div>
-
-<canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
-
-{% endblock task_content %}
+{% endblock task_javascript %}

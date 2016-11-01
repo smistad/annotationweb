@@ -1,8 +1,6 @@
 {% extends 'annotationweb/do_task.html' %}
 
 {% block task_javascript %}
-
-
 {% for label in task.label.all %}
     addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
 {% endfor %}
@@ -12,22 +10,4 @@ loadClassificationTask({{ task.id }}, {{ image.id }});
 {% if chosen_label %}
 changeLabel({{ chosen_label }});
 {% endif %}
-{% endblock %}
-
-{% block task_content %}
-<div id="imageQuality">
-    {% for quality_id, quality_name in image_quality_choices %}
-    <input type="radio" name="quality" value="{{ quality_id }}" required{% if chosen_quality == quality_id %} checked="checked"{% endif %}> {{ quality_name }}
-    {% endfor %}
-</div>
-<div id="labelButtons">
-{% for label in task.label.all %}
-    <button class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
-{% endfor %}
-</div>
-{% if image_sequence %}
-<canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
-{% else %}
-<img src="{% url 'show_image' image.id %}" alt="" width="512"/>
-{% endif %}
-{% endblock task_content %}
+{% endblock task_javascript %}
