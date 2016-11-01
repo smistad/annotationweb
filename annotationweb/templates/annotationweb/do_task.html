@@ -34,7 +34,18 @@ loadSequence(
 <div id="sliderText">Drag the slider to view the other frames in the sequence:</div>
 <div id="slider"></div>
 <button id="playButton" type="button">Play</button>
+<button id="goToTargetFrame">Go to target frame</button>
 {% endif %}
+<div id="actionButtons">
+    {% if previous_image_id %}
+    <button onclick="javascript:window.location.href='{% url 'annotate' task.id previous_image_id %}'">Previous</button>
+    {% endif %}
+    {% if next_image_id %}
+    <button onclick="javascript:window.location.href='{% url 'annotate' task.id next_image_id %}'">Next</button>
+    {% endif %}
+    <button id="clearButton">Clear</button>
+    <button id="saveButton">Save</button>
+</div>
 
 {% block task_content %}
 {% endblock %}
