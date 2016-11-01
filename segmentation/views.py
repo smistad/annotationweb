@@ -76,12 +76,17 @@ def save_segmentation(request):
         if 'quality' not in request.POST:
             raise Exception('ERROR: You must select image quality.')
 
-        # TODO delete old segmentation if it exists
+        image_id = int(request.POST['image_id'])
+        task_id = int(request.POST['task_id'])
+
+        # Delete old segmentation if it exists
+        processed_images = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
+        processed_images.delete()
 
         # Save to DB
         processed_image = ProcessedImage()
-        processed_image.image_id = int(request.POST['image_id'])
-        processed_image.task_id = int(request.POST['task_id'])
+        processed_image.image_id = image_id
+        processed_image.task_id = task_id
         processed_image.user = request.user
         processed_image.image_quality = request.POST['quality']
         processed_image.save()

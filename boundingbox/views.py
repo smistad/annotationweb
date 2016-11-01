@@ -68,11 +68,15 @@ def save_boxes(request):
         if 'quality' not in request.POST:
             raise Exception('ERROR: You must select image quality.')
 
-        # TODO Delete previous
+        image_id = int(request.POST['image_id'])
+        task_id = int(request.POST['task_id'])
+        # Delete old boxes if they exist
+        processed_images = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
+        processed_images.delete()
 
         image = ProcessedImage()
-        image.image_id = int(request.POST['image_id'])
-        image.task_id = int(request.POST['task_id'])
+        image.image_id = image_id
+        image.task_id = task_id
         image.user = request.user
         image.image_quality = request.POST['quality']
         image.save()
