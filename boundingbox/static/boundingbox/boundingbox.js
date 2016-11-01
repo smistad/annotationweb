@@ -112,7 +112,8 @@ function setupSegmentation(task_id, image_id) {
     });
 
     // Set first label active
-    changeLabel(labelButtons[0].id)
+    changeLabel(labelButtons[0].id);
+    redraw();
 }
 
 function createBox(x, y, x2, y2, label) {
@@ -234,7 +235,7 @@ function addLabelButton(label_id, red, green, blue) {
 function changeLabel(label_id) {
     for(var i = 0; i < labelButtons.length; i++)  {
         if(labelButtons[i].id == label_id) {
-            currentLabel = i;
+            currentLabel = label_id;
             var label = labelButtons[i]
             // Set correct button to active
             $('#labelButton' + label.id).addClass('activeLabel');
@@ -249,28 +250,6 @@ function changeLabel(label_id) {
             $('#labelButton' + labelButtons[i].id).removeClass('activeLabel');
         }
     }
-}
-
-
-// using jQuery
-function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = jQuery.trim(cookies[i]);
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-function csrfSafeMethod(method) {
-    // these HTTP methods do not require CSRF protection
-    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
 
 // Override redraw sequence in sequence.js
