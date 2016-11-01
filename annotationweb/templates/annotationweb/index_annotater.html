@@ -13,13 +13,7 @@
 {% for task in tasks %}
     <li>
         {% if task.started %}
-        {% if task.type == 'classification' %}
-            <a href="{% url 'classification:label_image' task.id %}">
-        {% elif task.type == 'segmentation' %}
-            <a href="{% url 'segmentation:segment_image' task.id %}">
-        {% elif task.type == 'boundingbox' %}
-            <a href="{% url 'boundingbox:process_image' task.id %}">
-        {% endif %}
+            <a href="{% url 'annotate' task.id %}">
         {% else %}
             <a href="{% url 'task_description' task.id %}">
         {% endif %}

@@ -57,9 +57,6 @@ def segment_image(request, task_id, image_id):
         else:
             context['chosen_quality'] = -1
 
-        # TODO load previous segmentation
-        # Is stored in: segmentations/<task_id>/<processed_image_id>.png/mhd
-
         return render(request, 'segmentation/segment_image.html', context)
     except ValueError:
         messages.info(request, 'This task is finished, no more images to segment.')

@@ -39,6 +39,8 @@ urlpatterns = [
     url(r'^export-options/(?P<task_id>[0-9]+)/(?P<exporter_index>[0-9]+)/$', views.export_options, name='export_options'),
     url(r'^import/(?P<dataset_id>[0-9]+)/$', views.import_data, name='import'),
     url(r'^import-options/(?P<dataset_id>[0-9]+)/(?P<importer_index>[0-9]+)/$', views.import_options, name='import_options'),
+    url(r'^annotate/(?P<task_id>[0-9]+)/$', views.annotate_next_image, name='annotate'),
+    url(r'^annotate/(?P<task_id>[0-9]+)/image/(?P<image_id>[0-9]+)/$', views.annotate_image, name='annotate'),
 
     url(r'^admin/', admin.site.urls),
     url(r'^user/', include('user.urls')),

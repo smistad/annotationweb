@@ -422,3 +422,31 @@ def task(request, task_id):
 
     return render(request, 'annotationweb/task.html', {'images': images, 'task': task})
 
+
+def get_redirection(task):
+    if task.type == Task.CLASSIFICATION:
+        return 'classification:label_image'
+    elif task.type == Task.BOUNDING_BOX:
+        return 'boundingbox:process_image'
+    elif task.type == Task.SEGMENTATION:
+        return 'segmentation:segment_image'
+
+
+def annotate_next_image(request, task_id):
+    # Find the task type and redirect
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        return Http404('The task does not exist')
+
+    return redirect(get_redirection(task), task_id=task.id)
+
+
+def annotate_image(request, task_id, image_id):
+    # Find the task type and redirect
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        return Http404('The task does not exist')
+
+    return redirect(get_redirection(task), task_id=task.id, image_id=image_id)
