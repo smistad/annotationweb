@@ -31,33 +31,12 @@ def segment_image(request, task_id, image_id):
 
 
 def save_segmentation(request):
-    if request.method != 'POST':
-        raise Http404('')
-
-    # Save the image
 
     try:
-        if 'quality' not in request.POST:
-            raise Exception('ERROR: You must select image quality.')
-
-        image_id = int(request.POST['image_id'])
-        task_id = int(request.POST['task_id'])
-
-        # Delete old segmentation if it exists
-        processed_images = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
-        processed_images.delete()
-
-        # Save to DB
-        processed_image = ProcessedImage()
-        processed_image.image_id = image_id
-        processed_image.task_id = task_id
-        processed_image.user = request.user
-        processed_image.image_quality = request.POST['quality']
-        processed_image.save()
-
+        annotation = common.task.save_annotation(request)
 
         # Save segmentation image to disk
-        base_path = PROJECT_PATH + '/segmentations/' + str(processed_image.task_id) + '/'
+        base_path = PROJECT_PATH + '/segmentations/' + str(annotation.task_id) + '/'
         try:
             os.makedirs(base_path)
         except:
@@ -70,7 +49,7 @@ def save_segmentation(request):
 
         # Store as png
         image = PIL.Image.open(image_string)
-        image.save(base_path + str(processed_image.id) + '.png')
+        image.save(base_path + str(annotation.id) + '.png')
 
         # Convert color image to single channel label image
         # Get all labels for this task
@@ -81,7 +60,7 @@ def save_segmentation(request):
         grayscaleimage = image.convert('L')
         X, Y = np.nonzero(np.asarray(grayscaleimage))
 
-        labels = Label.objects.filter(task__id=processed_image.task_id)
+        labels = Label.objects.filter(task__id=annotation.task_id)
         width = color_pixels.shape[0]
         height = color_pixels.shape[1]
         pixels = np.zeros((width, height)).astype(np.uint8)
@@ -100,7 +79,7 @@ def save_segmentation(request):
 
         # Store as metaimage
         writer = MetaImage(data=pixels)
-        writer.write(base_path + str(processed_image.id) + '.mhd')
+        writer.write(base_path + str(annotation.id) + '.mhd')
 
         response = {
             'success': 'true',

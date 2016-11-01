@@ -64,3 +64,28 @@ def setup_task_context(task_id, type, image_id):
 
     return context
 
+
+def save_annotation(request):
+    if request.method != 'POST':
+        raise Exception('ERROR: Must use POST when saving processed image.')
+
+    # Image quality is required
+    if 'quality' not in request.POST:
+        raise Exception('ERROR: You must select image quality.')
+
+    image_id = int(request.POST['image_id'])
+    task_id = int(request.POST['task_id'])
+
+    # Delete old annotations if it exists
+    annotations = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
+    annotations.delete()
+
+    # Save to DB
+    annotation = ProcessedImage()
+    annotation.image_id = image_id
+    annotation.task_id = task_id
+    annotation.user = request.user
+    annotation.image_quality = request.POST['quality']
+    annotation.save()
+
+    return annotation

@@ -83,6 +83,7 @@ class KeyFrame(models.Model):
         return str(self.frame_nr)
 
 
+# TODO: Rename this model to Annotation
 class ProcessedImage(models.Model):
     image = models.ForeignKey(Image, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)

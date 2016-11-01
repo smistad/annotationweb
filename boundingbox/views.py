@@ -29,25 +29,8 @@ def process_image(request, task_id, image_id):
 
 
 def save_boxes(request):
-    if request.method != 'POST':
-        raise Http404('')
-
     try:
-        if 'quality' not in request.POST:
-            raise Exception('ERROR: You must select image quality.')
-
-        image_id = int(request.POST['image_id'])
-        task_id = int(request.POST['task_id'])
-        # Delete old boxes if they exist
-        processed_images = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
-        processed_images.delete()
-
-        image = ProcessedImage()
-        image.image_id = image_id
-        image.task_id = task_id
-        image.user = request.user
-        image.image_quality = request.POST['quality']
-        image.save()
+        annotation = common.task.save_annotation(request)
 
         # Store every box
         boxes = json.loads(request.POST['boxes'])
@@ -57,7 +40,7 @@ def save_boxes(request):
             bb.y = int(box['y'])
             bb.width = int(box['width'])
             bb.height = int(box['height'])
-            bb.image = image
+            bb.image = annotation
             bb.label_id = int(box['label_id'])
             bb.save()
 
