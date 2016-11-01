@@ -10,6 +10,12 @@ loadBBTask({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}});
 addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
 
 {% endfor %}
+
+{% for box in boxes %}
+addBox({{ box.x }}, {{ box.y }}, {{ box.x }} + {{ box.width }}, {{ box.y }} + {{ box.height }}, {{ box.label_id }});
+{% endfor %}
+redraw();
+
 {% endblock %}
 
 {% block task_content %}
@@ -29,7 +35,7 @@ addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {
 <div id="imageQuality">
 <form>
 {% for quality_id, quality_name in image_quality_choices %}
-    <input type="radio" name="quality" value="{{ quality_id }}" required> {{ quality_name }}
+    <input type="radio" name="quality" value="{{ quality_id }}" required{% if chosen_quality == quality_id %} checked="checked"{% endif %}> {{ quality_name }}
 {% endfor %}
 </form>
 </div>

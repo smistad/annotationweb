@@ -55,14 +55,14 @@ function setupSegmentation(task_id, image_id) {
 
     $('#canvas').mouseup(function(e){
         paint = false;
-        addBox();
+        addBox(BBx, BBy, BBx2, BBy2, label);
         console.log('finished BB on ' + BBx + ' ' + BBy);
         //segmentationHistory.push(currentAction); // Add action to history
     });
 
     $('#canvas').mouseleave(function(e){
         if(paint) {
-            addBox();
+            addBox(BBx, BBy, BBx2, BBy2, label);
             redraw();
             paint = false;
             //segmentationHistory.push(currentAction); // Add action to history
@@ -115,29 +115,37 @@ function setupSegmentation(task_id, image_id) {
     changeLabel(labelButtons[0].id)
 }
 
-function createBox() {
+function createBox(x, y, x2, y2, label) {
     // Select the one closest to 0,0
-    var boxOriginX = min(BBx, BBx2);
-    var boxOriginY = min(BBy, BBy2);
+    var boxOriginX = min(x, x2);
+    var boxOriginY = min(y, y2);
 
     // Calculate width and height
-    var width = max(BBx, BBx2) - boxOriginX;
-    var height = max(BBy, BBy2) - boxOriginY;
+    var width = max(x, x2) - boxOriginX;
+    var height = max(y, y2) - boxOriginY;
+
+    // Find label index
+    var labelIndex = 0;
+    for(var i = 0; i < labelButtons.length; i++) {
+        if(labelButtons[i].id == label) {
+            labelIndex = i;
+        }
+    }
 
     var box = {
         x: boxOriginX,
         y: boxOriginY,
         width: width,
         height: height,
-        label_id: labelButtons[currentLabel].id, // actual DB id
-        label: currentLabel // index: only used for color
+        label_id: label, // actual DB id
+        label: labelIndex // index: only used for color
     };
     return box;
 }
 
-function addBox() {
+function addBox(x, y, x2, y2, label) {
 
-    var box = createBox();
+    var box = createBox(x, y, x2, y2, label);
     boxes.push(box);
 }
 

@@ -69,7 +69,6 @@ def label_image(request, task_id, image_id):
         if processed.exists():
             context['chosen_label'] = processed[0].label.id
             context['chosen_quality'] = processed[0].image.image_quality
-            print('Chosen label: ', context['chosen_label'])
         else:
             context['chosen_label'] = -1
             context['chosen_quality'] = -1

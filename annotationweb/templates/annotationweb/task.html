@@ -25,9 +25,10 @@
             {% for label in processed_image.imagelabel_set.all %}
             {{ label.label.name }}<br>
             {% endfor %}
-            <a href="{% url 'classification:label_image' task.id image.id %}">Edit</a> <a href="">Delete</a>
+            <a href="{% url 'classification:label_image' task.id image.id %}">Edit</a>
         {% elif task.type == 'boundingbox' %}
             Boxes added {{ processed_image.boundingbox_set.count }}<br>
+            <a href="{% url 'boundingbox:process_image' task.id image.id %}">Edit</a>
         {% endif %}
 
         {% else %}

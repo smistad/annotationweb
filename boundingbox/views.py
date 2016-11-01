@@ -24,7 +24,7 @@ def process_image(request, task_id, image_id):
         raise Http404("Task does not exist")
 
     try:
-        if image_id == None:
+        if image_id is None:
             image = get_next_unprocessed_image(task)
         else:
             image = Image.objects.get(pk=image_id)
@@ -44,7 +44,15 @@ def process_image(request, task_id, image_id):
         context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
         context['image_quality_choices'] = ProcessedImage.IMAGE_QUALITY_CHOICES
 
-        # TODO load boxes if they exist
+        # Check if image has been annotated
+        processed = ProcessedImage.objects.filter(image=image, task=task)
+        if processed.exists():
+            context['chosen_quality'] = processed[0].image_quality
+        else:
+            context['chosen_quality'] = -1
+
+        # Load boxes if they exist
+        context['boxes'] = BoundingBox.objects.filter(image__image=image, image__task=task)
 
         return render(request, 'boundingbox/process_image.html', context)
     except ValueError:
