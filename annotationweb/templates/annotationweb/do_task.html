@@ -2,7 +2,7 @@
 
 {% block javascript %}
 
-initializeAnnotation();
+initializeAnnotation({{ task.id }}, {{ image.id }});
 
 {% if image_sequence %}
 loadSequence(

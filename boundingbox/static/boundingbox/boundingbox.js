@@ -5,17 +5,13 @@ var backgroundImage;
 var paint = false;
 var frameNr;
 var currentColor = null;
-var labelButtons = [];
-var currentLabel = 0;
 var BBx;
 var BBy;
 var BBx2;
 var BBy2;
 var boxes = [];
 
-function setupSegmentation(task_id, image_id) {
-    g_taskID = task_id;
-    g_imageID = image_id;
+function setupSegmentation() {
 
     // Initialize canvas with background image
     context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
@@ -58,14 +54,14 @@ function setupSegmentation(task_id, image_id) {
 
     $('#canvas').mouseup(function(e){
         paint = false;
-        addBox(BBx, BBy, BBx2, BBy2, currentLabel);
+        addBox(BBx, BBy, BBx2, BBy2, g_currentLabel);
         console.log('finished BB on ' + BBx + ' ' + BBy);
         //segmentationHistory.push(currentAction); // Add action to history
     });
 
     $('#canvas').mouseleave(function(e){
         if(paint) {
-            addBox(BBx, BBy, BBx2, BBy2, currentLabel);
+            addBox(BBx, BBy, BBx2, BBy2, g_currentLabel);
             redraw();
             paint = false;
             //segmentationHistory.push(currentAction); // Add action to history
@@ -80,7 +76,7 @@ function setupSegmentation(task_id, image_id) {
     });
 
     // Set first label active
-    changeLabel(labelButtons[0].id);
+    changeLabel(g_labelButtons[0].id);
     redraw();
 }
 
@@ -95,8 +91,8 @@ function createBox(x, y, x2, y2, label) {
 
     // Find label index
     var labelIndex = 0;
-    for(var i = 0; i < labelButtons.length; i++) {
-        if(labelButtons[i].id == label) {
+    for(var i = 0; i < g_labelButtons.length; i++) {
+        if(g_labelButtons[i].id == label) {
             labelIndex = i;
         }
     }
@@ -132,7 +128,7 @@ function sendDataForSave() {
     });
 }
 
-function loadBBTask(image_sequence_id, frame_nr, task_id, image_id) {
+function loadBBTask(image_sequence_id, frame_nr) {
     console.log('In bb task load')
 
     backgroundImage = new Image();
@@ -141,7 +137,7 @@ function loadBBTask(image_sequence_id, frame_nr, task_id, image_id) {
     backgroundImage.onload = function() {
         canvasWidth = this.width;
         canvasHeight = this.height;
-        setupSegmentation(task_id, image_id);
+        setupSegmentation();
     };
 
 }
@@ -153,7 +149,7 @@ function redraw(){
         context.beginPath();
         context.lineWidth = 2;
         var box = boxes[i];
-        var label = labelButtons[box.label];
+        var label = g_labelButtons[box.label];
         context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         context.rect(box.x, box.y, box.width, box.height);
         context.stroke();
@@ -162,8 +158,8 @@ function redraw(){
     if(paint) {
         context.beginPath();
         context.lineWidth = 2;
-        var box = createBox(BBx, BBy, BBx2, BBy2, currentLabel);
-        var label = labelButtons[box.label];
+        var box = createBox(BBx, BBy, BBx2, BBy2, g_currentLabel);
+        var label = g_labelButtons[box.label];
         context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         context.rect(box.x, box.y, box.width, box.height);
         context.stroke();

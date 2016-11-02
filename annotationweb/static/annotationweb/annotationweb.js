@@ -2,13 +2,16 @@ var context;
 var canvasWidth = 512;
 var canvasHeight = 512;
 var sequence = [];
-var labelButtons = [];
+var g_labelButtons = [];
 var currentFrameNr;
 var startFrame;
 var progressbar;
 var framesLoaded;
 var is_playing = true;
 var g_returnURL = '';
+var g_taskID;
+var g_imageID;
+var g_currentLabel = -1;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -65,7 +68,10 @@ function save() {
     console.log("Save function executed");
 }
 
-function initializeAnnotation() {
+function initializeAnnotation(taskID, imageID) {
+    g_taskID = taskID;
+    g_imageID = imageID;
+
     // This is required due to djangos CSRF protection
     var csrftoken = getCookie('csrftoken');
     $.ajaxSetup({
@@ -240,16 +246,16 @@ function addLabelButton(label_id, red, green, blue) {
         green: green,
         blue: blue
     };
-    labelButtons.push(labelButton);
+    g_labelButtons.push(labelButton);
 
     $("#labelButton" + label_id).css("background-color", colorToHexString(red, green, blue));
 }
 
 function changeLabel(label_id) {
-    for(var i = 0; i < labelButtons.length; i++)  {
-        if(labelButtons[i].id == label_id) {
-            currentLabel = label_id;
-            var label = labelButtons[i]
+    for(var i = 0; i < g_labelButtons.length; i++)  {
+        if(g_labelButtons[i].id == label_id) {
+            g_currentLabel = label_id;
+            var label = g_labelButtons[i]
             // Set correct button to active
             $('#labelButton' + label.id).addClass('activeLabel');
             currentColor = {
@@ -260,7 +266,7 @@ function changeLabel(label_id) {
             console.log(i + ' is now active label');
         } else {
             // Set all other buttons to inactive
-            $('#labelButton' + labelButtons[i].id).removeClass('activeLabel');
+            $('#labelButton' + g_labelButtons[i].id).removeClass('activeLabel');
         }
     }
 }

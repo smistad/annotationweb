@@ -2,7 +2,7 @@
 
 {% block task_javascript %}
 {% if image_sequence %}
-loadSegmentation({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}})
+loadSegmentation({{ image_sequence.id }}, {{ frame_nr }});
 {% endif %}
 
 {% endblock task_javascript %}

@@ -9,8 +9,6 @@ var segmentationData;
 var paint = false;
 var frameNr;
 var currentColor = null;
-var labelButtons = new Array();
-var currentLabel = 0;
 
 function colorDistance(labelColor, colorArray) {
     var red = labelColor.red - colorArray[0];
@@ -51,8 +49,8 @@ function loadOldSegmentation(task_id, image_id) {
             if(colorDistance(useColor, color) > 20) {
                 // For each label, find closest color
                 var currentMinDistance = 1000000;
-                for (var l = 0; l < labelButtons.length; l++) {
-                    var labelButton = labelButtons[l];
+                for (var l = 0; l < g_labelButtons.length; l++) {
+                    var labelButton = g_labelButtons[l];
                     if (colorDistance(labelButton, color) < currentMinDistance) {
                         currentMinDistance = colorDistance(labelButton, color);
                         useColor.red = labelButton.red;
@@ -83,10 +81,7 @@ function loadOldSegmentation(task_id, image_id) {
     };
 }
 
-function setupSegmentation(task_id, image_id) {
-    g_taskID = task_id;
-    g_imageID = image_id;
-
+function setupSegmentation() {
     // Initialize canvas with background image
     context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
     context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight); // Draw background image
@@ -101,7 +96,7 @@ function setupSegmentation(task_id, image_id) {
     for(var i = 0; i < canvasWidth*canvasHeight; i++) {
         segmentationData[i*4+3] = 255;
     }
-    loadOldSegmentation(task_id, image_id);
+    loadOldSegmentation(g_taskID, g_imageID);
 
 
     // Define event callbacks
@@ -178,7 +173,7 @@ function setupSegmentation(task_id, image_id) {
     });
 
     // Set first label active
-    changeLabel(labelButtons[0].id)
+    changeLabel(g_labelButtons[0].id)
 }
 
 function sendDataForSave() {

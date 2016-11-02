@@ -2,7 +2,7 @@
 
 {% block task_javascript %}
 
-loadClassificationTask({{ task.id }}, {{ image.id }});
+loadClassificationTask();
 
 {% if chosen_label %}
 changeLabel({{ chosen_label }});

@@ -8,7 +8,7 @@ addBox({{ box.x }}, {{ box.y }}, {{ box.x }} + {{ box.width }}, {{ box.y }} + {{
 {% endfor %}
 
 {% if image_sequence %}
-loadBBTask({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}});
+loadBBTask({{ image_sequence.id }}, {{ frame_nr }});
 {% endif %}
 
 {% endblock task_javascript %}
