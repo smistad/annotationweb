@@ -1,34 +1,34 @@
-var backgroundImageData;
-var imageData;
-var image;
-var backgroundImage;
-var paint = false;
-var frameNr;
-var currentColor = null;
-var BBx;
-var BBy;
-var BBx2;
-var BBy2;
-var boxes = [];
+var g_backgroundImageData;
+var g_imageData;
+var g_image;
+var g_backgroundImage;
+var g_paint = false;
+var g_frameNr;
+var g_currentColor = null;
+var g_BBx;
+var g_BBy;
+var g_BBx2;
+var g_BBy2;
+var g_boxes = [];
 
 function setupSegmentation() {
 
     // Initialize canvas with background image
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
-    context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight); // Draw background image
-    backgroundImageData = context.getImageData(0,0,canvasWidth, canvasHeight).data; // Get pixel data
+    g_context.clearRect(0, 0, g_context.canvas.width, g_context.canvas.height); // Clears the canvas
+    g_context.drawImage(g_backgroundImage, 0, 0, g_canvasWidth, g_canvasHeight); // Draw background image
+    g_backgroundImageData = g_context.getImageData(0,0,g_canvasWidth, g_canvasHeight).data; // Get pixel data
     // Create the image which will be put on canvas
-    image = context.getImageData(0, 0, canvasWidth, canvasHeight);
-    imageData = image.data;
+    g_image = g_context.getImageData(0, 0, g_canvasWidth, g_canvasHeight);
+    g_imageData = g_image.data;
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
 
         // If current frame is not the frame to segment
-        if(currentFrameNr != frameNr) {
+        if(g_currentFrameNr != g_frameNr) {
             // Move slider to frame to segment
-            $('#slider').slider("value", frameNr);
-            currentFrameNr = frameNr;
+            $('#slider').slider("value", g_frameNr);
+            g_currentFrameNr = g_frameNr;
             redraw();
             return;
         }
@@ -36,42 +36,42 @@ function setupSegmentation() {
         var mouseX = e.pageX - this.offsetLeft;
         var mouseY = e.pageY - this.offsetTop;
 
-        BBx = mouseX;
-        BBy = mouseY;
-        paint = true;
-        console.log('started BB on ' + BBx + ' ' + BBy);
+        g_BBx = mouseX;
+        g_BBy = mouseY;
+        g_paint = true;
+        console.log('started BB on ' + g_BBx + ' ' + g_BBy);
     });
 
     $('#canvas').mousemove(function(e) {
-        if(paint) {
+        if(g_paint) {
             var mouseX = e.pageX - this.offsetLeft;
             var mouseY = e.pageY - this.offsetTop;
-            BBx2 = mouseX;
-            BBy2 = mouseY;
+            g_BBx2 = mouseX;
+            g_BBy2 = mouseY;
             redraw();
         }
     });
 
     $('#canvas').mouseup(function(e){
-        paint = false;
-        addBox(BBx, BBy, BBx2, BBy2, g_currentLabel);
-        console.log('finished BB on ' + BBx + ' ' + BBy);
+        g_paint = false;
+        addBox(g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
+        console.log('finished BB on ' + g_BBx + ' ' + g_BBy);
         //segmentationHistory.push(currentAction); // Add action to history
     });
 
     $('#canvas').mouseleave(function(e){
-        if(paint) {
-            addBox(BBx, BBy, BBx2, BBy2, g_currentLabel);
+        if(g_paint) {
+            addBox(g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
             redraw();
-            paint = false;
+            g_paint = false;
             //segmentationHistory.push(currentAction); // Add action to history
         }
     });
 
 
     $("#clearButton").click(function() {
-        boxes = [];
-        $('#slider').slider('value', frameNr); // Update slider
+        g_boxes = [];
+        $('#slider').slider('value', g_frameNr); // Update slider
         redraw();
     });
 
@@ -111,7 +111,7 @@ function createBox(x, y, x2, y2, label) {
 function addBox(x, y, x2, y2, label) {
 
     var box = createBox(x, y, x2, y2, label);
-    boxes.push(box);
+    g_boxes.push(box);
 }
 
 function sendDataForSave() {
@@ -120,7 +120,7 @@ function sendDataForSave() {
         url: "/boundingbox/save/",
         data: {
             image_id: g_imageID,
-            boxes: JSON.stringify(boxes),
+            boxes: JSON.stringify(g_boxes),
             task_id: g_taskID,
             quality: $('input[name=quality]:checked').val(),
         },
@@ -131,47 +131,47 @@ function sendDataForSave() {
 function loadBBTask(image_sequence_id, frame_nr) {
     console.log('In bb task load')
 
-    backgroundImage = new Image();
-    frameNr = frame_nr;
-    backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
-    backgroundImage.onload = function() {
-        canvasWidth = this.width;
-        canvasHeight = this.height;
+    g_backgroundImage = new Image();
+    g_frameNr = frame_nr;
+    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
+    g_backgroundImage.onload = function() {
+        g_canvasWidth = this.width;
+        g_canvasHeight = this.height;
         setupSegmentation();
     };
 
 }
 
 function redraw(){
-    context.putImageData(image, 0, 0);
+    g_context.putImageData(g_image, 0, 0);
     // Draw all stores boxes
-    for(var i = 0; i < boxes.length; ++i) {
-        context.beginPath();
-        context.lineWidth = 2;
-        var box = boxes[i];
+    for(var i = 0; i < g_boxes.length; ++i) {
+        g_context.beginPath();
+        g_context.lineWidth = 2;
+        var box = g_boxes[i];
         var label = g_labelButtons[box.label];
-        context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
-        context.rect(box.x, box.y, box.width, box.height);
-        context.stroke();
+        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
+        g_context.rect(box.x, box.y, box.width, box.height);
+        g_context.stroke();
     }
     // Draw current box
-    if(paint) {
-        context.beginPath();
-        context.lineWidth = 2;
-        var box = createBox(BBx, BBy, BBx2, BBy2, g_currentLabel);
+    if(g_paint) {
+        g_context.beginPath();
+        g_context.lineWidth = 2;
+        var box = createBox(g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
         var label = g_labelButtons[box.label];
-        context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
-        context.rect(box.x, box.y, box.width, box.height);
-        context.stroke();
+        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
+        g_context.rect(box.x, box.y, box.width, box.height);
+        g_context.stroke();
     }
 }
 
 // Override redraw sequence in sequence.js
 function redrawSequence() {
-    if(currentFrameNr == frameNr) {
+    if(g_currentFrameNr == g_frameNr) {
         redraw();
     } else {
-        var index = currentFrameNr - startFrame;
-        context.drawImage(sequence[index], 0, 0, canvasWidth, canvasHeight);
+        var index = g_currentFrameNr - g_startFrame;
+        g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     }
 }

@@ -1,14 +1,14 @@
-var previousX;
-var previousY;
-var backgroundImageData;
-var imageData;
-var image;
-var segmentation;
-var backgroundImage;
-var segmentationData;
-var paint = false;
-var frameNr;
-var currentColor = null;
+var g_previousX;
+var g_previousY;
+var g_backgroundImageData;
+var g_imageData;
+var g_image;
+var g_segmentation;
+var g_backgroundImage;
+var g_segmentationData;
+var g_paint = false;
+var g_frameNr;
+var g_currentColor = null;
 
 function colorDistance(labelColor, colorArray) {
     var red = labelColor.red - colorArray[0];
@@ -26,8 +26,8 @@ function loadOldSegmentation(task_id, image_id) {
         console.log("Old segmentation was found");
         // Create dummy canvas to get access to pixels
         var dummyCanvas = document.createElement('canvas');
-        dummyCanvas.setAttribute('width', canvasWidth);
-        dummyCanvas.setAttribute('height', canvasHeight);
+        dummyCanvas.setAttribute('width', g_canvasWidth);
+        dummyCanvas.setAttribute('height', g_canvasHeight);
         // IE stuff
         if(typeof G_vmlCanvasManager != 'undefined') {
             dummyCanvas = G_vmlCanvasManager.initElement(dummyCanvas);
@@ -35,11 +35,11 @@ function loadOldSegmentation(task_id, image_id) {
 
         // Put segmentation into canvas
         var ctx = dummyCanvas.getContext('2d');
-        ctx.drawImage(this, 0, 0, canvasWidth, canvasHeight);
-        var oldSegmentationData = ctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+        ctx.drawImage(this, 0, 0, g_canvasWidth, g_canvasHeight);
+        var oldSegmentationData = ctx.getImageData(0, 0, g_canvasWidth, g_canvasHeight).data;
 
         // Remove any non-label pixels from segmentation data (may happen if some smoothing of png occurs in browser)
-        for(var i = 0; i < canvasWidth*canvasHeight; i++) {
+        for(var i = 0; i < g_canvasWidth*g_canvasHeight; i++) {
             var color = [oldSegmentationData[i*4], oldSegmentationData[i*4+1], oldSegmentationData[i*4+2]];
             var useColor = {
                 red: 0,
@@ -66,14 +66,14 @@ function loadOldSegmentation(task_id, image_id) {
         }
 
         // Put pixels into imageData and segmentationData
-        for(var i = 0; i < canvasWidth*canvasHeight; i++) {
+        for(var i = 0; i < g_canvasWidth*g_canvasHeight; i++) {
             if(oldSegmentationData[i*4] > 0 || oldSegmentationData[i*4+1] > 0 || oldSegmentationData[i*4+2] > 0) {
-                imageData[i*4] = oldSegmentationData[i*4];
-                imageData[i*4+1] = oldSegmentationData[i*4+1];
-                imageData[i*4+2] = oldSegmentationData[i*4+2];
-                segmentationData[i*4] = oldSegmentationData[i*4];
-                segmentationData[i*4+1] = oldSegmentationData[i*4+1];
-                segmentationData[i*4+2] = oldSegmentationData[i*4+2];
+                g_imageData[i*4] = oldSegmentationData[i*4];
+                g_imageData[i*4+1] = oldSegmentationData[i*4+1];
+                g_imageData[i*4+2] = oldSegmentationData[i*4+2];
+                g_segmentationData[i*4] = oldSegmentationData[i*4];
+                g_segmentationData[i*4+1] = oldSegmentationData[i*4+1];
+                g_segmentationData[i*4+2] = oldSegmentationData[i*4+2];
             }
         }
 
@@ -83,18 +83,18 @@ function loadOldSegmentation(task_id, image_id) {
 
 function setupSegmentation() {
     // Initialize canvas with background image
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
-    context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight); // Draw background image
-    backgroundImageData = context.getImageData(0,0,canvasWidth, canvasHeight).data; // Get pixel data
+    g_context.clearRect(0, 0, g_context.canvas.width, g_context.canvas.height); // Clears the canvas
+    g_context.drawImage(g_backgroundImage, 0, 0, g_canvasWidth, g_canvasHeight); // Draw background image
+    g_backgroundImageData = g_context.getImageData(0,0,g_canvasWidth, g_canvasHeight).data; // Get pixel data
     // Create the image which will be put on canvas
-    image = context.getImageData(0, 0, canvasWidth, canvasHeight);
-    imageData = image.data;
+    g_image = g_context.getImageData(0, 0, g_canvasWidth, g_canvasHeight);
+    g_imageData = g_image.data;
 
     // Create segmentation image
-    segmentation = context.createImageData(canvasWidth, canvasHeight);
-    segmentationData = segmentation.data;
-    for(var i = 0; i < canvasWidth*canvasHeight; i++) {
-        segmentationData[i*4+3] = 255;
+    g_segmentation = g_context.createImageData(g_canvasWidth, g_canvasHeight);
+    g_segmentationData = g_segmentation.data;
+    for(var i = 0; i < g_canvasWidth*g_canvasHeight; i++) {
+        g_segmentationData[i*4+3] = 255;
     }
     loadOldSegmentation(g_taskID, g_imageID);
 
@@ -103,10 +103,10 @@ function setupSegmentation() {
     $('#canvas').mousedown(function(e) {
 
         // If current frame is not the frame to segment
-        if(currentFrameNr != frameNr) {
+        if(g_currentFrameNr != g_frameNr) {
             // Move slider to frame to segment
-            $('#slider').slider("value", frameNr);
-            currentFrameNr = frameNr;
+            $('#slider').slider("value", g_frameNr);
+            g_currentFrameNr = g_frameNr;
             redraw();
             return;
         }
@@ -114,16 +114,16 @@ function setupSegmentation() {
         var mouseX = e.pageX - this.offsetLeft;
         var mouseY = e.pageY - this.offsetTop;
 
-        paint = true;
-        previousX = mouseX;
-        previousY = mouseY;
+        g_paint = true;
+        g_previousX = mouseX;
+        g_previousY = mouseY;
         currentAction = new Array();
         addClick(mouseX, mouseY, false);
         redraw();
     });
 
     $('#canvas').mousemove(function(e) {
-        if(paint) {
+        if(g_paint) {
             var mouseX = e.pageX - this.offsetLeft;
             var mouseY = e.pageY - this.offsetTop;
             addClick(mouseX, mouseY, true);
@@ -132,43 +132,43 @@ function setupSegmentation() {
     });
 
     $('#canvas').mouseup(function(e){
-        paint = false;
+        g_paint = false;
         //segmentationHistory.push(currentAction); // Add action to history
     });
 
     $('#canvas').mouseleave(function(e){
-        if(paint) {
+        if(g_paint) {
             var mouseX = e.pageX - this.offsetLeft;
             var mouseY = e.pageY - this.offsetTop;
-            if(mouseX >= canvasWidth)
-                mouseX = canvasWidth-1;
-            if(mouseY >= canvasHeight)
-                mouseY = canvasHeight-1;
+            if(mouseX >= g_canvasWidth)
+                mouseX = g_canvasWidth-1;
+            if(mouseY >= g_canvasHeight)
+                mouseY = g_canvasHeight-1;
             if(mouseX < 0)
                 mouseX = 0;
             if(mouseY < 0)
                 mouseY = 0;
             addClick(mouseX, mouseY, true);
             redraw();
-            paint = false;
+            g_paint = false;
             //segmentationHistory.push(currentAction); // Add action to history
         }
     });
 
 
     $("#clearButton").click(function() {
-        for(var i = 0; i < canvasWidth*canvasHeight; i++) {
-            segmentationData[i*4] = 0;
-            segmentationData[i*4+1] = 0;
-            segmentationData[i*4+2] = 0;
-            segmentationData[i*4+3] = 255;
-            imageData[i*4] = backgroundImageData[i*4];
-            imageData[i*4+1] = backgroundImageData[i*4+1];
-            imageData[i*4+2] = backgroundImageData[i*4+2];
-            imageData[i*4+3] = 255;
+        for(var i = 0; i < g_canvasWidth*g_canvasHeight; i++) {
+            g_segmentationData[i*4] = 0;
+            g_segmentationData[i*4+1] = 0;
+            g_segmentationData[i*4+2] = 0;
+            g_segmentationData[i*4+3] = 255;
+            g_imageData[i*4] = g_backgroundImageData[i*4];
+            g_imageData[i*4+1] = g_backgroundImageData[i*4+1];
+            g_imageData[i*4+2] = g_backgroundImageData[i*4+2];
+            g_imageData[i*4+3] = 255;
         }
 
-        $('#slider').slider('value', frameNr); // Update slider
+        $('#slider').slider('value', g_frameNr); // Update slider
         redraw();
     });
 
@@ -179,8 +179,8 @@ function setupSegmentation() {
 function sendDataForSave() {
     // Create a new canvas to put segmentation in
     var dummyCanvas = document.createElement('canvas');
-    dummyCanvas.setAttribute('width', canvasWidth);
-    dummyCanvas.setAttribute('height', canvasHeight);
+    dummyCanvas.setAttribute('width', g_canvasWidth);
+    dummyCanvas.setAttribute('height', g_canvasHeight);
     // IE stuff
     if(typeof G_vmlCanvasManager != 'undefined') {
         dummyCanvas = G_vmlCanvasManager.initElement(dummyCanvas);
@@ -188,7 +188,7 @@ function sendDataForSave() {
 
     // Put segmentation into canvas
     var ctx = dummyCanvas.getContext('2d');
-    ctx.putImageData(segmentation, 0, 0);
+    ctx.putImageData(g_segmentation, 0, 0);
     var dataURL = dummyCanvas.toDataURL('image/png', 1); // Use png to compress image and save bandwidth
 
     return $.ajax({
@@ -196,8 +196,8 @@ function sendDataForSave() {
         url: "/segmentation/save/",
         data: {
             image: dataURL,
-            width: canvasWidth,
-            height: canvasHeight,
+            width: g_canvasWidth,
+            height: g_canvasHeight,
             image_id: g_imageID,
             task_id: g_taskID,
             quality: $('input[name=quality]:checked').val(),
@@ -209,12 +209,12 @@ function sendDataForSave() {
 function loadSegmentation(image_sequence_id, frame_nr, task_id, image_id) {
     console.log('In segmentation load')
 
-    backgroundImage = new Image();
-    frameNr = frame_nr;
-    backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
-    backgroundImage.onload = function() {
-        canvasWidth = this.width;
-        canvasHeight = this.height;
+    g_backgroundImage = new Image();
+    g_frameNr = frame_nr;
+    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
+    g_backgroundImage.onload = function() {
+        g_canvasWidth = this.width;
+        g_canvasHeight = this.height;
         setupSegmentation(task_id, image_id);
     };
 
@@ -223,29 +223,29 @@ function loadSegmentation(image_sequence_id, frame_nr, task_id, image_id) {
 function addClick(x, y, dragging) {
     segmentationChanged = true;
     //var label = labels[activeLabel];
-    var color = currentColor;
+    var color = g_currentColor;
     var brushRadius = 1;
     //if(label.name == "Eraser") {
     //    brushRadius = 3;
     //}
     // Draw a line from previousX, previousY to x, y
     if(dragging) {
-        directionX = x - previousX;
-        directionY = y - previousY;
+        directionX = x - g_previousX;
+        directionY = y - g_previousY;
         length = Math.sqrt(directionX*directionX+directionY*directionY);
         directionX /= length;
         directionY /= length;
         for(var i = 0; i < length; i++) {
-            currentX = previousX + directionX*i;
-            currentY = previousY + directionY*i;
+            currentX = g_previousX + directionX*i;
+            currentY = g_previousY + directionY*i;
             currentX = Math.round(currentX);
             currentY = Math.round(currentY);
-            drawAtPoint(currentX, currentY, canvasWidth, brushRadius, color);
+            drawAtPoint(currentX, currentY, g_canvasWidth, brushRadius, color);
         }
-        previousX = x;
-        previousY = y;
+        g_previousX = x;
+        g_previousY = y;
     } else {
-        drawAtPoint(x, y, canvasWidth, brushRadius, color);
+        drawAtPoint(x, y, g_canvasWidth, brushRadius, color);
     }
 }
 
@@ -255,35 +255,35 @@ function drawAtPoint(x, y, width, brushRadius, color) {
             var currentX = x + a;
             var currentY = y + b;
             // Check for out of bounds
-            if(currentX >= canvasWidth)
-                currentX = canvasWidth-1;
-            if(currentY >= canvasHeight)
-                currentY = canvasHeight-1;
+            if(currentX >= g_canvasWidth)
+                currentX = g_canvasWidth-1;
+            if(currentY >= g_canvasHeight)
+                currentY = g_canvasHeight-1;
             if(currentX < 0)
                 currentX = 0;
             if(currentY < 0)
                 currentY = 0;
-            segmentationData[(currentX + currentY*canvasWidth)*4] = color.red;
-            segmentationData[(currentX + currentY*canvasWidth)*4+1] = color.green;
-            segmentationData[(currentX + currentY*canvasWidth)*4+2] = color.blue;
-            imageData[(currentX + currentY*canvasWidth)*4] = color.red;
-            imageData[(currentX + currentY*canvasWidth)*4+1] = color.green;
-            imageData[(currentX + currentY*canvasWidth)*4+2] = color.blue;
+            g_segmentationData[(currentX + currentY*g_canvasWidth)*4] = color.red;
+            g_segmentationData[(currentX + currentY*g_canvasWidth)*4+1] = color.green;
+            g_segmentationData[(currentX + currentY*g_canvasWidth)*4+2] = color.blue;
+            g_imageData[(currentX + currentY*g_canvasWidth)*4] = color.red;
+            g_imageData[(currentX + currentY*g_canvasWidth)*4+1] = color.green;
+            g_imageData[(currentX + currentY*g_canvasWidth)*4+2] = color.blue;
             var position = {x: currentX, y: currentY};
         }
     }
 }
 
 function redraw(){
-    context.putImageData(image, 0, 0);
+    g_context.putImageData(g_image, 0, 0);
 }
 
 // Override redraw sequence in sequence.js
 function redrawSequence() {
-    if(currentFrameNr == frameNr) {
+    if(g_currentFrameNr == g_frameNr) {
         redraw();
     } else {
-        var index = currentFrameNr - startFrame;
-        context.drawImage(sequence[index], 0, 0, canvasWidth, canvasHeight);
+        var index = g_currentFrameNr - g_startFrame;
+        g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     }
 }

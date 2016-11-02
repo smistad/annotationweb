@@ -1,13 +1,13 @@
-var context;
-var canvasWidth = 512;
-var canvasHeight = 512;
-var sequence = [];
+var g_context;
+var g_canvasWidth = 512;
+var g_canvasHeight = 512;
+var g_sequence = [];
 var g_labelButtons = [];
-var currentFrameNr;
-var startFrame;
-var progressbar;
-var framesLoaded;
-var is_playing = true;
+var g_currentFrameNr;
+var g_startFrame;
+var g_progressbar;
+var g_framesLoaded;
+var g_isPlaying = true;
 var g_returnURL = '';
 var g_taskID;
 var g_imageID;
@@ -22,15 +22,15 @@ function min(a, b) {
 }
 
 function incrementFrame() {
-    currentFrameNr = ((currentFrameNr-startFrame) + 1) % framesLoaded + startFrame;
-    $('#slider').slider('value', currentFrameNr); // Update slider
+    g_currentFrameNr = ((g_currentFrameNr-g_startFrame) + 1) % g_framesLoaded + g_startFrame;
+    $('#slider').slider('value', g_currentFrameNr); // Update slider
     redrawSequence();
-    if(is_playing)
+    if(g_isPlaying)
         window.setTimeout(incrementFrame, 50);
 }
 
 function setPlayButtonText() {
-    if(is_playing) {
+    if(g_isPlaying) {
         $("#playButton").html('Pause');
     } else {
         $("#playButton").html('Play');
@@ -88,27 +88,27 @@ function initializeAnnotation(taskID, imageID) {
 
 function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
     console.log('In load sequence');
-    is_playing = auto_play;
+    g_isPlaying = auto_play;
     // Create play/pause button
     setPlayButtonText();
     $("#playButton").click(function() {
-        is_playing = !is_playing;
+        g_isPlaying = !g_isPlaying;
         setPlayButtonText();
-        if(is_playing) // Start it again
+        if(g_isPlaying) // Start it again
             incrementFrame();
     });
 
     // Create canvas
     var canvas = document.getElementById('canvas');
-    canvas.setAttribute('width', canvasWidth);
-    canvas.setAttribute('height', canvasHeight);
+    canvas.setAttribute('width', g_canvasWidth);
+    canvas.setAttribute('height', g_canvasHeight);
     // IE stuff
     if(typeof G_vmlCanvasManager != 'undefined') {
         canvas = G_vmlCanvasManager.initElement(canvas);
     }
-    context = canvas.getContext("2d");
+    g_context = canvas.getContext("2d");
 
-    currentFrameNr = target_frame;
+    g_currentFrameNr = target_frame;
 
     var start;
     var end;
@@ -122,7 +122,7 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
         end = min(nrOfFrames - 1, target_frame + images_to_load_after);
         totalToLoad = end - start;
     }
-    startFrame = start;
+    g_startFrame = start;
 
     // Create slider
     $("#slider").slider(
@@ -131,70 +131,70 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
                 min: start,
                 max: end,
                 step: 1,
-                value: currentFrameNr,
+                value: g_currentFrameNr,
             slide: function(event, ui) {
-                currentFrameNr = ui.value;
+                g_currentFrameNr = ui.value;
                 redrawSequence();
             }
             }
     );
 
     // Create progress bar
-    progressbar = $( "#progressbar" );
+    g_progressbar = $( "#progressbar" );
     progressLabel = $(".progress-label");
-    progressbar.progressbar({
+    g_progressbar.progressbar({
       value: false,
       change: function() {
-        progressLabel.text( "Please wait while loading. " + progressbar.progressbar( "value" ).toFixed(1) + "%" );
+        progressLabel.text( "Please wait while loading. " + g_progressbar.progressbar( "value" ).toFixed(1) + "%" );
       },
       complete: function() {
             // Remove progress bar and redraw
             progressLabel.text( "Finished loading!" );
-            progressbar.hide();
+            g_progressbar.hide();
             redrawSequence();
-            if(is_playing)
+            if(g_isPlaying)
                 incrementFrame();
       }
     });
 
     $("#addFrameButton").click(function() {
-        $("#framesSelected").append('<li>' + currentFrameNr + '</li>');
-        $("#framesForm").append('<input type="hidden" name="frames" value="' + currentFrameNr + '">');
+        $("#framesSelected").append('<li>' + g_currentFrameNr + '</li>');
+        $("#framesForm").append('<input type="hidden" name="frames" value="' + g_currentFrameNr + '">');
     });
 
     $("#goToTargetFrame").click(function() {
-        currentFrameNr = target_frame;
+        g_currentFrameNr = target_frame;
         $('#slider').slider('value', target_frame); // Update slider
         redrawSequence();
     });
 
 
     // Load images
-    framesLoaded = 0;
+    g_framesLoaded = 0;
     //console.log('start: ' + start + ' end: ' + end)
     //console.log('target_frame: ' + target_frame)
     for(var i = start; i <= end; i++) {
         var image = new Image();
         image.src = '/show_frame/' + image_sequence_id + '/' + i + '/';
         image.onload = function() {
-            canvasWidth = this.width;
-            canvasHeight = this.height;
-            canvas.setAttribute('width', canvasWidth);
-            canvas.setAttribute('height', canvasHeight);
+            g_canvasWidth = this.width;
+            g_canvasHeight = this.height;
+            canvas.setAttribute('width', g_canvasWidth);
+            canvas.setAttribute('height', g_canvasHeight);
 
             // Update progressbar
-            framesLoaded++;
-            progressbar.progressbar( "value", framesLoaded*100/totalToLoad);
+            g_framesLoaded++;
+            g_progressbar.progressbar( "value", g_framesLoaded*100/totalToLoad);
         }
 
-        sequence.push(image);
+        g_sequence.push(image);
     }
 
 }
 
 function redrawSequence() {
-    var index = currentFrameNr - startFrame;
-    context.drawImage(sequence[index], 0, 0, canvasWidth, canvasHeight); // Draw background image
+    var index = g_currentFrameNr - g_startFrame;
+    g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight); // Draw background image
 }
 
 // using jQuery
@@ -258,7 +258,7 @@ function changeLabel(label_id) {
             var label = g_labelButtons[i]
             // Set correct button to active
             $('#labelButton' + label.id).addClass('activeLabel');
-            currentColor = {
+            g_currentColor = {
                 red: label.red,
                 green: label.green,
                 blue: label.blue
