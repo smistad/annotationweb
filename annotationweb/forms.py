@@ -36,3 +36,20 @@ class LabelForm(forms.ModelForm):
     class Meta:
         model = Label
         fields = ['name', 'color_red', 'color_blue', 'color_green']
+
+
+class ImageListForm(forms.Form):
+    SORT_IMAGE_ID = 'image_id'
+    SORT_DATE_DESC = 'date_desc'
+    SORT_DATE_ASC = 'date_asc'
+    SORT_CHOICES = (
+        (SORT_IMAGE_ID, 'All images'),
+        (SORT_DATE_DESC, 'Annotated images (newest first)'),
+        (SORT_DATE_ASC, 'Annotated images (oldest first)'),
+    )
+    sort_by = forms.ChoiceField(
+        label='Show',
+        choices=SORT_CHOICES,
+        initial=SORT_IMAGE_ID,
+        widget=forms.Select(attrs={'onchange': 'this.form.submit();'})
+    )

@@ -15,7 +15,9 @@
 <h2>Images</h2>
 
 <div id="imageFilter">
-
+<form action="" method="get">
+    {{ form.as_p }}
+</form>
 </div>
 
 {% for image in images %}
@@ -50,7 +52,7 @@
 <div class="pagination" style="clear: both; border-top: 1px solid #000000;">
     <span class="step-links">
         {% if images.has_previous %}
-            <a href="?page={{ images.previous_page_number }}">Previous</a> -
+            <a href="?{% url_replace request 'page' images.previous_page_number %}">Previous</a> -
         {% endif %}
 
         <span class="current">
@@ -58,7 +60,7 @@
         </span>
 
         {% if images.has_next %}
-            - <a href="?page={{ images.next_page_number }}">Next</a>
+            - <a href="?{% url_replace request 'page' images.next_page_number %}">Next</a>
         {% endif %}
     </span>
 </div>

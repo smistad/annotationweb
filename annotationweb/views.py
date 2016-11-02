@@ -2,6 +2,8 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
+from django.template.defaulttags import register
+
 from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
@@ -402,14 +404,40 @@ def task_description(request, task_id):
     return render(request, 'annotationweb/task_description.html', {'task': task, 'continue_url': url})
 
 
+@register.simple_tag
+def url_replace(request, field, value):
+
+    dict_ = request.GET.copy()
+
+    dict_[field] = value
+
+    return dict_.urlencode()
+
+
 def task(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
         return Http404('The task does not exist')
 
+    sort_by = ImageListForm.SORT_IMAGE_ID
+    if 'sort_by' in request.GET:
+        form = ImageListForm(request.GET)
+        if form.is_valid():
+            sort_by = form.cleaned_data['sort_by']
+    else:
+        form = ImageListForm()
+
+
     # Get all processed images for given task
-    paginator = Paginator(Image.objects.filter(subject__dataset__task=task), 12)
+    if sort_by == ImageListForm.SORT_IMAGE_ID:
+        items = Image.objects.filter(subject__dataset__task=task)
+    else:
+        if sort_by == ImageListForm.SORT_DATE_DESC:
+            items = Image.objects.filter(subject__dataset__task=task, processedimage__task=task).order_by('-processedimage__date')
+        else:
+            items = Image.objects.filter(subject__dataset__task=task, processedimage__task=task).order_by('processedimage__date')
+    paginator = Paginator(items, 12)
     page = request.GET.get('page')
     try:
         images = paginator.page(page)
@@ -433,7 +461,8 @@ def task(request, task_id):
         return_url += '?page=' + str(page)
     request.session['return_to_url'] = return_url
 
-    return render(request, 'annotationweb/task.html', {'images': images, 'task': task})
+
+    return render(request, 'annotationweb/task.html', {'images': images, 'task': task, 'form': form})
 
 
 def get_redirection(task):
