@@ -23,7 +23,7 @@ def process_image(request, task_id, image_id):
         context['boxes'] = BoundingBox.objects.filter(image__image_id=image_id, image__task_id=task_id)
 
         return render(request, 'boundingbox/process_image.html', context)
-    except ValueError:
+    except IndexError:
         messages.info(request, 'This task is finished, no more images to segment.')
         return redirect('index')
 

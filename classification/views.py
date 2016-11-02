@@ -29,7 +29,7 @@ def label_image(request, task_id, image_id):
             pass
 
         return render(request, 'classification/label_image.html', context)
-    except ValueError:
+    except IndexError:
         messages.info(request, 'This task is finished, no more images to segment.')
         return redirect('index')
 

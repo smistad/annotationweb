@@ -25,7 +25,7 @@ def segment_image(request, task_id, image_id):
         context['javascript_files'] = ['segmentation/segmentation.js']
 
         return render(request, 'segmentation/segment_image.html', context)
-    except ValueError:
+    except IndexError:
         messages.info(request, 'This task is finished, no more images to segment.')
         return redirect('index')
 
