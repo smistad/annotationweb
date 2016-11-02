@@ -16,6 +16,10 @@ loadSequence(
 {% block task_javascript %}
 {% endblock %}
 
+{% if return_url %}
+setReturnURL('{{ return_url }}');
+{% endif %}
+
 {% endblock javascript %}
 
 {% block content %}

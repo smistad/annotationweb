@@ -21,7 +21,7 @@ def segment_next_image(request, task_id):
 
 def segment_image(request, task_id, image_id):
     try:
-        context = common.task.setup_task_context(task_id, Task.SEGMENTATION, image_id)
+        context = common.task.setup_task_context(request, task_id, Task.SEGMENTATION, image_id)
         context['javascript_files'] = ['segmentation/segmentation.js']
 
         return render(request, 'segmentation/segment_image.html', context)

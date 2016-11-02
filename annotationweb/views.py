@@ -428,6 +428,11 @@ def task(request, task_id):
         except:
             pass
 
+    return_url = reverse('task', kwargs={'task_id': task_id})
+    if page is not None:
+        return_url += '?page=' + str(page)
+    request.session['return_to_url'] = return_url
+
     return render(request, 'annotationweb/task.html', {'images': images, 'task': task})
 
 

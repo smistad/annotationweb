@@ -27,8 +27,12 @@ function save() {
         var messageBox = document.getElementById("message")
         if(data.success == "true") {
             messageBox.innerHTML = '<span class="success">Image was saved</span>';
-            // Refresh page
-            location.reload();
+            if(g_returnURL != '') {
+                window.location = g_returnURL;
+            } else {
+                // Refresh page
+                location.reload();
+            }
         } else {
             messageBox.innerHTML = '<span class="error">Save failed! ' + data.message + '</span>';
         }

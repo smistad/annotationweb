@@ -28,7 +28,7 @@ def get_next_image(task, image_id):
         return None
 
 
-def setup_task_context(task_id, type, image_id):
+def setup_task_context(request, task_id, type, image_id):
     context = {}
     context['dark_style'] = 'yes'
     try:
@@ -61,6 +61,10 @@ def setup_task_context(task_id, type, image_id):
         context['chosen_quality'] = processed[0].image_quality
     else:
         context['chosen_quality'] = -1
+
+    if 'return_to_url' in request.session:
+        context['return_url'] = request.session['return_to_url']
+        del request.session['return_to_url']
 
     return context
 

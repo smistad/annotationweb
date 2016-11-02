@@ -7,6 +7,7 @@ var startFrame;
 var progressbar;
 var framesLoaded;
 var is_playing = true;
+var g_returnURL = '';
 
 function max(a, b) {
     return a > b ? a : b;
@@ -163,4 +164,8 @@ function getCookie(name) {
 function csrfSafeMethod(method) {
     // these HTTP methods do not require CSRF protection
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+function setReturnURL(url) {
+    g_returnURL = url;
 }
