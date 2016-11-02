@@ -33,7 +33,38 @@ function setPlayButtonText() {
     }
 }
 
-function initialize() {
+function save() {
+    var messageBox = document.getElementById("message")
+    messageBox.innerHTML = '<span class="info">Please wait while saving..</span>';
+    sendDataForSave().done(function(data) {
+        console.log("Save done..");
+        console.log(data);
+        var messageBox = document.getElementById("message")
+        if(data.success == "true") {
+            messageBox.innerHTML = '<span class="success">Image was saved</span>';
+            if(g_returnURL != '') {
+                window.location = g_returnURL;
+            } else {
+                // Reset image quality form before refreshing
+                $('#imageQualityForm')[0].reset();
+                // Refresh page
+                location.reload();
+            }
+        } else {
+            messageBox.innerHTML = '<span class="error">Save failed! ' + data.message + '</span>';
+        }
+        console.log(data.message);
+    }).fail(function(data) {
+        console.log("Ajax failed");
+        var messageBox = document.getElementById("message")
+        messageBox.innerHTML = '<span class="error">Save failed!</span>';
+    }).always(function(data) {
+        console.log("Ajax complete");
+    });
+    console.log("Save function executed");
+}
+
+function initializeAnnotation() {
     // This is required due to djangos CSRF protection
     var csrftoken = getCookie('csrftoken');
     $.ajaxSetup({
@@ -43,6 +74,9 @@ function initialize() {
             }
         }
     });
+
+    // Setup save button
+    $('#saveButton').click(save);
 }
 
 function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {

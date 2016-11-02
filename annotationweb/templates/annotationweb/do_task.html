@@ -1,7 +1,9 @@
 {% extends 'annotationweb/base.html' %}
 
 {% block javascript %}
-initialize();
+
+initializeAnnotation();
+
 {% if image_sequence %}
 loadSequence(
     {{ image_sequence.id }},

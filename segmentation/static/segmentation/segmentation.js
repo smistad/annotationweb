@@ -84,6 +84,9 @@ function loadOldSegmentation(task_id, image_id) {
 }
 
 function setupSegmentation(task_id, image_id) {
+    g_taskID = task_id;
+    g_imageID = image_id;
+
     // Initialize canvas with background image
     context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
     context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight); // Draw background image
@@ -174,42 +177,11 @@ function setupSegmentation(task_id, image_id) {
         redraw();
     });
 
-    $('#saveButton').mousedown(function(e) {
-        var messageBox = document.getElementById("message")
-        messageBox.innerHTML = '<span class="info">Please wait while saving image..</span>';
-        sendDataForSave(task_id, image_id).done(function(data) {
-            console.log("Save done..");
-            console.log(data);
-            var messageBox = document.getElementById("message")
-            if(data.success == "true") {
-                messageBox.innerHTML = '<span class="success">Image was saved</span>';
-                if(g_returnURL != '') {
-                    window.location = g_returnURL;
-                } else {
-                    // Reset image quality form before refreshing
-                    $('#imageQualityForm')[0].reset();
-                    // Refresh page
-                    location.reload();
-                }
-            } else {
-                messageBox.innerHTML = '<span class="error">Save failed! ' + data.message + '</span>';
-            }
-            console.log(data.message);
-        }).fail(function(data) {
-            console.log("Ajax failed");
-            var messageBox = document.getElementById("message")
-            messageBox.innerHTML = '<span class="error">Save failed!</span>';
-        }).always(function(data) {
-            console.log("Ajax complete");
-        });
-        console.log("Save button pressed");
-    });
-
     // Set first label active
     changeLabel(labelButtons[0].id)
 }
 
-function sendDataForSave(task_id, image_id) {
+function sendDataForSave() {
     // Create a new canvas to put segmentation in
     var dummyCanvas = document.createElement('canvas');
     dummyCanvas.setAttribute('width', canvasWidth);
@@ -231,8 +203,8 @@ function sendDataForSave(task_id, image_id) {
             image: dataURL,
             width: canvasWidth,
             height: canvasHeight,
-            image_id: image_id,
-            task_id: task_id,
+            image_id: g_imageID,
+            task_id: g_taskID,
             quality: $('input[name=quality]:checked').val(),
         },
         dataType: "json" // Need this do get result back as JSON
