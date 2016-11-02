@@ -1,5 +1,5 @@
 var labelButtons = [];
-var currentLabel = 0;
+var currentLabel = -1;
 var g_taskID;
 var g_imageID;
 
@@ -62,7 +62,16 @@ function loadClassificationTask(task_id, image_id) {
         }
     });
 
-    $('#saveButton').mousedown(save);
+    $('#saveButton').click(save);
+
+    $('#clearButton').click(function() {
+        // Reset image quality form
+        $('#imageQualityForm input[type="radio"]').each(function(){
+            $(this).prop('checked', false);
+        });
+        // Set all label buttons to inactive
+        changeLabel(-1);
+    });
 }
 
 function colorToHexString(red, green, blue) {
