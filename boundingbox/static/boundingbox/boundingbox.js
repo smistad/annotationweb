@@ -98,6 +98,8 @@ function setupSegmentation(task_id, image_id) {
                 if(g_returnURL != '') {
                     window.location = g_returnURL;
                 } else {
+                    // Reset image quality form before refreshing
+                    $('#imageQualityForm')[0].reset();
                     // Refresh page
                     location.reload();
                 }

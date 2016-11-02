@@ -41,13 +41,23 @@ def setup_task_context(request, task_id, type, image_id):
     else:
         image = Image.objects.get(pk=image_id)
 
+        # Only show next and previous buttons if we processing specific images
+        context['next_image_id'] = get_next_image(task, image.id)
+        context['previous_image_id'] = get_previous_image(task, image.id)
+
+        # Give return URL to template if it exists
+        if 'return_to_url' in request.session:
+            context['return_url'] = request.session['return_to_url']
+
+    # Delete return URL
+    if 'return_to_url' in request.session:
+        del request.session['return_to_url']
+
     # Check if image belongs to an image sequence
     if hasattr(image, 'keyframe'):
         context['image_sequence'] = image.keyframe.image_sequence
         context['frame_nr'] = image.keyframe.frame_nr
 
-    context['next_image_id'] = get_next_image(task, image.id)
-    context['previous_image_id'] = get_previous_image(task, image.id)
     context['image'] = image
     context['task'] = task
     context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
@@ -62,9 +72,6 @@ def setup_task_context(request, task_id, type, image_id):
     else:
         context['chosen_quality'] = -1
 
-    if 'return_to_url' in request.session:
-        context['return_url'] = request.session['return_to_url']
-        del request.session['return_to_url']
 
     return context
 
