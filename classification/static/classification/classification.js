@@ -52,15 +52,6 @@ function save() {
 function loadClassificationTask(task_id, image_id) {
     g_taskID = task_id;
     g_imageID = image_id;
-    // This is required due to djangos CSRF protection
-    var csrftoken = getCookie('csrftoken');
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
 
     $('#saveButton').click(save);
 

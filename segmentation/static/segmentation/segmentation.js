@@ -174,16 +174,6 @@ function setupSegmentation(task_id, image_id) {
         redraw();
     });
 
-    // This is required due to djangos CSRF protection
-    var csrftoken = getCookie('csrftoken');
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
-
     $('#saveButton').mousedown(function(e) {
         var messageBox = document.getElementById("message")
         messageBox.innerHTML = '<span class="info">Please wait while saving image..</span>';

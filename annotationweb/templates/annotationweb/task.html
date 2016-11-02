@@ -37,8 +37,8 @@
             Boxes added {{ image.annotation.boundingbox_set.count }}<br>
         {% elif task.type == 'segmentation' %}
         {% endif %}
-        <a href="{% url 'annotate' task.id image.id %}">Edit</a>
 
+        <a href="{% url 'annotate' task.id image.id %}">Edit</a>
         {% else %}
         Not annotated.<br>
         <a href="{% url 'annotate' task.id image.id %}">Annotate</a>

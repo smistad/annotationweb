@@ -33,6 +33,18 @@ function setPlayButtonText() {
     }
 }
 
+function initialize() {
+    // This is required due to djangos CSRF protection
+    var csrftoken = getCookie('csrftoken');
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+}
+
 function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
     console.log('In load sequence');
     is_playing = auto_play;
