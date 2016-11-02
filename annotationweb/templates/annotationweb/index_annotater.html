@@ -17,7 +17,8 @@
         {% else %}
             <a href="{% url 'task_description' task.id %}">
         {% endif %}
-        {{ task.name }}</a>
+        {{ task.name }}</a> -
+        <a href="{% url 'task' task.id %}">Image list</a> -
         ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
     </li>
 {% endfor %}
