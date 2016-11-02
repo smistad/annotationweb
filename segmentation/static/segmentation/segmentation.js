@@ -283,50 +283,6 @@ function redraw(){
     context.putImageData(image, 0, 0);
 }
 
-function addLabelButton(label_id, red, green, blue) {
-     var labelButton = {
-        id: label_id,
-        red: red,
-        green: green,
-        blue: blue
-    };
-    labelButtons.push(labelButton);
-
-    red = red.toString(16);
-    if(red.length == 1) {
-        red = "0" + red;
-    }
-    green = green.toString(16);
-    if(green.length == 1) {
-        green = "0" + green;
-    }
-    blue = blue.toString(16);
-    if(blue.length == 1) {
-        blue = "0" + blue;
-    }
-    $("#labelButton" + label_id).css("background-color", "#" + red + green + blue);
-}
-
-function changeLabel(label_id) {
-    for(var i = 0; i < labelButtons.length; i++)  {
-        if(labelButtons[i].id == label_id) {
-            currentLabel = i;
-            label = labelButtons[i]
-            // Set correct button to active
-            $('#labelButton' + label.id).addClass('activeLabel');
-            currentColor = {
-                red: label.red,
-                green: label.green,
-                blue: label.blue
-            };
-            console.log(i + ' is now active label');
-        } else {
-            // Set all other buttons to inactive
-            $('#labelButton' + labelButtons[i].id).removeClass('activeLabel');
-        }
-    }
-}
-
 // Override redraw sequence in sequence.js
 function redrawSequence() {
     if(currentFrameNr == frameNr) {

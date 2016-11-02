@@ -2,10 +2,7 @@
 
 {% block task_javascript %}
 
-{% for label in task.label.all %}
-addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
-{% endfor %}
-
+{# Add previously stored boxes if they exist #}
 {% for box in boxes %}
 addBox({{ box.x }}, {{ box.y }}, {{ box.x }} + {{ box.width }}, {{ box.y }} + {{ box.height }}, {{ box.label_id }});
 {% endfor %}

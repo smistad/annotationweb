@@ -1,9 +1,6 @@
 {% extends 'annotationweb/do_task.html' %}
 
 {% block task_javascript %}
-{% for label in task.label.all %}
-    addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
-{% endfor %}
 
 loadClassificationTask({{ task.id }}, {{ image.id }});
 

@@ -5,8 +5,4 @@
 loadSegmentation({{ image_sequence.id }}, {{ frame_nr }}, {{task.id}}, {{image.id}})
 {% endif %}
 
-{% for label in task.label.all %}
-addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
-{% endfor %}
-
 {% endblock task_javascript %}

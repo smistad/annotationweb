@@ -102,5 +102,4 @@ def show_segmentation(request, task_id, image_id):
         return Http404('')
 
     filename = os.path.join(os.path.join(os.path.join(settings.PROJECT_PATH, 'segmentations'), str(task_id)), str(processed_image.id) + '.png')
-    print(filename)
     return get_image_as_http_response(filename)
