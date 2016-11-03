@@ -25,7 +25,7 @@ loadSequence(
 {% endblock %}
 
 {% if return_url %}
-setReturnURL('{{ return_url }}');
+setReturnURL('{{ return_url|safe }}');
 {% endif %}
 
 {% endblock javascript %}
