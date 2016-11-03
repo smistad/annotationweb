@@ -24,11 +24,10 @@ function loadClassificationTask() {
         changeLabel(-1);
     });
 
-    // Modify on click listener for label buttons to trigger save
+    // Add click listener for label buttons to trigger save
     for(var i = 0; i < g_labelButtons.length; ++i) {
         var label_id = g_labelButtons[i].id;
         $('#labelButton' + label_id).click(function() {
-            changeLabel(label_id);
             save();
         });
     }
