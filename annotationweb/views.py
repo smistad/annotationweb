@@ -56,6 +56,11 @@ def index(request):
         get_task_statistics(bb_tasks, request.user)
         context['boundingbox_tasks'] = bb_tasks
 
+        # Landmark tasks
+        landmark_tasks = Task.objects.filter(type=Task.LANDMARK)
+        get_task_statistics(landmark_tasks, request.user)
+        context['landmark_tasks'] = landmark_tasks
+
         return render(request, 'annotationweb/index_admin.html', context)
 
 
@@ -398,6 +403,8 @@ def task_description(request, task_id):
         url = reverse('segmentation:segment_image', args=[task_id])
     elif task.type == task.BOUNDING_BOX:
         url = reverse('boundingbox:process_image', args=[task_id])
+    elif task.type == task.LANDMARK:
+        url = reverse('landmark:process_image', args=[task_id])
     else:
         raise NotImplementedError()
 
@@ -472,6 +479,8 @@ def get_redirection(task):
         return 'boundingbox:process_image'
     elif task.type == Task.SEGMENTATION:
         return 'segmentation:segment_image'
+    elif task.type == Task.LANDMARK:
+        return 'landmark:process_image'
 
 
 def annotate_next_image(request, task_id):

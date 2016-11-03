@@ -47,6 +47,7 @@ urlpatterns = [
     url(r'^classification/', include('classification.urls')),
     url(r'^segmentation/', include('segmentation.urls')),
     url(r'^boundingbox/', include('boundingbox.urls')),
+    url(r'^landmark/', include('landmark.urls')),
 ]
 
 # This is for making statics in a development environment

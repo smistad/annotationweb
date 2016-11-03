@@ -41,10 +41,12 @@ class Task(models.Model):
     SEGMENTATION = 'segmentation'
     CLASSIFICATION = 'classification'
     BOUNDING_BOX = 'boundingbox'
+    LANDMARK = 'landmark'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
         (SEGMENTATION, 'Segmentation'),
         (BOUNDING_BOX, 'Bounding box'),
+        (LANDMARK, 'Landmark'),
     )
 
     name = models.CharField(max_length=200)

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'classification',
     'segmentation',
     'boundingbox',
+    'landmark',
     'user',
 ]
 

@@ -1,0 +1,14 @@
+{% extends 'annotationweb/do_task.html' %}
+
+{% block task_javascript %}
+
+{# Add previously stored boxes if they exist #}
+{% for landmark in landmarks %}
+addLandmark({{ landmark.x }}, {{ landmark.y }}, {{ landmark.label_id }});
+{% endfor %}
+
+{% if image_sequence %}
+loadLandmarkTask({{ image_sequence.id }}, {{ frame_nr }});
+{% endif %}
+
+{% endblock task_javascript %}
