@@ -104,9 +104,8 @@ function initializeAnnotation(taskID, imageID) {
           buttons: {
             "Save and go to next/previous": function() {
               $( this ).dialog( "close" );
-                g_returnURL = '';
+                g_returnURL = g_nextURL;
                 save();
-                window.location.href = g_nextURL;
             },
             "Discard changes and go to next/previous": function() {
               $( this ).dialog( "close" );
