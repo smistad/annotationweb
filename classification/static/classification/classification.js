@@ -16,6 +16,7 @@ function sendDataForSave() {
 function loadClassificationTask() {
 
     $('#clearButton').click(function() {
+        g_annotationHasChanged = true;
         // Reset image quality form
         $('#imageQualityForm input[type="radio"]').each(function(){
             $(this).prop('checked', false);

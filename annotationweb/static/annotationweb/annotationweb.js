@@ -12,6 +12,10 @@ var g_returnURL = '';
 var g_taskID;
 var g_imageID;
 var g_currentLabel = -1;
+// Set this true if user has changed annotation. This will trigger a dialog
+// if user press next or previous
+var g_annotationHasChanged = false;
+var g_nextURL = '';
 
 function max(a, b) {
     return a > b ? a : b;
@@ -84,6 +88,35 @@ function initializeAnnotation(taskID, imageID) {
 
     // Setup save button
     $('#saveButton').click(save);
+
+
+    $('#imageQualityForm input[type="radio"]').change(function(){
+        g_annotationHasChanged = true;
+    });
+
+    // Create dialog
+    $("#dialogConfirm").dialog({
+          resizable: false,
+          height: "auto",
+          width: 400,
+          modal: true,
+            autoOpen: false,
+          buttons: {
+            "Save and go to next/previous": function() {
+              $( this ).dialog( "close" );
+                g_returnURL = '';
+                save();
+                window.location.href = g_nextURL;
+            },
+            "Discard changes and go to next/previous": function() {
+              $( this ).dialog( "close" );
+                window.location.href = g_nextURL;
+            },
+            Cancel: function() {
+              $( this ).dialog( "close" );
+            },
+          }
+        });
 }
 
 function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
@@ -268,5 +301,15 @@ function changeLabel(label_id) {
             // Set all other buttons to inactive
             $('#labelButton' + g_labelButtons[i].id).removeClass('activeLabel');
         }
+    }
+}
+
+function changeImage(url) {
+    if(g_annotationHasChanged) {
+        // Open dialog
+        g_nextURL = url;
+        $('#dialogConfirm').dialog("open");
+    } else {
+        window.location.href = url;
     }
 }

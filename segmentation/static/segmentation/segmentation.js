@@ -117,7 +117,6 @@ function setupSegmentation() {
         g_paint = true;
         g_previousX = mouseX;
         g_previousY = mouseY;
-        currentAction = new Array();
         addClick(mouseX, mouseY, false);
         redraw();
     });
@@ -157,6 +156,7 @@ function setupSegmentation() {
 
 
     $("#clearButton").click(function() {
+        g_annotationHasChanged = true;
         for(var i = 0; i < g_canvasWidth*g_canvasHeight; i++) {
             g_segmentationData[i*4] = 0;
             g_segmentationData[i*4+1] = 0;
@@ -221,7 +221,7 @@ function loadSegmentation(image_sequence_id, frame_nr, task_id, image_id) {
 }
 
 function addClick(x, y, dragging) {
-    segmentationChanged = true;
+    g_annotationHasChanged = true;
     //var label = labels[activeLabel];
     var color = g_currentColor;
     var brushRadius = 1;
@@ -230,14 +230,14 @@ function addClick(x, y, dragging) {
     //}
     // Draw a line from previousX, previousY to x, y
     if(dragging) {
-        directionX = x - g_previousX;
-        directionY = y - g_previousY;
-        length = Math.sqrt(directionX*directionX+directionY*directionY);
+        var directionX = x - g_previousX;
+        var directionY = y - g_previousY;
+        var length = Math.sqrt(directionX*directionX+directionY*directionY);
         directionX /= length;
         directionY /= length;
         for(var i = 0; i < length; i++) {
-            currentX = g_previousX + directionX*i;
-            currentY = g_previousY + directionY*i;
+            var currentX = g_previousX + directionX*i;
+            var currentY = g_previousY + directionY*i;
             currentX = Math.round(currentX);
             currentY = Math.round(currentY);
             drawAtPoint(currentX, currentY, g_canvasWidth, brushRadius, color);

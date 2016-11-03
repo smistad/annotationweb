@@ -50,14 +50,18 @@ setReturnURL('{{ return_url|safe }}');
 {% endif %}
 <div id="actionButtons">
     {% if previous_image_id %}
-    <button onclick="javascript:window.location.href='{% url 'annotate' task.id previous_image_id %}'">Previous</button>
+    <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}');">Previous</button>
     {% endif %}
     {% if next_image_id %}
-    <button onclick="javascript:window.location.href='{% url 'annotate' task.id next_image_id %}'">Next</button>
+    <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}');">Next</button>
     {% endif %}
     <button id="clearButton">Clear</button>
     <button id="saveButton">Save</button>
     <button onclick="javascript:window.location.href='{% url 'task' task.id %}'">Image list</button>
+</div>
+<div id="dialogConfirm">
+    You have done changes to the annotation. <br>
+    Do you wish to save the changes before going to the next/previous image?
 </div>
 <div id="imageQuality">
 <form id="imageQualityForm">

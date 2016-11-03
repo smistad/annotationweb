@@ -54,6 +54,7 @@ function setupSegmentation() {
 
     $('#canvas').mouseup(function(e){
         g_paint = false;
+        g_annotationHasChanged = true;
         addBox(g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
         console.log('finished BB on ' + g_BBx + ' ' + g_BBy);
         //segmentationHistory.push(currentAction); // Add action to history
@@ -61,6 +62,7 @@ function setupSegmentation() {
 
     $('#canvas').mouseleave(function(e){
         if(g_paint) {
+            g_annotationHasChanged = true;
             addBox(g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
             redraw();
             g_paint = false;
@@ -70,6 +72,7 @@ function setupSegmentation() {
 
 
     $("#clearButton").click(function() {
+        g_annotationHasChanged = true;
         g_boxes = [];
         $('#slider').slider('value', g_frameNr); // Update slider
         redraw();
@@ -109,7 +112,6 @@ function createBox(x, y, x2, y2, label) {
 }
 
 function addBox(x, y, x2, y2, label) {
-
     var box = createBox(x, y, x2, y2, label);
     g_boxes.push(box);
 }
