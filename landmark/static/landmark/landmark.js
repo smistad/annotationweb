@@ -101,17 +101,26 @@ function loadLandmarkTask(image_sequence_id, frame_nr) {
 
 function redraw(){
     g_context.putImageData(g_image, 0, 0);
-    var landmarkSize = 4;
+    var landmarkSize = 20;
     // Draw all stores landmarks
     for(var i = 0; i < g_landmarks.length; ++i) {
         g_context.beginPath();
-        g_context.lineWidth = 2;
+        g_context.lineWidth = 3;
         var landmark = g_landmarks[i];
         var label = g_labelButtons[landmark.label];
         g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
-        var x = landmark.x - landmarkSize/2;
-        var y = landmark.y - landmarkSize/2;
-        g_context.rect(x, y, landmarkSize, landmarkSize);
+        var y = landmark.y;
+        var x = landmark.x;
+        var start_x = landmark.x - landmarkSize/2;
+        var start_y = landmark.y - landmarkSize/2;
+        var end_x = landmark.x + landmarkSize/2;
+        var end_y = landmark.y + landmarkSize/2;
+        // Horizontal line
+        g_context.moveTo(start_x, y);
+        g_context.lineTo(end_x, y);
+        // Vertical line
+        g_context.moveTo(x, start_y);
+        g_context.lineTo(x, end_y);
         g_context.stroke();
     }
 }
