@@ -427,26 +427,41 @@ def task(request, task_id):
     except Task.DoesNotExist:
         return Http404('The task does not exist')
 
+    # Get task labels
+    labels = None
+    if task.type == Task.CLASSIFICATION:
+        labels = Label.objects.filter(task=task)
+        labels_selected = [label.id for label in labels]
+
     # Default sort
     sort_by = ImageListForm.SORT_DATE_DESC
+    image_quality = [x for x, y in ProcessedImage.IMAGE_QUALITY_CHOICES]
 
     # Override of sort_by is in URL
     if 'sort_by' in request.GET:
-        form = ImageListForm(request.GET)
+        form = ImageListForm(data=request.GET, labels=labels)
         if form.is_valid():
             sort_by = form.cleaned_data['sort_by']
+            image_quality = form.cleaned_data['image_quality']
+            labels_selected = form.cleaned_data['label']
     else:
-        form = ImageListForm(initial={'sort_by': sort_by})
+        form = ImageListForm(initial={'sort_by': sort_by}, labels=labels)
+
+    queryset = Image.objects.all()
 
     # Get all processed images for given task
     if sort_by == ImageListForm.SORT_IMAGE_ID:
-        items = Image.objects.filter(subject__dataset__task=task)
+        queryset = queryset.filter(subject__dataset__task=task)
     else:
-        if sort_by == ImageListForm.SORT_DATE_DESC:
-            items = Image.objects.filter(subject__dataset__task=task, processedimage__task=task).order_by('-processedimage__date')
+        if task.type == Task.CLASSIFICATION:
+            queryset = queryset.filter(processedimage__image_quality__in=image_quality, processedimage__task=task, processedimage__imagelabel__label__in=labels_selected)
         else:
-            items = Image.objects.filter(subject__dataset__task=task, processedimage__task=task).order_by('processedimage__date')
-    paginator = Paginator(items, 12)
+            queryset = queryset.filter(processedimage__image_quality__in=image_quality, processedimage__task=task)
+        if sort_by == ImageListForm.SORT_DATE_DESC:
+            queryset = queryset.order_by('-processedimage__date')
+        else:
+            queryset = queryset.order_by('processedimage__date')
+    paginator = Paginator(queryset, 12)
     page = request.GET.get('page')
     try:
         images = paginator.page(page)
