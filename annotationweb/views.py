@@ -427,14 +427,16 @@ def task(request, task_id):
     except Task.DoesNotExist:
         return Http404('The task does not exist')
 
-    sort_by = ImageListForm.SORT_IMAGE_ID
+    # Default sort
+    sort_by = ImageListForm.SORT_DATE_DESC
+
+    # Override of sort_by is in URL
     if 'sort_by' in request.GET:
         form = ImageListForm(request.GET)
         if form.is_valid():
             sort_by = form.cleaned_data['sort_by']
     else:
-        form = ImageListForm()
-
+        form = ImageListForm(initial={'sort_by': sort_by})
 
     # Get all processed images for given task
     if sort_by == ImageListForm.SORT_IMAGE_ID:
