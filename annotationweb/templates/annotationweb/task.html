@@ -42,7 +42,7 @@
             Landmarks added {{ image.annotation.landmark_set.count }}<br>
         {% endif %}
 
-        <a href="{% url 'annotate' task.id image.id %}?sort_by={{ sort_by }}">Edit</a>
+        <a href="{% url 'annotate' task.id image.id %}?{{  search_filters.urlencode }}">Edit</a>
         {% else %}
         Not annotated.<br>
         <a href="{% url 'annotate' task.id image.id %}">Annotate</a>

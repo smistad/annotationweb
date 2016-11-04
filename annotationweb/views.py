@@ -1,8 +1,10 @@
 from django.contrib import messages
+from django.http import QueryDict
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
+from django.utils.safestring import mark_safe
 
 from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
@@ -427,23 +429,27 @@ def task(request, task_id):
     except Task.DoesNotExist:
         return Http404('The task does not exist')
 
+    search_filters = QueryDict(mutable=True)
     # Get task labels
     labels = None
     if task.type == Task.CLASSIFICATION:
         labels = Label.objects.filter(task=task)
         labels_selected = [label.id for label in labels]
+        search_filters.setlist('label', labels_selected)
 
     # Default sort
     sort_by = ImageListForm.SORT_DATE_DESC
     image_quality = [x for x, y in ProcessedImage.IMAGE_QUALITY_CHOICES]
+    search_filters.setdefault('sort_by', sort_by)
+    search_filters.setlist('image_quality', image_quality)
 
-    # Override of sort_by is in URL
     if 'sort_by' in request.GET:
         form = ImageListForm(data=request.GET, labels=labels)
         if form.is_valid():
             sort_by = form.cleaned_data['sort_by']
             image_quality = form.cleaned_data['image_quality']
             labels_selected = form.cleaned_data['label']
+            search_filters = request.GET
     else:
         form = ImageListForm(initial={'sort_by': sort_by}, labels=labels)
 
@@ -485,7 +491,7 @@ def task(request, task_id):
         return_url += '&page=' + str(page)
     request.session['return_to_url'] = return_url
 
-    return render(request, 'annotationweb/task.html', {'images': images, 'task': task, 'form': form, 'sort_by': sort_by})
+    return render(request, 'annotationweb/task.html', {'images': images, 'task': task, 'form': form, 'search_filters': search_filters})
 
 
 def get_redirection(task):
@@ -499,21 +505,26 @@ def get_redirection(task):
         return 'landmark:process_image'
 
 
-@register.simple_tag
-def urlencode_dict(dict):
-    url = ''
-    if len(dict) > 0:
-        url += '?'
-        first = True
-        for key, value in dict.items():
-            if not first:
-                key += '&'
-            else:
-                first = False
-
-            url += key + '=' + str(value)
-
-    return url
+# @register.simple_tag
+# def urlencode_dict(dict):
+#     print(dict)
+#     url = ''
+#     if len(dict) > 0:
+#         first = True
+#         for key, value_list in dict.items():
+#             print(value_list)
+#             if type(value_list) is not list:
+#                 value_list = [value_list]
+#             for value in value_list:
+#                 if first:
+#                     url += '?'
+#                     first = False
+#                 else:
+#                     url += '&'
+#
+#                 url += key + '=' + str(value)
+#
+#     return mark_safe(url)
 
 
 def annotate_next_image(request, task_id):
@@ -524,7 +535,7 @@ def annotate_next_image(request, task_id):
         return Http404('The task does not exist')
 
     url = reverse(get_redirection(task), kwargs={'task_id': task.id})
-    return redirect(url + urlencode_dict(request.GET))
+    return redirect(url + '?' + request.GET.urlencode())
 
 
 def annotate_image(request, task_id, image_id):
@@ -535,4 +546,4 @@ def annotate_image(request, task_id, image_id):
         return Http404('The task does not exist')
 
     url = reverse(get_redirection(task), kwargs={'task_id': task.id, 'image_id': image_id})
-    return redirect(url + urlencode_dict(request.GET))
+    return redirect(url + '?' + request.GET.urlencode())

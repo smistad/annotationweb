@@ -15,18 +15,49 @@ def get_next_unprocessed_image(task):
     return Image.objects.filter(subject__dataset__task=task).exclude(processedimage__task=task).order_by('id')[0]
 
 
+# TODO cleanup these to functions, extract common functionality
 def get_previous_image(request, task, image):
     try:
         sort_by = request.GET['sort_by']
+        image_quality = request.GET.getlist('image_quality')
+        labels = None
+        if task.type == Task.CLASSIFICATION:
+            labels = request.GET.getlist('label')
         if sort_by == ImageListForm.SORT_IMAGE_ID:
             return Image.objects.filter(subject__dataset__task=task).exclude(id__gte=image.id).order_by('-id')[0].id
         else:
             # Get current annotated image
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
-                return Image.objects.filter(processedimage__task=task, processedimage__date__gt=annotated_image.date).order_by('processedimage__date')[0].id
+                if labels is None:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__gt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality
+                    )
+                else:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__gt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality,
+                        processedimage__imagelabel__label__in=labels
+                    )
+                return queryset.order_by('processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
-                return Image.objects.filter(processedimage__task=task, processedimage__date__lt=annotated_image.date).order_by('-processedimage__date')[0].id
+                if labels is None:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__lt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality
+                    )
+                else:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__lt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality,
+                        processedimage__imagelabel__label__in=labels
+                    )
+                return queryset.order_by('-processedimage__date')[0].id
     except:
         return None
 
@@ -34,15 +65,47 @@ def get_previous_image(request, task, image):
 def get_next_image(request, task, image):
     try:
         sort_by = request.GET['sort_by']
+        image_quality = request.GET.getlist('image_quality')
+        labels = None
+        if task.type == Task.CLASSIFICATION:
+            labels = request.GET.getlist('label')
         if sort_by == ImageListForm.SORT_IMAGE_ID:
             return Image.objects.filter(subject__dataset__task=task).exclude(id__lte=image.id).order_by('id')[0].id
         else:
+            print(image_quality)
+            print(labels)
             # Get current annotated image
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
-                return Image.objects.filter(processedimage__task=task, processedimage__date__lt=annotated_image.date).order_by('-processedimage__date')[0].id
+                if labels is None:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__lt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality
+                    )
+                else:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__lt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality,
+                        processedimage__imagelabel__label__in=labels
+                    )
+                return queryset.order_by('-processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
-                return Image.objects.filter(processedimage__task=task, processedimage__date__gt=annotated_image.date).order_by('processedimage__date')[0].id
+                if labels is None:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__gt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality
+                    )
+                else:
+                    queryset = Image.objects.filter(
+                        processedimage__task=task,
+                        processedimage__date__gt=annotated_image.date,
+                        processedimage__image_quality__in=image_quality,
+                        processedimage__imagelabel__label__in=labels
+                    )
+                return queryset.order_by('processedimage__date')[0].id
     except:
         return None
 
