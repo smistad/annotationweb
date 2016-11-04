@@ -50,10 +50,10 @@ setReturnURL('{{ return_url|safe }}');
 {% endif %}
 <div id="actionButtons">
     {% if previous_image_id %}
-    <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}');">Previous</button>
+    <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?sort_by={{ request.GET.sort_by }}');">Previous</button>
     {% endif %}
     {% if next_image_id %}
-    <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}');">Next</button>
+    <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?sort_by={{ request.GET.sort_by }}');">Next</button>
     {% endif %}
     <button id="clearButton">Clear</button>
     <button id="saveButton">Save</button>

@@ -3,6 +3,7 @@ import random
 from django.http import Http404
 
 from annotationweb.models import Image, Task, ProcessedImage
+from annotationweb.forms import ImageListForm
 
 
 def get_next_unprocessed_image(task):
@@ -14,16 +15,34 @@ def get_next_unprocessed_image(task):
     return Image.objects.filter(subject__dataset__task=task).exclude(processedimage__task=task).order_by('id')[0]
 
 
-def get_previous_image(task, image_id):
+def get_previous_image(request, task, image):
     try:
-        return Image.objects.filter(subject__dataset__task=task).exclude(id__gte=image_id).order_by('-id')[0].id
+        sort_by = request.GET['sort_by']
+        if sort_by == ImageListForm.SORT_IMAGE_ID:
+            return Image.objects.filter(subject__dataset__task=task).exclude(id__gte=image.id).order_by('-id')[0].id
+        else:
+            # Get current annotated image
+            annotated_image = ProcessedImage.objects.get(task=task, image=image)
+            if sort_by == ImageListForm.SORT_DATE_DESC:
+                return Image.objects.filter(processedimage__task=task, processedimage__date__gt=annotated_image.date).order_by('processedimage__date')[0].id
+            elif sort_by == ImageListForm.SORT_DATE_ASC:
+                return Image.objects.filter(processedimage__task=task, processedimage__date__lt=annotated_image.date).order_by('-processedimage__date')[0].id
     except:
         return None
 
 
-def get_next_image(task, image_id):
+def get_next_image(request, task, image):
     try:
-        return Image.objects.filter(subject__dataset__task=task).exclude(id__lte=image_id).order_by('id')[0].id
+        sort_by = request.GET['sort_by']
+        if sort_by == ImageListForm.SORT_IMAGE_ID:
+            return Image.objects.filter(subject__dataset__task=task).exclude(id__lte=image.id).order_by('id')[0].id
+        else:
+            # Get current annotated image
+            annotated_image = ProcessedImage.objects.get(task=task, image=image)
+            if sort_by == ImageListForm.SORT_DATE_DESC:
+                return Image.objects.filter(processedimage__task=task, processedimage__date__lt=annotated_image.date).order_by('-processedimage__date')[0].id
+            elif sort_by == ImageListForm.SORT_DATE_ASC:
+                return Image.objects.filter(processedimage__task=task, processedimage__date__gt=annotated_image.date).order_by('processedimage__date')[0].id
     except:
         return None
 
@@ -42,8 +61,8 @@ def setup_task_context(request, task_id, type, image_id):
         image = Image.objects.get(pk=image_id)
 
         # Only show next and previous buttons if we processing specific images
-        context['next_image_id'] = get_next_image(task, image.id)
-        context['previous_image_id'] = get_previous_image(task, image.id)
+        context['next_image_id'] = get_next_image(request, task, image)
+        context['previous_image_id'] = get_previous_image(request, task, image)
 
         # Give return URL to template if it exists
         if 'return_to_url' in request.session:
@@ -71,7 +90,6 @@ def setup_task_context(request, task_id, type, image_id):
         context['chosen_quality'] = processed[0].image_quality
     else:
         context['chosen_quality'] = -1
-
 
     return context
 

@@ -470,8 +470,7 @@ def task(request, task_id):
         return_url += '&page=' + str(page)
     request.session['return_to_url'] = return_url
 
-
-    return render(request, 'annotationweb/task.html', {'images': images, 'task': task, 'form': form})
+    return render(request, 'annotationweb/task.html', {'images': images, 'task': task, 'form': form, 'sort_by': sort_by})
 
 
 def get_redirection(task):
@@ -485,6 +484,23 @@ def get_redirection(task):
         return 'landmark:process_image'
 
 
+@register.simple_tag
+def urlencode_dict(dict):
+    url = ''
+    if len(dict) > 0:
+        url += '?'
+        first = True
+        for key, value in dict.items():
+            if not first:
+                key += '&'
+            else:
+                first = False
+
+            url += key + '=' + str(value)
+
+    return url
+
+
 def annotate_next_image(request, task_id):
     # Find the task type and redirect
     try:
@@ -492,7 +508,8 @@ def annotate_next_image(request, task_id):
     except Task.DoesNotExist:
         return Http404('The task does not exist')
 
-    return redirect(get_redirection(task), task_id=task.id)
+    url = reverse(get_redirection(task), kwargs={'task_id': task.id})
+    return redirect(url + urlencode_dict(request.GET))
 
 
 def annotate_image(request, task_id, image_id):
@@ -502,4 +519,5 @@ def annotate_image(request, task_id, image_id):
     except Task.DoesNotExist:
         return Http404('The task does not exist')
 
-    return redirect(get_redirection(task), task_id=task.id, image_id=image_id)
+    url = reverse(get_redirection(task), kwargs={'task_id': task.id, 'image_id': image_id})
+    return redirect(url + urlencode_dict(request.GET))
