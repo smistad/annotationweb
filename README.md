@@ -26,6 +26,7 @@ source environment/bin/activate
 
 **3. Install requirements**
 ```bash
+pip install --upgrade pip # Make sure pip is up to date first
 pip install -r requirements.txt
 ```
 
