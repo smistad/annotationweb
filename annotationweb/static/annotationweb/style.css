@@ -10,11 +10,15 @@ body {
 #pageContent {
     padding: 40px;
     width: 100%;
-    max-width: 1024px;
+    max-width: 1400px;
     margin: 0px auto;
 }
 
 #content {
+    margin: 0px auto;
+    width: -webkit-fit-content;
+    width: -moz-fit-content;
+    width: fit-content;
 }
 
 #contentRight {
