@@ -30,7 +30,13 @@
         <td>{{task.total_number_of_images}}</td>
         <td>{{task.percentage_finished}}%</td>
         <td><a href="{% url 'task' task.id %}">Image list</a></td>
-        <td><a href="{% url 'annotate' task.id %}">Continue annotation</a></td>
+        <td>
+            {% if task.finished %}
+            Task is finished
+            {% else %}
+            <a href="{% url 'annotate' task.id %}">Continue annotation</a>
+            {% endif %}
+        </td>
         <td><a href="{% url 'export' task.id %}">Export</a>
         <td><a href="{% url 'delete_task' task.id %}">Delete</a></td>
     </tr>
