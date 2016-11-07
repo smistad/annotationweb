@@ -8,15 +8,22 @@
 
 <h2>Datasets</h2>
 
-<a href="{% url 'new_dataset' %}">Create new dataset</a><br>
+<p><a href="{% url 'new_dataset' %}">Create new dataset</a></p>
 
-<ul>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Details</th>
+        <th>Import</th>
+        <th>Delete</th>
+    </tr>
     {% for dataset in datasets %}
-    <li>{{ dataset.name }} -
-        <a href="{%  url 'dataset_details' dataset.id %}">Details</a> -
-        <a href="{% url 'import' dataset.id %}">Import data</a> -
-        <a href="{% url 'delete_dataset' dataset.id %}">Delete</a>
-    </li>
+    <tr>
+        <td>{{ dataset.name }}</td>
+        <td><a href="{%  url 'dataset_details' dataset.id %}">Details</a></td>
+        <td><a href="{% url 'import' dataset.id %}">Import data</a></td>
+        <td><a href="{% url 'delete_dataset' dataset.id %}">Delete</a></td>
+    </tr>
     {% endfor %}
-</ul>
+</table>
 {% endblock %}

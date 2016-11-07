@@ -11,13 +11,20 @@
     <a href="{% url 'new_subject' dataset.id %}">Add a new subject to this dataset</a><br>
 
     <h3>Subjects</h3>
-    <ul>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Add data</th>
+            <th>Import</th>
+            <th>Delete</th>
+        </tr>
         {% for subject in dataset.subject_set.all %}
-            <li>{{ subject.name }} -
-                <a href="{% url 'add_image_sequence' subject.id %}">Add an image sequence</a> -
-                <a href="{% url 'import' subject.id %}">Import data</a> -
-                <a href="{% url 'delete_subject' subject.id %}">Delete</a>
-            </li>
+            <tr>
+                <td>{{ subject.name }}</td>
+                <td><a href="{% url 'add_image_sequence' subject.id %}">Add an image sequence</a></td>
+                <td><a href="{% url 'import' subject.id %}">Import data</a></td>
+                <td><a href="{% url 'delete_subject' subject.id %}">Delete</a></td>
+            </tr>
         {% endfor %}
-    </ul>
+    </table>
 {% endblock %}
