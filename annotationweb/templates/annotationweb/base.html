@@ -6,10 +6,9 @@
         <title>
             Annotation Web {% block title %}{% endblock %}
         </title>
-        {% if dark_style %}
-        <link rel="stylesheet" type="text/css" href="{% static 'annotationweb/style_dark.css' %}">
-        {% else %}
         <link rel="stylesheet" type="text/css" href="{% static 'annotationweb/style.css' %}">
+        {% if dark_style %}
+            <link rel="stylesheet" type="text/css" href="{% static 'annotationweb/style_dark.css' %}">
         {% endif %}
         <script src="{% static 'annotationweb/jquery.min.js' %}"></script>
         <link rel="stylesheet" href="{% static 'annotationweb/jquery-ui.css' %}">
@@ -26,21 +25,26 @@
         </script>
     </head>
     <body>
-        <div id="content">
-            <h1>Annotation Web</h1>
-
-            {% if user.is_authenticated %}
+        <div id="menuWrapper">
             <div id="menu">
-                <a href="{%  url 'index' %}">Task list</a> -
+            <ul>
+                <li><h1>Annotation Web</h1></li>
+                {% if user.is_authenticated %}
+                <li><a href="{%  url 'index' %}">Task list</a></li>
                 {% ifequal user.groups.all.0.name 'annotater' %}
                 {% else %}
-                <a href="{% url 'datasets' %}">Datasets</a> -
-                <a href="{% url 'admin:index' %}">Admin</a> -
+                <li><a href="{% url 'datasets' %}">Datasets</a></li>
+                <li><a href="{% url 'admin:index' %}">Admin</a></li>
                 {% endifequal %}
-                <a href="{% url 'user:logout' %}">Logout</a><br>
-                Logged in as {{ user }}
+                <li><a href="{% url 'user:logout' %}">Logout</a></li>
+                <li id="loggedIn">Logged in as {{ user }}</li>
+                {% endif %}
+            </ul>
             </div>
-            {% endif %}
+        </div>
+        <div id="content">
+
+
 
             {% block content %}
             {% endblock %}

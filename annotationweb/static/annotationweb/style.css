@@ -3,18 +3,63 @@ body {
     color: #000000;
     margin: 0;
     padding: 0;
-    font-size: 14px;
-    line-height: 28px;
+    font-size: medium;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 #content {
-    max-width: 640px;
-    width: 96%;
+    width: 100%;
+    max-width: 1024px;
     margin: 0px auto;
 }
 
 .labelButton {
     font-size: 20px;
+}
+
+#menuWrapper {
+    width: 100%;
+    background-color: #333;
+}
+
+#menu{
+    margin: 0px auto;
+}
+
+#menu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    text-align:center;
+}
+
+#menu h1 {
+    color: #FFFFFF;
+    font-size: x-large;
+    display: inline-block;
+}
+
+#menu li {
+    color: white;
+    display: inline;
+}
+
+#menu li a {
+    padding: 14px 16px;
+    display: inline-block;
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    text-decoration: none;
+}
+
+#loggedIn {
+    padding: 14px 16px;
+}
+
+/* Change the link color to #111 (black) on hover */
+#menu li a:hover {
+    background-color: #111;
 }
 
 .info {
@@ -59,4 +104,10 @@ button {
     color: #000000;
     border: none;
     padding: 4px;
+}
+
+#imageQuality {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: x-large;
 }

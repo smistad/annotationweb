@@ -21,7 +21,18 @@
 </div>
 
 {% for image in images %}
-    <div style="float: left; width: 25%; height: 300px">
+
+
+    {# one row #}
+    {% if forloop.counter0|divisibleby:"4" %}
+    {% if not forloop.first %}
+        {# end previous row #}
+        </div>
+    {% endif %}
+    <div style="clear: both">
+    {% endif %}
+
+    <div style="float: left; width: 25%; box-sizing: border-box; padding: 10px;">
         <img src="{% url 'show_image' image.id %}" width="100%">
 
         {% if image.annotation %}
@@ -49,6 +60,12 @@
         {% endif %}
 
     </div>
+
+
+    {# end row if last#}
+    {% if forloop.last %}
+        </div>
+    {% endif %}
 {% endfor %}
 
 <div class="pagination" style="clear: both; border-top: 1px solid #000000;">
