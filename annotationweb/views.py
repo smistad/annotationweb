@@ -44,24 +44,9 @@ def index(request):
     else:
         # Admin page
         # Classification tasks
-        tasks = Task.objects.filter(type=Task.CLASSIFICATION)
+        tasks = Task.objects.all()
         get_task_statistics(tasks, request.user)
         context['tasks'] = tasks
-
-        # Segmentation tasks
-        segmentation_tasks = Task.objects.filter(type=Task.SEGMENTATION)
-        get_task_statistics(segmentation_tasks, request.user)
-        context['segmentation_tasks'] = segmentation_tasks
-
-        # Bounding box tasks
-        bb_tasks = Task.objects.filter(type=Task.BOUNDING_BOX)
-        get_task_statistics(bb_tasks, request.user)
-        context['boundingbox_tasks'] = bb_tasks
-
-        # Landmark tasks
-        landmark_tasks = Task.objects.filter(type=Task.LANDMARK)
-        get_task_statistics(landmark_tasks, request.user)
-        context['landmark_tasks'] = landmark_tasks
 
         return render(request, 'annotationweb/index_admin.html', context)
 

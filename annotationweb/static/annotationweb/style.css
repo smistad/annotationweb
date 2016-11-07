@@ -130,3 +130,8 @@ button {
     margin-bottom: 30px;
     font-size: x-large;
 }
+
+th, td {
+    border-bottom: 1px solid #ddd;
+    padding: 4px 16px;
+}
