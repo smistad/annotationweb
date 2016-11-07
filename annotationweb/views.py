@@ -31,7 +31,7 @@ def get_task_statistics(tasks, user):
                                              task.total_number_of_images, 1)
         # Check if user has processed any
         task.started = ProcessedImage.objects.filter(task=task, user=user).count() > 0
-        task.finished = task.number_of_annotated_images == task.total_number_of_images
+        task.finished = task.number_of_annotated_images >= task.total_number_of_images
 
 
 def index(request):
