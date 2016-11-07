@@ -8,6 +8,9 @@ class Dataset(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+
 
 class Subject(models.Model):
     name = models.CharField(max_length=200, help_text='Use anonymized id')
@@ -15,6 +18,9 @@ class Subject(models.Model):
 
     def __str__(self):
         return self.dataset.name + ' - ' + self.name
+
+    class Meta:
+        ordering = ['name']
 
 
 class Image(models.Model):
@@ -65,6 +71,9 @@ class Task(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['name']
 
 
 class ImageSequence(models.Model):
