@@ -1,4 +1,4 @@
-{% extends 'annotationweb/base.html' %}
+{% extends 'annotationweb/two_column_layout.html' %}
 
 {% block javascript %}
 
@@ -30,7 +30,7 @@ setReturnURL('{{ return_url|safe }}');
 
 {% endblock javascript %}
 
-{% block content %}
+{% block content_left %}
 
 {% for message in messages %}
 <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
@@ -78,6 +78,10 @@ setReturnURL('{{ return_url|safe }}');
 {% endfor %}
 </div>
 
+
+{% endblock content_left %}
+{% block content_right %}
+
 <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 
 {% block task_content %}
@@ -89,4 +93,4 @@ setReturnURL('{{ return_url|safe }}');
 {{ task.description }}
 {% endautoescape %}
 
-{% endblock content %}
+{% endblock content_right %}

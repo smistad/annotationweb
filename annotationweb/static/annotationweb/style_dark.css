@@ -54,8 +54,6 @@ img {
 }
 
 #labelButtons, #actionButtons {
-    margin-top: 10px;
-    margin-bottom: 10px;
 }
 
 #slider {
@@ -68,4 +66,5 @@ button {
     background-color: #FFFFFF;
     border: none;
     padding: 10px;
+    margin: 4px;
 }
