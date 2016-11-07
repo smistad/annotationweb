@@ -33,8 +33,9 @@ function setupSegmentation() {
             return;
         }
 
-        var mouseX = e.pageX - this.offsetLeft;
-        var mouseY = e.pageY - this.offsetTop;
+        var scale =  g_canvasWidth / $('#canvas').width();
+        var mouseX = (e.pageX - this.offsetLeft)*scale;
+        var mouseY = (e.pageY - this.offsetTop)*scale;
 
         g_BBx = mouseX;
         g_BBy = mouseY;
@@ -44,8 +45,9 @@ function setupSegmentation() {
 
     $('#canvas').mousemove(function(e) {
         if(g_paint) {
-            var mouseX = e.pageX - this.offsetLeft;
-            var mouseY = e.pageY - this.offsetTop;
+            var scale =  g_canvasWidth / $('#canvas').width();
+            var mouseX = (e.pageX - this.offsetLeft)*scale;
+            var mouseY = (e.pageY - this.offsetTop)*scale;
             g_BBx2 = mouseX;
             g_BBy2 = mouseY;
             redraw();

@@ -27,8 +27,9 @@ function setupSegmentation() {
             return;
         }
 
-        var mouseX = e.pageX - this.offsetLeft;
-        var mouseY = e.pageY - this.offsetTop;
+        var scale =  g_canvasWidth / $('#canvas').width();
+        var mouseX = (e.pageX - this.offsetLeft)*scale;
+        var mouseY = (e.pageY - this.offsetTop)*scale;
 
         addLandmark(mouseX, mouseY, g_currentLabel);
         redraw();

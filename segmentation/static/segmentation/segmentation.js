@@ -111,8 +111,9 @@ function setupSegmentation() {
             return;
         }
 
-        var mouseX = e.pageX - this.offsetLeft;
-        var mouseY = e.pageY - this.offsetTop;
+        var scale =  g_canvasWidth / $('#canvas').width();
+        var mouseX = (e.pageX - this.offsetLeft)*scale;
+        var mouseY = (e.pageY - this.offsetTop)*scale;
 
         g_paint = true;
         g_previousX = mouseX;
@@ -123,8 +124,9 @@ function setupSegmentation() {
 
     $('#canvas').mousemove(function(e) {
         if(g_paint) {
-            var mouseX = e.pageX - this.offsetLeft;
-            var mouseY = e.pageY - this.offsetTop;
+            var scale =  g_canvasWidth / $('#canvas').width();
+            var mouseX = (e.pageX - this.offsetLeft)*scale;
+            var mouseY = (e.pageY - this.offsetTop)*scale;
             addClick(mouseX, mouseY, true);
             redraw();
         }
@@ -137,8 +139,10 @@ function setupSegmentation() {
 
     $('#canvas').mouseleave(function(e){
         if(g_paint) {
-            var mouseX = e.pageX - this.offsetLeft;
-            var mouseY = e.pageY - this.offsetTop;
+
+            var scale =  g_canvasWidth / $('#canvas').width();
+            var mouseX = (e.pageX - this.offsetLeft)*scale;
+            var mouseY = (e.pageY - this.offsetTop)*scale;
             if(mouseX >= g_canvasWidth)
                 mouseX = g_canvasWidth-1;
             if(mouseY >= g_canvasHeight)
