@@ -42,14 +42,17 @@ class ImageListForm(forms.Form):
     SORT_IMAGE_ID = 'image_id'
     SORT_DATE_DESC = 'date_desc'
     SORT_DATE_ASC = 'date_asc'
+    SORT_NOT_ANNOTATED_IMAGE_ID = 'not_annotated_image_id'
     SORT_CHOICES = (
         (SORT_IMAGE_ID, 'All images'),
         (SORT_DATE_DESC, 'Annotated images (newest first)'),
         (SORT_DATE_ASC, 'Annotated images (oldest first)'),
+        (SORT_NOT_ANNOTATED_IMAGE_ID, 'Non-annotated images'),
     )
     sort_by = forms.ChoiceField(
         label='Show',
         choices=SORT_CHOICES,
+        required=False,
         initial=SORT_IMAGE_ID,
         widget=forms.Select(attrs={'onchange': 'this.form.submit();'})
     )

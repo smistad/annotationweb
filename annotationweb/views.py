@@ -435,7 +435,8 @@ def task(request, task_id):
         if form.is_valid():
             sort_by = form.cleaned_data['sort_by']
             image_quality = form.cleaned_data['image_quality']
-            labels_selected = form.cleaned_data['label']
+            if 'label' in form.cleaned_data:
+                labels_selected = form.cleaned_data['label']
             search_filters = request.GET
     else:
         form = ImageListForm(initial={'sort_by': sort_by}, labels=labels)
@@ -445,6 +446,8 @@ def task(request, task_id):
     # Get all processed images for given task
     if sort_by == ImageListForm.SORT_IMAGE_ID:
         queryset = queryset.filter(subject__dataset__task=task)
+    elif sort_by == ImageListForm.SORT_NOT_ANNOTATED_IMAGE_ID:
+        queryset = queryset.filter(subject__dataset__task=task).exclude(processedimage__task=task)
     else:
         if task.type == Task.CLASSIFICATION:
             queryset = queryset.filter(processedimage__image_quality__in=image_quality, processedimage__task=task, processedimage__imagelabel__label__in=labels_selected)

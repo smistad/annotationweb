@@ -20,6 +20,10 @@
 </form>
 </div>
 
+{% if images|length == 0 %}
+<p>No images found.</p>
+{% endif %}
+
 {% for image in images %}
 
 
