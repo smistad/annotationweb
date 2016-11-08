@@ -76,9 +76,8 @@ body {
     padding: 14px 16px;
 }
 
-/* Change the link color to #111 (black) on hover */
 #menu li a:hover {
-    background-color: #111;
+    background-color: #0077b3;
 }
 
 .info {
@@ -107,7 +106,7 @@ body {
 }
 
 a:link, a:visited {
-    color: #000000;
+    color: #0077b3;
     text-decoration: underline;
 }
 a:hover {
