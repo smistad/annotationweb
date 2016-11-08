@@ -133,8 +133,6 @@ STATIC_FILEFINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
-PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
-
 LOGIN_URL = '/user/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGIN_EXEMPT_URLS = (

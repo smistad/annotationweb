@@ -7,7 +7,7 @@ from django.http import HttpResponse, Http404, JsonResponse
 import random
 from io import StringIO, BytesIO
 import base64
-from annotationweb.settings import PROJECT_PATH
+from annotationweb.settings import BASE_DIR
 from common.metaimage import *
 import numpy as np
 from annotationweb.models import Task, Image, ProcessedImage, Label
@@ -36,7 +36,7 @@ def save_segmentation(request):
         annotation = common.task.save_annotation(request)
 
         # Save segmentation image to disk
-        base_path = PROJECT_PATH + '/segmentations/' + str(annotation.task_id) + '/'
+        base_path = BASE_DIR + '/segmentations/' + str(annotation.task_id) + '/'
         try:
             os.makedirs(base_path)
         except:
@@ -101,5 +101,5 @@ def show_segmentation(request, task_id, image_id):
     except ProcessedImage.DoesNotExist:
         return Http404('')
 
-    filename = os.path.join(os.path.join(os.path.join(settings.PROJECT_PATH, 'segmentations'), str(task_id)), str(processed_image.id) + '.png')
+    filename = os.path.join(os.path.join(os.path.join(settings.BASE_DIR, 'segmentations'), str(task_id)), str(processed_image.id) + '.png')
     return get_image_as_http_response(filename)

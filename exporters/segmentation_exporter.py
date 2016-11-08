@@ -4,7 +4,7 @@ from annotationweb.models import ProcessedImage, Dataset, Task, Label
 from django import forms
 import os
 from shutil import rmtree, copyfile
-from annotationweb.settings import PROJECT_PATH
+from annotationweb.settings import BASE_DIR
 
 
 class SegmentationExporterForm(forms.Form):
@@ -68,7 +68,7 @@ class SegmentationExporter(Exporter):
             copy_image(name, new_filename)
 
             # Copy all segmentation files
-            segmentation_filename = os.path.join(PROJECT_PATH, os.path.join('segmentations', os.path.join(str(self.task.id), str(segmented_image.id) + '.mhd')))
+            segmentation_filename = os.path.join(BASE_DIR, os.path.join('segmentations', os.path.join(str(self.task.id), str(segmented_image.id) + '.mhd')))
             new_segmentation_filename = os.path.join(dataset_path, str(image_id) + '_segmentation.mhd')
             copy_image(segmentation_filename, new_segmentation_filename)
 
