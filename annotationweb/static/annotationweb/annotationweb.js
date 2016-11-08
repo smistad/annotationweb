@@ -33,7 +33,8 @@ function incrementFrame() {
         window.setTimeout(incrementFrame, 50);
 }
 
-function setPlayButtonText() {
+function setPlayButton(play) {
+    g_isPlaying = play;
     if(g_isPlaying) {
         $("#playButton").html('Pause');
     } else {
@@ -120,12 +121,10 @@ function initializeAnnotation(taskID, imageID) {
 
 function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
     console.log('In load sequence');
-    g_isPlaying = auto_play;
     // Create play/pause button
-    setPlayButtonText();
+    setPlayButton(auto_play);
     $("#playButton").click(function() {
-        g_isPlaying = !g_isPlaying;
-        setPlayButtonText();
+        setPlayButton(!g_isPlaying);
         if(g_isPlaying) // Start it again
             incrementFrame();
     });
@@ -166,6 +165,7 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
                 value: g_currentFrameNr,
             slide: function(event, ui) {
                 g_currentFrameNr = ui.value;
+                setPlayButton(false);
                 redrawSequence();
             }
             }
@@ -173,7 +173,7 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
 
     // Create progress bar
     g_progressbar = $( "#progressbar" );
-    progressLabel = $(".progress-label");
+    var progressLabel = $(".progress-label");
     g_progressbar.progressbar({
       value: false,
       change: function() {
