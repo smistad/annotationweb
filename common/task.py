@@ -72,8 +72,6 @@ def get_next_image(request, task, image):
         if sort_by == ImageListForm.SORT_IMAGE_ID:
             return Image.objects.filter(subject__dataset__task=task).exclude(id__lte=image.id).order_by('id')[0].id
         else:
-            print(image_quality)
-            print(labels)
             # Get current annotated image
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
