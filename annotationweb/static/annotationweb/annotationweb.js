@@ -26,11 +26,12 @@ function min(a, b) {
 }
 
 function incrementFrame() {
+    if(!g_isPlaying) // If this is set to false, stop playing
+        return;
     g_currentFrameNr = ((g_currentFrameNr-g_startFrame) + 1) % g_framesLoaded + g_startFrame;
     $('#slider').slider('value', g_currentFrameNr); // Update slider
     redrawSequence();
-    if(g_isPlaying)
-        window.setTimeout(incrementFrame, 50);
+    window.setTimeout(incrementFrame, 50);
 }
 
 function setPlayButton(play) {
@@ -195,6 +196,7 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
     });
 
     $("#goToTargetFrame").click(function() {
+        setPlayButton(false);
         g_currentFrameNr = target_frame;
         $('#slider').slider('value', target_frame); // Update slider
         redrawSequence();
