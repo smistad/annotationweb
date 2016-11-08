@@ -2,7 +2,7 @@ from os.path import basename
 import importlib
 import glob
 import os
-from annotationweb.settings import PROJECT_PATH
+from annotationweb.settings import BASE_DIR
 
 importers = []
 
@@ -31,7 +31,7 @@ def find_all_importers():
 
     # Go through each app and see if there is an exporters.py file
 
-    modules = glob.glob(os.path.join(PROJECT_PATH, 'importers') + "/*.py")
+    modules = glob.glob(os.path.join(BASE_DIR, 'importers') + "/*.py")
     for module in modules:
         print('Importing..')
         importers.clear()

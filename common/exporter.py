@@ -3,7 +3,7 @@ from os.path import basename
 import importlib
 import glob
 import os
-from annotationweb.settings import PROJECT_PATH
+from annotationweb.settings import BASE_DIR
 
 exporters = []
 
@@ -30,7 +30,7 @@ class Exporter(metaclass=MetaExporter):
 def find_all_exporters(task_type):
     result = []
 
-    modules = glob.glob(os.path.join(PROJECT_PATH, 'exporters') + '/*.py')
+    modules = glob.glob(os.path.join(BASE_DIR, 'exporters') + '/*.py')
     for module in modules:
         print('Importing..')
         exporters.clear()
