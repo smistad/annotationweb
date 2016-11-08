@@ -8,6 +8,7 @@ body {
 }
 
 #pageContent {
+    box-sizing: border-box;
     padding: 40px;
     width: 100%;
     max-width: 1400px;
@@ -55,12 +56,11 @@ body {
 #menu h1 {
     color: #FFFFFF;
     font-size: x-large;
-    display: inline-block;
 }
 
 #menu li {
     color: white;
-    display: inline;
+    display: inline-block;
 }
 
 #menu li a {
