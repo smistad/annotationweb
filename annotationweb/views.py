@@ -426,10 +426,11 @@ def task(request, task_id):
 
     sort_by = ImageListForm.SORT_DATE_DESC # Default sort
     image_quality = [x for x, y in ProcessedImage.IMAGE_QUALITY_CHOICES]
-    search_filters.setdefault('sort_by', sort_by)
-    search_filters.setlist('image_quality', image_quality)
     subjects = Subject.objects.filter(dataset__task=task)
     subjects_selected = [subject.id for subject in subjects]
+    search_filters.setdefault('sort_by', sort_by)
+    search_filters.setlist('image_quality', image_quality)
+    search_filters.setlist('subject', subjects_selected)
 
     if 'sort_by' in request.GET:
         form = ImageListForm(subjects, data=request.GET, labels=labels)
