@@ -424,35 +424,46 @@ def task(request, task_id):
         labels_selected = [label.id for label in labels]
         search_filters.setlist('label', labels_selected)
 
-    # Default sort
-    sort_by = ImageListForm.SORT_DATE_DESC
+    sort_by = ImageListForm.SORT_DATE_DESC # Default sort
     image_quality = [x for x, y in ProcessedImage.IMAGE_QUALITY_CHOICES]
     search_filters.setdefault('sort_by', sort_by)
     search_filters.setlist('image_quality', image_quality)
+    subjects = Subject.objects.filter(dataset__task=task)
+    subjects_selected = [subject.id for subject in subjects]
 
     if 'sort_by' in request.GET:
-        form = ImageListForm(data=request.GET, labels=labels)
+        form = ImageListForm(subjects, data=request.GET, labels=labels)
         if form.is_valid():
             sort_by = form.cleaned_data['sort_by']
             image_quality = form.cleaned_data['image_quality']
+            subjects_selected = form.cleaned_data['subject']
             if 'label' in form.cleaned_data:
                 labels_selected = form.cleaned_data['label']
             search_filters = request.GET
     else:
-        form = ImageListForm(initial={'sort_by': sort_by}, labels=labels)
+        form = ImageListForm(subjects, initial={'sort_by': sort_by}, labels=labels)
 
     queryset = Image.objects.all()
 
     # Get all processed images for given task
     if sort_by == ImageListForm.SORT_IMAGE_ID:
-        queryset = queryset.filter(subject__dataset__task=task)
+        queryset = queryset.filter(subject__dataset__task=task, subject__in=subjects_selected)
     elif sort_by == ImageListForm.SORT_NOT_ANNOTATED_IMAGE_ID:
-        queryset = queryset.filter(subject__dataset__task=task).exclude(processedimage__task=task)
+        queryset = queryset.filter(subject__dataset__task=task, subject__in=subjects_selected).exclude(processedimage__task=task)
     else:
         if task.type == Task.CLASSIFICATION:
-            queryset = queryset.filter(processedimage__image_quality__in=image_quality, processedimage__task=task, processedimage__imagelabel__label__in=labels_selected)
+            queryset = queryset.filter(
+                processedimage__image_quality__in=image_quality,
+                processedimage__task=task,
+                processedimage__imagelabel__label__in=labels_selected,
+                subject__in=subjects_selected
+            )
         else:
-            queryset = queryset.filter(processedimage__image_quality__in=image_quality, processedimage__task=task)
+            queryset = queryset.filter(
+                processedimage__image_quality__in=image_quality,
+                processedimage__task=task,
+                subject__in=subjects_selected
+            )
         if sort_by == ImageListForm.SORT_DATE_DESC:
             queryset = queryset.order_by('-processedimage__date')
         else:
