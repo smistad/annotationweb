@@ -29,6 +29,7 @@ def get_previous_image(request, task, image):
         image_quality = search_filters.get_value('image_quality')
         selected_subjects = search_filters.get_value('subject')
         selected_labels = search_filters.get_value('label')
+        users_selected = search_filters.get_value('user')
 
         if sort_by == ImageListForm.SORT_IMAGE_ID:
             return Image.objects.filter(
@@ -44,6 +45,7 @@ def get_previous_image(request, task, image):
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 else:
@@ -52,6 +54,7 @@ def get_previous_image(request, task, image):
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
                         processedimage__imagelabel__label__in=selected_labels,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 return queryset.order_by('processedimage__date')[0].id
@@ -61,6 +64,7 @@ def get_previous_image(request, task, image):
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 else:
@@ -69,6 +73,7 @@ def get_previous_image(request, task, image):
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
                         processedimage__imagelabel__label__in=selected_labels,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 return queryset.order_by('-processedimage__date')[0].id
@@ -84,6 +89,7 @@ def get_next_image(request, task, image):
         image_quality = search_filters.get_value('image_quality')
         selected_subjects = search_filters.get_value('subject')
         selected_labels = search_filters.get_value('label')
+        users_selected = search_filters.get_value('user')
 
         if sort_by == ImageListForm.SORT_IMAGE_ID:
             return Image.objects.filter(
@@ -99,6 +105,7 @@ def get_next_image(request, task, image):
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 else:
@@ -107,6 +114,7 @@ def get_next_image(request, task, image):
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
                         processedimage__imagelabel__label__in=selected_labels,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 return queryset.order_by('-processedimage__date')[0].id
@@ -116,6 +124,7 @@ def get_next_image(request, task, image):
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 else:
@@ -124,6 +133,7 @@ def get_next_image(request, task, image):
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
                         processedimage__imagelabel__label__in=selected_labels,
+                        processedimage__user__in=users_selected,
                         subject__in=selected_subjects,
                     )
                 return queryset.order_by('processedimage__date')[0].id

@@ -63,7 +63,7 @@ class ImageListForm(forms.Form):
         widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
     )
 
-    def __init__(self, subjects, data=None, labels=None, initial=None):
+    def __init__(self, subjects, users, data=None, labels=None, initial=None):
         super().__init__(data, initial=initial)
         if labels is not None:
             self.fields['label'] = forms.MultipleChoiceField(
@@ -79,4 +79,11 @@ class ImageListForm(forms.Form):
             initial=[subject.id for subject in subjects],
             widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
         )
+        if len(users) > 0:
+            self.fields['user'] = forms.MultipleChoiceField(
+                label='Users',
+                choices=((user.id, user.username) for user in users),
+                initial=[user.id for user in users],
+                widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
+            )
 

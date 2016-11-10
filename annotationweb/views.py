@@ -440,24 +440,33 @@ def task(request, task_id):
     # Get all processed images for given task
     sort_by = search_filters.get_value('sort_by')
     subjects_selected = search_filters.get_value('subject')
+    users_selected = search_filters.get_value('user')
+    image_quality = search_filters.get_value('image_quality')
     if sort_by == ImageListForm.SORT_IMAGE_ID:
-        queryset = queryset.filter(subject__dataset__task=task, subject__in=subjects_selected)
+        queryset = queryset.filter(
+            subject__dataset__task=task,
+            subject__in=subjects_selected
+        )
     elif sort_by == ImageListForm.SORT_NOT_ANNOTATED_IMAGE_ID:
-        queryset = queryset.filter(subject__dataset__task=task, subject__in=subjects_selected).exclude(processedimage__task=task)
+        queryset = queryset.filter(
+            subject__dataset__task=task,
+            subject__in=subjects_selected
+        ).exclude(processedimage__task=task)
     else:
-        image_quality = search_filters.get_value('image_quality')
         if task.type == Task.CLASSIFICATION:
             labels_selected = search_filters.get_value('label')
             queryset = queryset.filter(
                 processedimage__image_quality__in=image_quality,
                 processedimage__task=task,
                 processedimage__imagelabel__label__in=labels_selected,
-                subject__in=subjects_selected
+                processedimage__user__in=users_selected,
+                subject__in=subjects_selected,
             )
         else:
             queryset = queryset.filter(
                 processedimage__image_quality__in=image_quality,
                 processedimage__task=task,
+                processedimage__user__in=users_selected,
                 subject__in=subjects_selected
             )
         if sort_by == ImageListForm.SORT_DATE_DESC:
