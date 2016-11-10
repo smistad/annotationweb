@@ -202,6 +202,14 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
         redrawSequence();
     });
 
+    $("#canvas").click(function() {
+        // Stop playing if user clicks image
+        setPlayButton(false);
+        g_currentFrameNr = target_frame;
+        $('#slider').slider('value', target_frame); // Update slider
+        redrawSequence();
+    });
+
 
     // Load images
     g_framesLoaded = 0;
