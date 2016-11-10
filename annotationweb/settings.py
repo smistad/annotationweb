@@ -139,3 +139,5 @@ LOGIN_EXEMPT_URLS = (
  r'^about\.html$',
  r'^legal/', # allow any URL under /legal/*
 )
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

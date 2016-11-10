@@ -75,7 +75,7 @@ class ImageListForm(forms.Form):
 
         self.fields['subject'] = forms.MultipleChoiceField(
             label='Subjects',
-            choices=((subject.id, subject.name) for subject in subjects),
+            choices=((subject.id, subject.dataset.name + ': ' + subject.name) for subject in subjects),
             initial=[subject.id for subject in subjects],
             widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
         )

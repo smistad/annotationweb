@@ -15,8 +15,10 @@
 <h2>Images</h2>
 
 <div id="imageFilter">
-<form action="" method="get">
+<form action="{% url 'task' task.id %}" method="post">
+    {% csrf_token %}
     {{ form.as_p }}
+    <p><button type="button" onclick="javascript:window.location = '{% url 'reset_filters' task.id %}';">Reset filters</button></p>
 </form>
 </div>
 
@@ -57,7 +59,7 @@
             Landmarks added {{ image.annotation.landmark_set.count }}<br>
         {% endif %}
 
-        <a href="{% url 'annotate' task.id image.id %}?{{  search_filters.urlencode }}">Edit</a>
+        <a href="{% url 'annotate' task.id image.id %}">Edit</a>
         {% else %}
         Not annotated.<br>
         <a href="{% url 'annotate' task.id image.id %}">Annotate</a>

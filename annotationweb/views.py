@@ -9,6 +9,7 @@ from django.utils.safestring import mark_safe
 from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
+from common.search_filters import SearchFilter
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
@@ -410,49 +411,43 @@ def url_replace(request, field, value):
     return dict_.urlencode()
 
 
+def reset_filters(request, task_id):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        return Http404('The task does not exist')
+
+    search_filters = SearchFilter(request, task)
+    search_filters.delete()
+    return redirect('task', task_id)
+
+
 def task(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
         return Http404('The task does not exist')
 
-    search_filters = QueryDict(mutable=True)
-    # Get task labels
-    labels = None
-    if task.type == Task.CLASSIFICATION:
-        labels = Label.objects.filter(task=task)
-        labels_selected = [label.id for label in labels]
-        search_filters.setlist('label', labels_selected)
+    search_filters = SearchFilter(request, task)
 
-    sort_by = ImageListForm.SORT_DATE_DESC # Default sort
-    image_quality = [x for x, y in ProcessedImage.IMAGE_QUALITY_CHOICES]
-    subjects = Subject.objects.filter(dataset__task=task)
-    subjects_selected = [subject.id for subject in subjects]
-    search_filters.setdefault('sort_by', sort_by)
-    search_filters.setlist('image_quality', image_quality)
-    search_filters.setlist('subject', subjects_selected)
-
-    if 'sort_by' in request.GET:
-        form = ImageListForm(subjects, data=request.GET, labels=labels)
-        if form.is_valid():
-            sort_by = form.cleaned_data['sort_by']
-            image_quality = form.cleaned_data['image_quality']
-            subjects_selected = form.cleaned_data['subject']
-            if 'label' in form.cleaned_data:
-                labels_selected = form.cleaned_data['label']
-            search_filters = request.GET
+    if request.method == 'POST':
+        form = search_filters.create_form(data=request.POST)
     else:
-        form = ImageListForm(subjects, initial={'sort_by': sort_by}, labels=labels)
+        form = search_filters.create_form()
 
     queryset = Image.objects.all()
 
     # Get all processed images for given task
+    sort_by = search_filters.get_value('sort_by')
+    subjects_selected = search_filters.get_value('subject')
     if sort_by == ImageListForm.SORT_IMAGE_ID:
         queryset = queryset.filter(subject__dataset__task=task, subject__in=subjects_selected)
     elif sort_by == ImageListForm.SORT_NOT_ANNOTATED_IMAGE_ID:
         queryset = queryset.filter(subject__dataset__task=task, subject__in=subjects_selected).exclude(processedimage__task=task)
     else:
+        image_quality = search_filters.get_value('image_quality')
         if task.type == Task.CLASSIFICATION:
+            labels_selected = search_filters.get_value('label')
             queryset = queryset.filter(
                 processedimage__image_quality__in=image_quality,
                 processedimage__task=task,
@@ -488,12 +483,12 @@ def task(request, task_id):
         except:
             pass
 
-    return_url = reverse('task', kwargs={'task_id': task_id}) + '?' + search_filters.urlencode()
+    return_url = reverse('task', kwargs={'task_id': task_id})
     if page is not None:
-        return_url += '&page=' + str(page)
+        return_url += '?page=' + str(page)
     request.session['return_to_url'] = return_url
 
-    return render(request, 'annotationweb/task.html', {'images': images, 'task': task, 'form': form, 'search_filters': search_filters})
+    return render(request, 'annotationweb/task.html', {'images': images, 'task': task, 'form': form})
 
 
 def get_redirection(task):

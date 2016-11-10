@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^show-image/(?P<image_id>[0-9]+)/$', views.show_image, name='show_image'),
     url(r'^new-task/$', views.new_task, name='new_task'),
     url(r'^task/(?P<task_id>[0-9]+)/$', views.task, name='task'),
+    url(r'^reset-filters/(?P<task_id>[0-9]+)/$', views.reset_filters, name='reset_filters'),
     url(r'^new-label/$', views.new_label, name='new_label'),
     url(r'^task-description/(?P<task_id>[0-9]+)/$', views.task_description, name='task_description'),
     url(r'^export/(?P<task_id>[0-9]+)/$', views.export, name='export'),

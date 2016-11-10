@@ -6,6 +6,8 @@ from annotationweb.models import Image, Task, ProcessedImage, Subject, Label
 from annotationweb.forms import ImageListForm
 from django.db.models.aggregates import Count
 
+from common.search_filters import SearchFilter
+
 
 def get_next_unprocessed_image(task):
     """
@@ -21,19 +23,12 @@ def get_next_unprocessed_image(task):
 # TODO cleanup these to functions, extract common functionality
 def get_previous_image(request, task, image):
     try:
-        subjects = Subject.objects.filter(dataset__task=task)
-        labels = None
-        if task.type == Task.CLASSIFICATION:
-            labels = Label.objects.filter(task=task)
+        search_filters = SearchFilter(request, task)
 
-        form = ImageListForm(subjects, data=request.GET, labels=labels)
-        if not form.is_valid():
-            raise ValueError
-        sort_by = form.cleaned_data['sort_by']
-        image_quality = form.cleaned_data['image_quality']
-        selected_subjects = form.cleaned_data['subject']
-        if task.type == Task.CLASSIFICATION:
-            selected_labels = form.cleaned_data['label']
+        sort_by = search_filters.get_value('sort_by')
+        image_quality = search_filters.get_value('image_quality')
+        selected_subjects = search_filters.get_value('subject')
+        selected_labels = search_filters.get_value('label')
 
         if sort_by == ImageListForm.SORT_IMAGE_ID:
             return Image.objects.filter(
@@ -44,7 +39,7 @@ def get_previous_image(request, task, image):
             # Get current annotated image
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
-                if labels is None:
+                if task.type != Task.CLASSIFICATION:
                     queryset = Image.objects.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
@@ -61,7 +56,7 @@ def get_previous_image(request, task, image):
                     )
                 return queryset.order_by('processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
-                if labels is None:
+                if task.type != Task.CLASSIFICATION:
                     queryset = Image.objects.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
@@ -83,19 +78,12 @@ def get_previous_image(request, task, image):
 
 def get_next_image(request, task, image):
     try:
-        subjects = Subject.objects.filter(dataset__task=task)
-        labels = None
-        if task.type == Task.CLASSIFICATION:
-            labels = Label.objects.filter(task=task)
+        search_filters = SearchFilter(request, task)
 
-        form = ImageListForm(subjects, data=request.GET, labels=labels)
-        if not form.is_valid():
-            raise ValueError
-        sort_by = form.cleaned_data['sort_by']
-        image_quality = form.cleaned_data['image_quality']
-        selected_subjects = form.cleaned_data['subject']
-        if task.type == Task.CLASSIFICATION:
-            selected_labels = form.cleaned_data['label']
+        sort_by = search_filters.get_value('sort_by')
+        image_quality = search_filters.get_value('image_quality')
+        selected_subjects = search_filters.get_value('subject')
+        selected_labels = search_filters.get_value('label')
 
         if sort_by == ImageListForm.SORT_IMAGE_ID:
             return Image.objects.filter(
@@ -106,7 +94,7 @@ def get_next_image(request, task, image):
             # Get current annotated image
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
-                if labels is None:
+                if task.type != Task.CLASSIFICATION:
                     queryset = Image.objects.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
@@ -123,7 +111,7 @@ def get_next_image(request, task, image):
                     )
                 return queryset.order_by('-processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
-                if labels is None:
+                if task.type != Task.CLASSIFICATION:
                     queryset = Image.objects.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,

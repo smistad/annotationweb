@@ -138,3 +138,7 @@ th, td {
 #canvas {
     width: 100%;
 }
+
+#imageFilter form p {
+    display: inline-block;
+}
