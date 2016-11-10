@@ -270,7 +270,7 @@ def add_image_sequence(request, subject_id):
                         # Create image
                         image = Image()
                         image.filename = new_image_sequence.format.replace('#', str(frame_nr))
-                        image.dataset = new_image_sequence.dataset
+                        image.subject = subject
                         image.save()
 
                         # Create associated key frame
