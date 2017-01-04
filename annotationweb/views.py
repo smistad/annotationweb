@@ -442,6 +442,27 @@ def task(request, task_id):
     subjects_selected = search_filters.get_value('subject')
     users_selected = search_filters.get_value('user')
     image_quality = search_filters.get_value('image_quality')
+    metadata = search_filters.get_value('metadata')
+
+    if len(metadata) > 0:
+        metadata_dict = {}
+        for item in metadata:
+            parts = item.split(': ')
+            if len(parts) != 2:
+                raise Exception('Error: must be 2 parts')
+            name = parts[0]
+            value = parts[1]
+            if name in metadata_dict.keys():
+                metadata_dict[name].append(value)
+            else:
+                metadata_dict[name] = [value]
+
+        for name, values in metadata_dict.items():
+            queryset = queryset.filter(
+                metadata__name=name,
+                metadata__value__in=values
+            )
+
     if sort_by == ImageListForm.SORT_IMAGE_ID:
         queryset = queryset.filter(
             subject__dataset__task=task,
@@ -473,6 +494,7 @@ def task(request, task_id):
             queryset = queryset.order_by('-processedimage__date')
         else:
             queryset = queryset.order_by('processedimage__date')
+
     paginator = Paginator(queryset, 12)
     page = request.GET.get('page')
     try:

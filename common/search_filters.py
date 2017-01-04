@@ -1,4 +1,4 @@
-from annotationweb.models import Task, Label, Subject, ProcessedImage
+from annotationweb.models import Task, Label, Subject, ProcessedImage, Metadata
 from annotationweb.forms import ImageListForm
 from django.contrib.auth.models import User
 
@@ -19,6 +19,9 @@ class SearchFilter:
         self.subjects = Subject.objects.filter(dataset__task=task)
         self.users = User.objects.filter(processedimage__task=task).distinct()
 
+        # Get metadata for task
+        self.metadata = Metadata.objects.values('value', 'name').filter(image__subject__dataset__task=task).distinct()
+
         if 'search_filters'+str(task.id) not in request.session:
             request.session['search_filters'+str(task.id)] = {}
 
@@ -31,15 +34,17 @@ class SearchFilter:
             self.set_value('label', labels_selected)
             users_selected = [user.id for user in self.users]
             self.set_value('user', users_selected)
+            metadata_selected = []
+            self.set_value('metadata', metadata_selected)
 
     def set_value(self, name, value):
         self.request.session['search_filters'+str(self.task.id)][name] = value
 
     def create_form(self, data=None):
         if data is None:
-            form = ImageListForm(self.subjects, self.users, data=self.request.session['search_filters'+str(self.task.id)], labels=self.labels)
+            form = ImageListForm(self.subjects, self.users, self.metadata, data=self.request.session['search_filters'+str(self.task.id)], labels=self.labels)
         else:
-            form = ImageListForm(self.subjects, self.users, data=data, labels=self.labels)
+            form = ImageListForm(self.subjects, self.users, self.metadata, data=data, labels=self.labels)
             # Update search filters with contents of form if it is valid
             if form.is_valid():
                 for key, value in form.cleaned_data.items():
