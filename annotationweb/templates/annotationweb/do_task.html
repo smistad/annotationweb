@@ -90,6 +90,13 @@ setReturnURL('{{ return_url|safe }}');
 {% block task_content %}
 {% endblock %}
 
+{% if image.metadata_set.count > 0 %}
+<h2>Image metadata</h2>
+{% for metadata in image.metadata_set.all %}
+<strong>{{ metadata.name }}:</strong> {{ metadata.value }}<br>
+{% endfor %}
+{% endif %}
+
 {% if task.description|length > 0 %}
 <h2>Task description</h2>
 
