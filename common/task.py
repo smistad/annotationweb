@@ -30,9 +30,31 @@ def get_previous_image(request, task, image):
         selected_subjects = search_filters.get_value('subject')
         selected_labels = search_filters.get_value('label')
         users_selected = search_filters.get_value('user')
+        metadata = search_filters.get_value('metadata')
+
+        queryset = Image.objects.all()
+
+        if len(metadata) > 0:
+            metadata_dict = {}
+            for item in metadata:
+                parts = item.split(': ')
+                if len(parts) != 2:
+                    raise Exception('Error: must be 2 parts')
+                name = parts[0]
+                value = parts[1]
+                if name in metadata_dict.keys():
+                    metadata_dict[name].append(value)
+                else:
+                    metadata_dict[name] = [value]
+
+            for name, values in metadata_dict.items():
+                queryset = queryset.filter(
+                    metadata__name=name,
+                    metadata__value__in=values
+                )
 
         if sort_by == ImageListForm.SORT_IMAGE_ID:
-            return Image.objects.filter(
+            return queryset.filter(
                 subject__dataset__task=task,
                 subject__in=selected_subjects,
             ).exclude(id__gte=image.id).order_by('-id')[0].id
@@ -41,7 +63,7 @@ def get_previous_image(request, task, image):
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
                 if task.type != Task.CLASSIFICATION:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
@@ -49,7 +71,7 @@ def get_previous_image(request, task, image):
                         subject__in=selected_subjects,
                     )
                 else:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
@@ -60,7 +82,7 @@ def get_previous_image(request, task, image):
                 return queryset.order_by('processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
                 if task.type != Task.CLASSIFICATION:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
@@ -68,7 +90,7 @@ def get_previous_image(request, task, image):
                         subject__in=selected_subjects,
                     )
                 else:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
@@ -90,9 +112,31 @@ def get_next_image(request, task, image):
         selected_subjects = search_filters.get_value('subject')
         selected_labels = search_filters.get_value('label')
         users_selected = search_filters.get_value('user')
+        metadata = search_filters.get_value('metadata')
+
+        queryset = Image.objects.all()
+
+        if len(metadata) > 0:
+            metadata_dict = {}
+            for item in metadata:
+                parts = item.split(': ')
+                if len(parts) != 2:
+                    raise Exception('Error: must be 2 parts')
+                name = parts[0]
+                value = parts[1]
+                if name in metadata_dict.keys():
+                    metadata_dict[name].append(value)
+                else:
+                    metadata_dict[name] = [value]
+
+            for name, values in metadata_dict.items():
+                queryset = queryset.filter(
+                    metadata__name=name,
+                    metadata__value__in=values
+                )
 
         if sort_by == ImageListForm.SORT_IMAGE_ID:
-            return Image.objects.filter(
+            return queryset.filter(
                 subject__dataset__task=task,
                 subject__in=selected_subjects,
             ).exclude(id__lte=image.id).order_by('id')[0].id
@@ -101,7 +145,7 @@ def get_next_image(request, task, image):
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
                 if task.type != Task.CLASSIFICATION:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
@@ -109,7 +153,7 @@ def get_next_image(request, task, image):
                         subject__in=selected_subjects,
                     )
                 else:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
@@ -120,7 +164,7 @@ def get_next_image(request, task, image):
                 return queryset.order_by('-processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
                 if task.type != Task.CLASSIFICATION:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
@@ -128,7 +172,7 @@ def get_next_image(request, task, image):
                         subject__in=selected_subjects,
                     )
                 else:
-                    queryset = Image.objects.filter(
+                    queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
                         processedimage__image_quality__in=image_quality,
