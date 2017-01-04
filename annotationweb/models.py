@@ -110,3 +110,14 @@ class ProcessedImage(models.Model):
         (QUALITY_GOOD, 'Good'),
     )
     image_quality = models.CharField(max_length=50, choices=IMAGE_QUALITY_CHOICES)
+
+
+# Used to attach metadata to images, such as acquisition parameters
+class Metadata(models.Model):
+    image = models.ForeignKey(Image, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    value = models.CharField(max_length=256)
+
+    def __str__(self):
+        return self.name + ': ' + self.value
+
