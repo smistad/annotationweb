@@ -261,7 +261,7 @@ class CardiacSequenceHDFExaminationsExporter(Exporter):
                 continue
             width = 128
             height = 128
-            frames = 50
+            frames = 10
             samples = len(labeled_images)
             input = np.zeros((samples, frames, height, width))
             output = np.zeros((samples, len(label_dict)))
