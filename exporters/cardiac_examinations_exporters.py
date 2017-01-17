@@ -257,6 +257,8 @@ class CardiacSequenceHDFExaminationsExporter(Exporter):
         for subject in subjects:
             # Get labeled images
             labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
+            if labeled_images.count() == 0:
+                continue
             width = 128
             height = 128
             frames = 50
@@ -271,16 +273,16 @@ class CardiacSequenceHDFExaminationsExporter(Exporter):
                 key_frame = KeyFrame.objects.get(image=labeled_image.image)
                 image_sequence = key_frame.image_sequence
                 nr_of_frames = image_sequence.nr_of_frames
-                for i in range(min(nr_of_frames, samples)):
+                for frame_nr in range(min(nr_of_frames, frames)):
                     # Get image
-                    filename = image_sequence.format.replace('#', str(i))
+                    filename = image_sequence.format.replace('#', str(frame_nr))
                     image = PIL.Image.open(filename)
                     # Resize
                     image = image.resize((width, height), PIL.Image.BILINEAR)
                     # Convert to numpy array and normalize
                     image_array = np.array(image).astype(np.float32)
                     image_array /= 255
-                    input[current_sample, i, :, :] = image_array
+                    input[current_sample, frame_nr, :, :] = image_array
 
                 output[current_sample, label_dict[label.label.name]] = 1
                 current_sample += 1
