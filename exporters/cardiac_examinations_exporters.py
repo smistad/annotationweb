@@ -150,7 +150,7 @@ class CardiacHDFExaminationsExporter(Exporter):
         label_file = open(join(path, 'labels.txt'), 'w')
         labels = Label.objects.filter(task=self.task)
         label_dict = {}
-        counter = 0
+        counter = 0 
         for label in labels:
             label_file.write(label.name + '\n')
             label_dict[label.name] = counter
@@ -162,10 +162,12 @@ class CardiacHDFExaminationsExporter(Exporter):
         for subject in subjects:
             # Get labeled images
             labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
-            minisequences = []
+            if labeled_images.count() == 0:
+                continue
+            sequence_frames = []
             labels = []
-            width = 128
-            height = 128
+            width = 128 
+            height = 128 
             frames = 10
             for labeled_image in labeled_images:
                 label = ImageLabel.objects.get(image=labeled_image)
@@ -177,7 +179,6 @@ class CardiacHDFExaminationsExporter(Exporter):
                 # Skip sequence if too small
                 if nr_of_frames < frames:
                     continue
-                sequence_frames = []
                 for i in range(nr_of_frames):
                     # Get image
                     filename = image_sequence.format.replace('#', str(i))
@@ -186,29 +187,20 @@ class CardiacHDFExaminationsExporter(Exporter):
                     image = image.resize((width, height), PIL.Image.BILINEAR)
                     # Convert to numpy array and normalize
                     image_array = np.array(image).astype(np.float32)
-                    image_array /= 255
+                    image_array /= 255 
                     sequence_frames.append(image_array)
-
-                # Sample minisequences from sequence
-                for i in range(nr_of_frames-frames):
-                    minisequence = np.ndarray((frames, height, width))
-                    for j in range(frames):
-                        minisequence[j, :, :] = sequence_frames[i+j]
-                    minisequences.append(minisequence)
                     labels.append(label_dict[label.label.name])
-
 
             # TODO Create hdf5 files and insert data
             # Collect data as ndarrays
-            input = np.ndarray((len(minisequences), 10, height, width))
-            output = np.ndarray((len(minisequences), 1, 1, 1))
-            for i in range(len(minisequences)):
-                input[i,:,:,:] = minisequences[i]
+            input = np.ndarray((len(sequence_frames), 1, height, width))
+            output = np.ndarray((len(sequence_frames), 1, 1, 1))
+            for i in range(len(sequence_frames)):
+                input[i,0,:,:] = sequence_frames[i]
                 output[i,0,0,0] = labels[i]
 
             f = h5py.File(join(path, subject.name + '.hd5'), 'w')
             f.create_dataset("data", data=input, compression="gzip", compression_opts=4)
             f.create_dataset("label", data=output, compression="gzip", compression_opts=4)
             f.close()
-
 
