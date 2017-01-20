@@ -193,6 +193,36 @@ def setup_task_context(request, task_id, type, image_id):
     except Task.DoesNotExist:
         raise Http404("Task does not exist")
 
+    # TODO Get label hierarchy
+    # Top labels first
+    toplabels = task.label.all()
+    # Find each sublabel group
+    sublabels = []
+    label_stack = []
+    labels = [] # all labels
+    for label in toplabels:
+        label_stack.append(label)
+        labels.append(label)
+
+    # Process stack
+    while len(label_stack) > 0:
+        current_label = label_stack.pop()
+
+        # Add all children
+        children = []
+        for label in Label.objects.filter(parent=current_label):
+            label_stack.append(label)
+            children.append(label)
+            labels.append(label)
+
+        if len(children) > 0:
+            sublabel = {'id': current_label.id, 'labels': children}
+            sublabels.append(sublabel)
+
+    context['toplabels'] = toplabels
+    context['sublabels'] = sublabels
+    context['labels'] = labels
+
     if image_id is None:
         image = get_next_unprocessed_image(task)
     else:

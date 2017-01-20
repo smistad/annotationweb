@@ -29,7 +29,18 @@ function loadClassificationTask() {
     for(var i = 0; i < g_labelButtons.length; ++i) {
         var label_id = g_labelButtons[i].id;
         $('#labelButton' + label_id).click(function() {
-            save();
+            // TODO only trigger save if label has no children
+            // TODO If button has children, show sublabels instead
+            var childrenFound = false;
+            for(var j = 0; j < g_labelButtons.length; j++) {
+                var child_label = g_labelButtons[j];
+                if(child_label.parent_id == g_currentLabel) {
+                    childrenFound = true;
+                } else if(child_label.parent_id != 0) {
+                }
+            }
+            if(!childrenFound)
+                save();
         });
     }
 }

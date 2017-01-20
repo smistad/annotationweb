@@ -39,7 +39,7 @@ class Label(models.Model):
     color_green = models.PositiveSmallIntegerField()
     color_blue = models.PositiveSmallIntegerField()
 
-    children = models.ManyToManyField('Label')
+    parent = models.ForeignKey('Label', blank=True, null=True)
 
     def __str__(self):
         return self.name

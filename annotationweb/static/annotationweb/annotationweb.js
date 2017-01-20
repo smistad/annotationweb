@@ -285,22 +285,36 @@ function colorToHexString(red, green, blue) {
     return '#' + red + green + blue;
 }
 
-function addLabelButton(label_id, red, green, blue) {
+function addLabelButton(label_id, red, green, blue, parent_id) {
     var labelButton = {
         id: label_id,
         red: red,
         green: green,
-        blue: blue
+        blue: blue,
+        parent_id: parent_id,
     };
     g_labelButtons.push(labelButton);
 
     $("#labelButton" + label_id).css("background-color", colorToHexString(red, green, blue));
+
+    // TODO finish
+    if(parent_id != 0) {
+        $('#sublabel_' + parent_id).hide();
+    }
 }
 
 function changeLabel(label_id) {
     for(var i = 0; i < g_labelButtons.length; i++)  {
         if(g_labelButtons[i].id == label_id) {
+            // Hide previous label's sublabels
+            console.log("Hiding sublabel group " + g_currentLabel);
+            $('#sublabel_' + g_currentLabel).hide();
+
             g_currentLabel = label_id;
+            // Show new label's sublabels
+            console.log("Showing sublabel group " + g_currentLabel);
+            $('#sublabel_' + g_currentLabel).show();
+
             var label = g_labelButtons[i]
             // Set correct button to active
             $('#labelButton' + label.id).addClass('activeLabel');

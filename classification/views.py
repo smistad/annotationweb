@@ -19,7 +19,7 @@ def label_image(request, task_id, image_id):
         context['javascript_files'] = ['classification/classification.js']
 
         # Load labels
-        context['labels'] = Label.objects.filter(task=task_id)
+        #context['labels'] = Label.objects.filter(task=task_id)
 
         # Get label, if image has been already labeled
         try:

@@ -17,8 +17,8 @@ loadSequence(
 {% endif %}
 
 {# Add label buttons #}
-{% for label in task.label.all %}
-    addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }});
+{% for label in labels %}
+    addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }}, {% if label.parent %}{{ label.parent.id }}{% else  %}0{% endif %});
 {% endfor %}
 
 {% block task_javascript %}
@@ -80,8 +80,15 @@ setReturnURL('{{ return_url|safe }}');
 </div>
 
 <div id="labelButtons">
-{% for label in task.label.all %}
+{% for label in toplabels %}
     <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
+{% endfor %}
+{% for sublabel in sublabels %}
+    <div id="sublabel_{{ sublabel.id }}">
+        {% for label in sublabel.labels %}
+        <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
+        {% endfor %}
+    </div>
 {% endfor %}
 </div>
 
