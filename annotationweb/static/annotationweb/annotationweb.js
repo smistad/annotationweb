@@ -303,30 +303,72 @@ function addLabelButton(label_id, red, green, blue, parent_id) {
     }
 }
 
+function getLabelWithId(id) {
+    for(var i = 0; i < g_labelButtons.length; i++) {
+        if (g_labelButtons[i].id == id) {
+            return g_labelButtons[i];
+        }
+    }
+}
+
+function getLabelList(label) {
+    var currentLabel = label;
+    var labels = [];
+    labels.push(label);
+    while(currentLabel.parent_id != 0) {
+        currentLabel = getLabelWithId(currentLabel.parent_id);
+        labels.push(currentLabel);
+    }
+
+    return labels;
+}
+
+function showLabelList(list) {
+    // Hide all sublabel groups first
+    for(var i = 0; i < g_labelButtons.length; i++)  {
+        if(g_labelButtons[i].parent_id != 0) {
+            $('#sublabel_' + g_labelButtons[i].parent_id).hide();
+        }
+    }
+    // Then show the ones needed
+    for(var i = 0; i < list.length; i++) {
+        console.log("Showing sublabel group " + list[i].id);
+        $('#sublabel_' + list[i].id).show();
+    }
+}
+
+function decorateLabelButtons(list) {
+    // Remove active class from all first
+    for(var i = 0; i < g_labelButtons.length; i++)  {
+        $('#labelButton' + g_labelButtons[i].id).removeClass('activeLabel');
+    }
+    // Then add it the ones which have been selected
+    for(var i = 0; i < list.length; i++) {
+        $('#labelButton' + list[i].id).addClass('activeLabel');
+    }
+}
+
 function changeLabel(label_id) {
     for(var i = 0; i < g_labelButtons.length; i++)  {
         if(g_labelButtons[i].id == label_id) {
             // Hide previous label's sublabels
-            console.log("Hiding sublabel group " + g_currentLabel);
-            $('#sublabel_' + g_currentLabel).hide();
+            var labelList = getLabelList(g_labelButtons[i]);
+            showLabelList(labelList);
 
             g_currentLabel = label_id;
             // Show new label's sublabels
-            console.log("Showing sublabel group " + g_currentLabel);
-            $('#sublabel_' + g_currentLabel).show();
 
-            var label = g_labelButtons[i]
+            var label = g_labelButtons[i];
             // Set correct button to active
-            $('#labelButton' + label.id).addClass('activeLabel');
+            decorateLabelButtons(labelList);
+            //$('#labelButton' + label.id).addClass('activeLabel');
             g_currentColor = {
                 red: label.red,
                 green: label.green,
                 blue: label.blue
             };
             console.log(i + ' is now active label');
-        } else {
-            // Set all other buttons to inactive
-            $('#labelButton' + g_labelButtons[i].id).removeClass('activeLabel');
+            break;
         }
     }
 }
