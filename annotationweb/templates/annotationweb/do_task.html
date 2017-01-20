@@ -58,6 +58,10 @@ setReturnURL('{{ return_url|safe }}');
     <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
     {% endif %}
     <button id="clearButton">Clear</button>
+    {% if next_image_id or previous_image_id %}
+    {% else %}
+    <button id="skipButton">Skip</button>
+    {% endif %}
     <button id="saveButton">Save</button>
     <button onclick="javascript:window.location.href='{% url 'task' task.id %}'">Image list</button>
 </div>
