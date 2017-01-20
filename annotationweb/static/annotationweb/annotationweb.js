@@ -91,6 +91,10 @@ function initializeAnnotation(taskID, imageID) {
     // Setup save button
     $('#saveButton').click(save);
 
+    // If skip is selected, refresh page
+    $('#skipButton').click(function() {
+        window.location.reload();
+    });
 
     $('#imageQualityForm input[type="radio"]').change(function(){
         g_annotationHasChanged = true;
