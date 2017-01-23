@@ -410,6 +410,17 @@ def url_replace(request, field, value):
 
     return dict_.urlencode()
 
+@register.simple_tag
+def complete_label(label):
+    # If label is a sublabel this will get the label name as: "sublabel#1.name - sublabel#2.name - assignedlabel.name"
+    label_name = label.name
+    while label.parent is not None:
+        # Get parent
+        label = Label.objects.get(pk=label.parent_id)
+        label_name = label.name + ' - ' + label_name
+
+    return label_name
+
 
 def reset_filters(request, task_id):
     try:
@@ -423,6 +434,7 @@ def reset_filters(request, task_id):
 
 
 def task(request, task_id):
+    # Image list site
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
