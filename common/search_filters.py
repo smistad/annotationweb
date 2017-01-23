@@ -12,8 +12,26 @@ class SearchFilter:
         self.labels = None
         labels_selected = None
         if task.type == Task.CLASSIFICATION:
-            self.labels = Label.objects.filter(task=task)
-            labels_selected = [label.id for label in self.labels]
+            # Get all labels, including sublabels
+            labels = []
+            sublabels = [(x.id, x.name) for x in Label.objects.filter(task=task).order_by('-name')]
+            # Create stack
+            sublabel_stack = [x for x in sublabels]
+            while len(sublabel_stack) > 0:
+                sublabel = sublabel_stack.pop()
+
+                sublabels = Label.objects.filter(parent_id=sublabel[0])
+                for sublabel_child in sublabels:
+                    parent_name = sublabel[1]
+                    label = (sublabel_child.id, parent_name + ' - ' + sublabel_child.name)
+                    sublabel_stack.append(label)
+
+                label = {'id': sublabel[0], 'name': sublabel[1]}
+                print('Added ', label)
+                labels.append(label)
+
+            self.labels = labels
+            labels_selected = [label['id'] for label in self.labels]
 
         self.image_quality = [x for x, y in ProcessedImage.IMAGE_QUALITY_CHOICES]
         self.subjects = Subject.objects.filter(dataset__task=task)
