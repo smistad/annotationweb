@@ -142,3 +142,7 @@ th, td {
 #imageFilter form p {
     display: inline-block;
 }
+
+ul{
+    list-style-type: none;
+}
