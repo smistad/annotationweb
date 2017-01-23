@@ -69,3 +69,9 @@ button {
     padding: 10px;
     margin: 4px;
 }
+
+hr {
+    background-color: #FFFFFF;
+    border: none;
+    height: 3px;
+}

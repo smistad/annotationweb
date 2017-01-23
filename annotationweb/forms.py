@@ -35,7 +35,7 @@ class ImageSequenceForm(forms.ModelForm):
 class LabelForm(forms.ModelForm):
     class Meta:
         model = Label
-        fields = ['name', 'color_red', 'color_blue', 'color_green']
+        fields = ['name', 'color_red', 'color_blue', 'color_green', 'parent']
 
 
 class ImageListForm(forms.Form):

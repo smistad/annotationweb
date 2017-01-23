@@ -66,7 +66,7 @@ class Task(models.Model):
     type = models.CharField(max_length=50, choices=TASK_TYPES)
     label = models.ManyToManyField(Label,
            help_text='<button onclick="'
-                     'window.open(\'/new-label/\', \'Add new label\', \'width=400,height=200,scrollbars=no\');"'
+                     'window.open(\'/new-label/\', \'Add new label\', \'width=400,height=400,scrollbars=no\');"'
                      ' type="button">Add new label</button>')
     user = models.ManyToManyField(User)
     description = models.TextField(default='', blank=True)

@@ -85,6 +85,7 @@ setReturnURL('{{ return_url|safe }}');
 {% endfor %}
 {% for sublabel in sublabels %}
     <div id="sublabel_{{ sublabel.id }}">
+        <hr>
         {% for label in sublabel.labels %}
         <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
         {% endfor %}

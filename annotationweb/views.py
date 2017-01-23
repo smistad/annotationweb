@@ -410,6 +410,7 @@ def url_replace(request, field, value):
 
     return dict_.urlencode()
 
+
 @register.simple_tag
 def complete_label(label):
     # If label is a sublabel this will get the label name as: "sublabel#1.name - sublabel#2.name - assignedlabel.name"
