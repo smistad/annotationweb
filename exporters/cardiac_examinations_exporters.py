@@ -10,6 +10,8 @@ from common.metaimage import MetaImage
 import PIL
 import numpy as np
 import h5py
+from django.utils.safestring import mark_safe
+from common.label import get_all_labels
 
 
 class CardiacExaminationsExporterForm(forms.Form):
@@ -101,10 +103,8 @@ class CardiacExaminationsExporter(Exporter):
 
         file_list.close()
 
-from django.utils.safestring import mark_safe
 
 def to_categorical(y, nb_classes=None):
-
     y = np.array(y, dtype='uint8').ravel()
     if not nb_classes:
         nb_classes = np.max(y) + 1
@@ -113,9 +113,11 @@ def to_categorical(y, nb_classes=None):
     categorical[np.arange(n), y] = 1
     return categorical
 
+
 class HorizontalRadioRenderer(forms.RadioSelect.renderer):
-  def render(self):
-    return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
+    def render(self):
+        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
+
 
 class CardiacHDFExaminationsExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
@@ -128,12 +130,20 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
                                            )
     sequence_wise = forms.BooleanField(label='Export by sequence', initial=False, required=False)
     categorical = forms.BooleanField(label='Categorical labels', initial=False, required=False)
-    labels = forms.ModelMultipleChoiceField(Label.objects)
     width = forms.IntegerField(max_value=512, label='Width', initial=128) # TODO: Fix layout...
     height = forms.IntegerField(max_value=512, label='Height', initial=128)
 
-    # TODO add how many frames
-    # TODO set image size
+    def __init__(self, task, data=None):
+        super().__init__(data)
+        labels = get_all_labels(task)
+        self.fields['labels'] = forms.MultipleChoiceField(
+            choices=((label['id'], label['name']) for label in labels),
+            initial=[label['id'] for label in labels],
+            help_text='Images assigned to sublabels which are not selected will be added '
+                       'to first selected parent label. If no parent labels are '
+                       'selected, the images will be excluded.'
+        )
+
 
 class CardiacHDFExaminationsExporter(Exporter):
     """
@@ -145,7 +155,7 @@ class CardiacHDFExaminationsExporter(Exporter):
     name = 'Cardiac examinations classification exporter (HDF5)'
 
     def get_form(self, data=None):
-        return CardiacHDFExaminationsExporterForm(data=data)
+        return CardiacHDFExaminationsExporterForm(self.task, data=data)
 
     def export(self, form):
         delete_existing_data = form.cleaned_data['delete_existing_data']
@@ -287,7 +297,7 @@ class CardiacSequenceHDFExaminationsExporter(Exporter):
     name = 'Cardiac examinations sequence classification exporter (HDF5)'
 
     def get_form(self, data=None):
-        return CardiacHDFExaminationsExporterForm(data=data)
+        return CardiacHDFExaminationsExporterForm(self.task, data=data)
 
     def export(self, form):
         delete_existing_data = form.cleaned_data['delete_existing_data']
