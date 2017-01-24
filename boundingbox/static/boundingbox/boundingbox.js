@@ -116,7 +116,7 @@ function createBox(x, y, x2, y2, label) {
 
 function addBox(x, y, x2, y2, label) {
     // Only add box if large enough
-    if(x2 - x > g_minimumSize && y2 - y > g_minimumSize) {
+    if(Math.abs(x2 - x) > g_minimumSize && Math.abs(y2 - y) > g_minimumSize) {
         var box = createBox(x, y, x2, y2, label);
         g_boxes.push(box);
     }
