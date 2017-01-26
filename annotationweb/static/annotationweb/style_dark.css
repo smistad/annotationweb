@@ -51,6 +51,8 @@ img {
 
 .activeLabel {
     border: 3px solid #FFFFFF;
+    color: #FFFFFF;
+    padding: 7px !important;
 }
 
 #labelButtons, #actionButtons {
