@@ -10,6 +10,7 @@ from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
 from common.search_filters import SearchFilter
+from common.label import get_complete_label_name
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
@@ -413,14 +414,7 @@ def url_replace(request, field, value):
 
 @register.simple_tag
 def complete_label(label):
-    # If label is a sublabel this will get the label name as: "sublabel#1.name - sublabel#2.name - assignedlabel.name"
-    label_name = label.name
-    while label.parent is not None:
-        # Get parent
-        label = Label.objects.get(pk=label.parent_id)
-        label_name = label.name + ' - ' + label_name
-
-    return label_name
+    return get_complete_label_name(label)
 
 
 def reset_filters(request, task_id):

@@ -11,7 +11,7 @@ import PIL
 import numpy as np
 import h5py
 from django.utils.safestring import mark_safe
-from common.label import get_all_labels
+from common.label import get_all_labels, get_complete_label_name
 
 
 class CardiacExaminationsExporterForm(forms.Form):
@@ -186,9 +186,11 @@ class CardiacHDFExaminationsExporter(Exporter):
         labels = form.cleaned_data['labels']
         label_dict = {}
         counter = 0 
-        for label in labels:
-            label_file.write(label.name + '\n')
-            label_dict[label.name] = counter
+        for label_id in labels:
+            label = Label.objects.get(pk=label_id)
+            label_name = get_complete_label_name(label)
+            label_file.write(label_name + '\n')
+            label_dict[label_name] = counter
             counter += 1
         label_file.close()
 

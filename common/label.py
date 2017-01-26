@@ -1,6 +1,17 @@
 from annotationweb.models import Label
 
 
+def get_complete_label_name(label):
+    # If label is a sublabel this will get the label name as: "sublabel#1.name - sublabel#2.name - assignedlabel.name"
+    label_name = label.name
+    while label.parent is not None:
+        # Get parent
+        label = Label.objects.get(pk=label.parent_id)
+        label_name = label.name + ' - ' + label_name
+
+    return label_name
+
+
 def get_all_labels(task):
     labels = []
     sublabels = [(x.id, x.name) for x in Label.objects.filter(task=task).order_by('-name')]
