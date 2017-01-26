@@ -139,9 +139,8 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
         self.fields['labels'] = forms.MultipleChoiceField(
             choices=((label['id'], label['name']) for label in labels),
             initial=[label['id'] for label in labels],
-            help_text='Images assigned to sublabels which are not selected will be added '
-                       'to first selected parent label. If no parent labels are '
-                       'selected, the images will be excluded.'
+            help_text='Not implemented yet: Images assigned to sublabels which are not selected will be added '
+                      'to first selected parent label. If no parent labels are selected, the images will be excluded.'
         )
 
 
