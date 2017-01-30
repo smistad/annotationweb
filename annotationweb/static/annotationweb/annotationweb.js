@@ -120,7 +120,7 @@ function initializeAnnotation(taskID, imageID) {
         });
 }
 
-function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
+function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
     console.log('In load sequence');
     // Create play/pause button
     setPlayButton(auto_play);
@@ -146,12 +146,12 @@ function loadSequence(image_sequence_id, nrOfFrames, target_frame, show_entire_s
     var end;
     var totalToLoad;
     if(show_entire_sequence) {
-        start = 0;
-        end = nrOfFrames-1;
+        start = start_frame;
+        end = start_frame + nrOfFrames - 1;
         totalToLoad = nrOfFrames;
     } else {
-        start = max(0, target_frame - images_to_load_before);
-        end = min(nrOfFrames - 1, target_frame + images_to_load_after);
+        start = max(start_frame, target_frame - images_to_load_before);
+        end = min(start_frame + nrOfFrames - 1, target_frame + images_to_load_after);
         totalToLoad = end - start;
     }
     g_startFrame = start;

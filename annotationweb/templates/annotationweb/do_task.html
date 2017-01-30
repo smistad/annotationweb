@@ -7,6 +7,7 @@ initializeAnnotation({{ task.id }}, {{ image.id }});
 {% if image_sequence %}
 loadSequence(
     {{ image_sequence.id }},
+    {{ image_sequence.start_frame_nr }},
     {{ image_sequence.nr_of_frames }},
     {{ frame_nr }},
     {%  if task.show_entire_sequence %}true{% else %}false{% endif %},

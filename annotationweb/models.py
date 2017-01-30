@@ -77,9 +77,11 @@ class Task(models.Model):
 
 
 class ImageSequence(models.Model):
-    format = models.CharField(max_length=1024)
+    format = models.CharField(max_length=1024, help_text='Should contain # which will be replaced with an integer, '
+                                                         'increasing with 1 for each frame. E.g. /path/to/frame_#.png')
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     nr_of_frames = models.PositiveIntegerField()
+    start_frame_nr = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.format
