@@ -47,11 +47,13 @@ setReturnURL('{{ return_url|safe }}');
 <div id="progressbar"><div class="progress-label">Loading...</div></div>
 <div id="sliderText">Drag the slider to view the other frames in the sequence:</div>
 <div id="slider"></div>
-<button id="playButton" type="button">Play</button>
-<button id="goToTargetFrame">Go to target frame</button>
+<div class="actionButtons">
+    <button id="playButton" type="button">Play</button>
+    <button id="goToTargetFrame">Go to target frame</button>
+</div>
 {% endif %}
-<div id="actionButtons">
-    <h2>Actions</h2>
+<h2>Actions</h2>
+<div class="actionButtons">
     {% if previous_image_id %}
     <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?{{ request.GET.urlencode }}');">Previous</button>
     {% endif %}
