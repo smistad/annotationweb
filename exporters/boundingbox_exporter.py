@@ -65,19 +65,20 @@ class BoundingBoxExporter(Exporter):
 
         # For each subject
         for subject in data:
-            create_folder(join(path, subject.name))
+            subject_path = join(path, subject.name)
+            create_folder(subject_path)
             images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
             for image in images:
                 name = image.image.filename
 
                 # Copy image
                 image_id = image.image.pk
-                new_filename = join(path, str(image_id) + '.png')
+                new_filename = join(subject_path, str(image_id) + '.png')
                 copy_image(name, new_filename)
 
                 # Write bounding boxes txt file
                 boxes = BoundingBox.objects.filter(image=image)
-                with open(join(path, str(image_id) + '.txt'), 'w') as f:
+                with open(join(subject_path, str(image_id) + '.txt'), 'w') as f:
                     for box in boxes:
                         center_x = round(box.x + box.width*0.5)
                         center_y = round(box.y + box.height*0.5)
