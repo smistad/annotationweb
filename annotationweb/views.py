@@ -237,6 +237,30 @@ def delete_dataset(request, dataset_id):
         return render(request, 'annotationweb/delete_dataset.html', {'dataset': dataset})
 
 
+def get_start_and_total_frames(file_format):
+    # Find start_number and total number of frames automatically
+    i = 0
+    # Start frame can either be 0 or 1
+    start_frame = None
+    nr_of_frames = 0
+    while True:
+        exists = False
+        if os.path.isfile(file_format.replace('#', str(i))):
+            exists = True
+            nr_of_frames += 1
+        if start_frame is None:
+            if exists:
+                start_frame = i
+            elif i > 1:
+                break
+        else:
+            if not exists:
+                break
+        i += 1
+
+    return start_frame, nr_of_frames
+
+
 @staff_member_required
 def add_image_sequence(request, subject_id):
     try:
@@ -248,40 +272,47 @@ def add_image_sequence(request, subject_id):
         form = ImageSequenceForm(request.POST)
         if form.is_valid():
             new_image_sequence = form.save(commit=False)  # Create new model, but don't save to DB
-            new_image_sequence.subject = subject
+            start_frame, total_nr_of_frames = get_start_and_total_frames(new_image_sequence.format)
+            print(start_frame, total_nr_of_frames)
+            if start_frame is None:
+                messages.error(request, 'No data existed with the provided filename format.')
+            else:
+                new_image_sequence.nr_of_frames = total_nr_of_frames
+                new_image_sequence.start_frame_nr = start_frame
+                new_image_sequence.subject = subject
 
-            if request.POST['frame_selection'] == 'manual':
-                new_image_sequence.save()  # Save to db
-                return redirect('add_key_frames', new_image_sequence.id)
-            elif request.POST['frame_selection'] == 'every_n_frame':
-                try:
-                    frame_step = int(request.POST['frame_step'])
-                    frame_start = int(request.POST['frame_start'])
-                except:
-                    messages.error(request, 'No input given to every X frame.')
-                if frame_step <= 0 or frame_step >= new_image_sequence.nr_of_frames or frame_start < 0 \
-                        or frame_start >= new_image_sequence.nr_of_frames:
-                    messages.error(request, 'Incorrect frame step or start nr.')
-                else:
+                if request.POST['frame_selection'] == 'manual':
                     new_image_sequence.save()  # Save to db
+                    return redirect('add_key_frames', new_image_sequence.id)
+                elif request.POST['frame_selection'] == 'every_n_frame':
+                    try:
+                        frame_step = int(request.POST['frame_step'])
+                        frame_start = int(request.POST['frame_start'])
+                    except:
+                        messages.error(request, 'No input given to every X frame.')
+                    if frame_step <= 0 or frame_step >= new_image_sequence.nr_of_frames or frame_start < 0 \
+                            or frame_start >= new_image_sequence.nr_of_frames:
+                        messages.error(request, 'Incorrect frame step or start nr.')
+                    else:
+                        new_image_sequence.save()  # Save to db
 
-                    # Add every frame_step
-                    for frame_nr in range(frame_start, new_image_sequence.nr_of_frames, frame_step):
-                        # Create image
-                        image = Image()
-                        image.filename = new_image_sequence.format.replace('#', str(frame_nr))
-                        image.subject = subject
-                        image.save()
+                        # Add every frame_step
+                        for frame_nr in range(frame_start, new_image_sequence.nr_of_frames, frame_step):
+                            # Create image
+                            image = Image()
+                            image.filename = new_image_sequence.format.replace('#', str(frame_nr))
+                            image.subject = subject
+                            image.save()
 
-                        # Create associated key frame
-                        key_frame = KeyFrame()
-                        key_frame.frame_nr = frame_nr
-                        key_frame.image_sequence = new_image_sequence
-                        key_frame.image = image
-                        key_frame.save()
+                            # Create associated key frame
+                            key_frame = KeyFrame()
+                            key_frame.frame_nr = frame_nr
+                            key_frame.image_sequence = new_image_sequence
+                            key_frame.image = image
+                            key_frame.save()
 
-                    messages.success(request, 'The image sequence and frames were stored.')
-                    return redirect('datasets')
+                        messages.success(request, 'The image sequence and frames were stored.')
+                        return redirect('datasets')
 
     else:
         form = ImageSequenceForm()

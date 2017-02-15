@@ -53,19 +53,33 @@ img {
     border: 3px solid #FFFFFF;
 }
 
-#labelButtons, #actionButtons {
+#labelButtons, .actionButtons {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    -moz-flex-direction: row;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 #slider {
-    margin: 20px;
-    margin-right: 40px;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 button {
     font-size: x-large;
     color: #000000;
-    background-color: #FFFFFF;
+    background-color: #d4d4d4;
     border: none;
     padding: 10px;
     margin: 4px;
+    flex-grow: 1;
+}
+
+button:hover {
+    background-color: #FFFFFF;
 }

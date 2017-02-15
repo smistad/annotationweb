@@ -10,6 +10,7 @@ var g_BBy;
 var g_BBx2;
 var g_BBy2;
 var g_boxes = [];
+var g_minimumSize = 10;
 
 function setupSegmentation() {
 
@@ -114,8 +115,11 @@ function createBox(x, y, x2, y2, label) {
 }
 
 function addBox(x, y, x2, y2, label) {
-    var box = createBox(x, y, x2, y2, label);
-    g_boxes.push(box);
+    // Only add box if large enough
+    if(Math.abs(x2 - x) > g_minimumSize && Math.abs(y2 - y) > g_minimumSize) {
+        var box = createBox(x, y, x2, y2, label);
+        g_boxes.push(box);
+    }
 }
 
 function sendDataForSave() {

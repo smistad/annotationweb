@@ -29,7 +29,7 @@ class SubjectForm(forms.ModelForm):
 class ImageSequenceForm(forms.ModelForm):
     class Meta:
         model = ImageSequence
-        fields = ['format', 'nr_of_frames']
+        fields = ['format']
 
 
 class LabelForm(forms.ModelForm):
