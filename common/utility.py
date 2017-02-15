@@ -56,3 +56,9 @@ def create_folder(path):
         os.mkdir(path)  # Make dataset path if doesn't exist
     except:
         pass
+
+    # Check that the path exists
+    try:
+        os.stat(path)
+    except:
+        return False, 'Failed to create directory at ' + path
