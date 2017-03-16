@@ -35,7 +35,7 @@ class ImageSequenceForm(forms.ModelForm):
 class LabelForm(forms.ModelForm):
     class Meta:
         model = Label
-        fields = ['name', 'color_red', 'color_blue', 'color_green']
+        fields = ['name', 'color_red', 'color_blue', 'color_green', 'parent']
 
 
 class ImageListForm(forms.Form):
@@ -69,8 +69,8 @@ class ImageListForm(forms.Form):
         if labels is not None:
             self.fields['label'] = forms.MultipleChoiceField(
                 label='Labels',
-                choices=((label.id, label.name) for label in labels),
-                initial=[label.id for label in labels],
+                choices=((label['id'], label['name']) for label in labels),
+                initial=[label['id'] for label in labels],
                 widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
             )
 

@@ -1,6 +1,7 @@
 from annotationweb.models import Task, Label, Subject, ProcessedImage, Metadata
 from annotationweb.forms import ImageListForm
 from django.contrib.auth.models import User
+from common.label import get_all_labels
 
 
 class SearchFilter:
@@ -12,8 +13,9 @@ class SearchFilter:
         self.labels = None
         labels_selected = None
         if task.type == Task.CLASSIFICATION:
-            self.labels = Label.objects.filter(task=task)
-            labels_selected = [label.id for label in self.labels]
+            # Get all labels, including sublabels
+            self.labels = get_all_labels(task)
+            labels_selected = [label['id'] for label in self.labels]
 
         self.image_quality = [x for x, y in ProcessedImage.IMAGE_QUALITY_CHOICES]
         self.subjects = Subject.objects.filter(dataset__task=task)

@@ -1,6 +1,6 @@
 from common.importer import Importer
 from django import forms
-from annotationweb.models import Image, ImageSequence, KeyFrame, Dataset, Subject
+from annotationweb.models import Image, ImageSequence, KeyFrame, Dataset, Subject, Metadata
 import os
 from os.path import join
 
@@ -58,13 +58,15 @@ class CardiacExaminationsImporter(Importer):
                 if not os.path.isdir(image_sequence_dir):
                     continue
 
+                # Count nr of frames
                 frames = []
                 for file3 in os.listdir(image_sequence_dir):
-                    image_filename = join(image_sequence_dir, file3)
-                    if not os.path.isfile(image_filename):
-                        continue
+                    if file3[-4:] == '.png':
+                        image_filename = join(image_sequence_dir, file3)
+                        frames.append(image_filename)
 
-                    frames.append(image_filename)
+                if len(frames) == 0:
+                    continue
 
                 image_sequence = ImageSequence()
                 image_sequence.format = join(image_sequence_dir, 'US-2D_#.png') # TODO How to determine this??
@@ -84,5 +86,21 @@ class CardiacExaminationsImporter(Importer):
                 key_frame.frame_nr = key_frame_nr
                 key_frame.image = image
                 key_frame.save()
+
+                # Check if metadata.txt exists, and if so parse it and add
+                metadata_filename = join(image_sequence_dir, 'metadata.txt')
+                if os.path.exists(metadata_filename):
+                    with open(metadata_filename, 'r') as f:
+                        for line in f:
+                            parts = line.split(':')
+                            if len(parts) != 2:
+                                raise Exception('Excepted 2 parts when spliting metadata in file ' + metadata_filename)
+
+                            # Save to DB
+                            metadata = Metadata()
+                            metadata.image = image
+                            metadata.name = parts[0].strip()
+                            metadata.value = parts[1].strip()
+                            metadata.save()
 
         return True, path

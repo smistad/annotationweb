@@ -5,7 +5,6 @@ from django.http import Http404
 from annotationweb.models import Image, Task, ProcessedImage, Subject, Label
 from annotationweb.forms import ImageListForm
 from django.db.models.aggregates import Count
-
 from common.search_filters import SearchFilter
 
 
@@ -286,3 +285,5 @@ def save_annotation(request):
     annotation.save()
 
     return annotation
+
+

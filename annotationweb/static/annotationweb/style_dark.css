@@ -51,19 +51,10 @@ img {
 
 .activeLabel {
     border: 3px solid #FFFFFF;
+    color: #FFFFFF;
+    padding: 7px !important;
 }
 
-#labelButtons, .actionButtons {
-    display: -webkit-box;
-    display: -moz-box;
-    display: -ms-flexbox;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-direction: row;
-    -moz-flex-direction: row;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
 
 #slider {
     margin-top: 20px;
@@ -82,4 +73,23 @@ button {
 
 button:hover {
     background-color: #FFFFFF;
+}
+
+hr {
+    background-color: #FFFFFF;
+    border: none;
+    height: 3px;
+}
+
+.flexButtons {
+    width: 100%;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    -moz-flex-direction: row;
+    flex-direction: row;
+    flex-wrap: wrap;
 }

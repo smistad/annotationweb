@@ -10,6 +10,7 @@ from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
 from common.search_filters import SearchFilter
+from common.label import get_complete_label_name
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
@@ -442,6 +443,11 @@ def url_replace(request, field, value):
     return dict_.urlencode()
 
 
+@register.simple_tag
+def complete_label(label):
+    return get_complete_label_name(label)
+
+
 def reset_filters(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
@@ -454,6 +460,7 @@ def reset_filters(request, task_id):
 
 
 def task(request, task_id):
+    # Image list site
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
