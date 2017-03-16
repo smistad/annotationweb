@@ -51,25 +51,24 @@ class SegmentationExporter(Exporter):
                 return False, 'Path does not exist: ' + path
 
 
-        # TODO non metaimage support
-        segmented_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        segmented_images = ProcessedImage.objects.filter(task=self.task, image__subject__dataset__in=datasets)
         for segmented_image in segmented_images:
             name = segmented_image.image.filename
             image_filename = name[name.rfind('/')+1:]
-            dataset_path = os.path.join(path, segmented_image.image.dataset.name)
+            subject_path = os.path.join(path, segmented_image.image.subject.name)
             try:
-                os.mkdir(dataset_path)  # Make dataset path if doesn't exist
+                os.mkdir(subject_path)  # Make dataset path if doesn't exist
             except:
                 pass
 
             # Copy image
             image_id = segmented_image.image.pk
-            new_filename = os.path.join(dataset_path, str(image_id) + '.mhd')
+            new_filename = os.path.join(subject_path, str(image_id) + '.mhd')
             copy_image(name, new_filename)
 
             # Copy all segmentation files
             segmentation_filename = os.path.join(BASE_DIR, os.path.join('segmentations', os.path.join(str(self.task.id), str(segmented_image.id) + '.mhd')))
-            new_segmentation_filename = os.path.join(dataset_path, str(image_id) + '_segmentation.mhd')
+            new_segmentation_filename = os.path.join(subject_path, str(image_id) + '_segmentation.mhd')
             copy_image(segmentation_filename, new_segmentation_filename)
 
 

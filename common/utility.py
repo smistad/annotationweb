@@ -4,6 +4,7 @@ import PIL
 from shutil import copyfile
 from io import BytesIO
 from django.http import HttpResponse
+import numpy as np
 
 
 def get_image_as_http_response(filename):
@@ -41,7 +42,7 @@ def copy_image(filename, new_filename):
     elif original_extension.lower() == '.png':
         if new_extension.lower() == '.mhd':
             pil_image = PIL.Image.open(filename)
-            metaimage = MetaImage(data=pil_image)
+            metaimage = MetaImage(data=np.asarray(pil_image))
             metaimage.write(new_filename)
         elif new_extension.lower() == '.png':
             copyfile(filename, new_filename)
