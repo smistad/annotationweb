@@ -38,10 +38,16 @@ function setupSegmentation() {
         if(point >= 0) {
             // Move point
             g_move = true;
-            g_pointToMove = point
+            g_pointToMove = point;
         } else {
-            // Add point
-            addControlPoint(mouseX, mouseY, g_currentLabel);
+            var section = isPointOnSpline(mouseX, mouseY);
+            if(section >= 0) {
+                // Insert point
+                insertControlPoint(mouseX, mouseY, g_currentLabel, section);
+            } else {
+                // Add point at end
+                addControlPoint(mouseX, mouseY, g_currentLabel);
+            }
         }
         redraw();
     });
@@ -55,6 +61,7 @@ function setupSegmentation() {
             g_controlPoints[g_pointToMove].y = mouseY;
             redraw();
         }
+        e.preventDefault();
     });
 
     $('#canvas').mouseup(function(e) {
@@ -138,10 +145,49 @@ function createControlPoint(x, y, label) {
     return controlPoint;
 }
 
+function insertControlPoint(x, y, label, index) {
+    var controlPoint = createControlPoint(x, y, label);
+    g_controlPoints.splice(index+1, 0, controlPoint);
+}
+
 function addControlPoint(x, y, label) {
     var controlPoint = createControlPoint(x, y, label);
-    console.log('Adding: ' + controlPoint.x + ' ' + controlPoint.y);
     g_controlPoints.push(controlPoint);
+}
+
+function isPointOnSpline(pointX, pointY) {
+    for(var i = 0; i < g_controlPoints.length; ++i) {
+        g_context.beginPath();
+        var controlPoint = g_controlPoints[i];
+        var label = g_labelButtons[controlPoint.label];
+
+        var a = g_controlPoints[max(0, i - 1)];
+        var b = g_controlPoints[i];
+        var c = g_controlPoints[min(g_controlPoints.length - 1, i + 1)];
+        var d = g_controlPoints[min(g_controlPoints.length - 1, i + 2)];
+
+
+        // Draw line as spline
+        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
+        var step = 0.1;
+        var tension = 0.5;
+        for (var t = 0.0; t < 1; t += step) {
+            var x =
+                (2 * t * t * t - 3 * t * t + 1) * b.x +
+                (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) +
+                (-2 * t * t * t + 3 * t * t) * c.x +
+                (1 - tension) * (t * t * t - t * t) * (d.x - b.x);
+            var y =
+                (2 * t * t * t - 3 * t * t + 1) * b.y +
+                (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) +
+                (-2 * t * t * t + 3 * t * t) * c.y +
+                (1 - tension) * (t * t * t - t * t) * (d.y - b.y);
+            if(Math.sqrt((pointX-x)*(pointX-x) + (pointY-y)*(pointY-y)) < g_moveDistanceThreshold) {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
 
 
