@@ -85,6 +85,11 @@ function setupSegmentation() {
         g_move = false;
     });
 
+    $('#canvas').mouseleave(function(e) {
+        g_drawLine = false;
+        redraw();
+    });
+
     $('#canvas').dblclick(function(e) {
         if(g_move)
             return;
@@ -169,7 +174,37 @@ function insertControlPoint(x, y, label, index) {
     g_controlPoints[g_currentSegmentationLabel].splice(index+1, 0, controlPoint);
 }
 
+function snapToAVLine(x, y) {
+    var y1 = getControlPoint(0, 0).y;
+    var y2 = getControlPoint(-1, 0).y;
+    var x1 = getControlPoint(0, 0).x;
+    var x2 = getControlPoint(-1, 0).x;
+    var a = (y2 - y1);
+    var b = -(x2 - x1);
+    var c = x2*y1 - y2*x1;
+    var distance = Math.abs(a*x + b*y + c) / Math.sqrt(a*a + b*b);
+    // Calculate new position
+    x = (b*(b*x - a*y) - a*c) / (a*a + b*b);
+    y = (a*(-b*x + a*y) - b*c) / (a*a + b*b);
+
+    return {
+        distance: distance,
+        x: x,
+        y: y
+    };
+}
+
 function addControlPoint(x, y, label) {
+    /*
+    if(label == 1) {
+        // If epicardium and close to AV plane line, snap to it
+        var snap = snapToAVLine(x, y);
+        if(snap.distance < 10) {
+            x = snap.x;
+            y = snap.y;
+        }
+    }
+    */
     var controlPoint = createControlPoint(x, y, label);
     g_controlPoints[g_currentSegmentationLabel].push(controlPoint);
 }
@@ -184,6 +219,7 @@ function getControlPoint(index, label) {
 function setControlPoint(index, label, x, y) {
     g_controlPoints[label][index].x = x;
     g_controlPoints[label][index].y = y;
+
 }
 
 function isPointOnSpline(pointX, pointY) {
@@ -226,6 +262,16 @@ function redraw(){
         g_controlPoints[2].push(getControlPoint(0, 0));
     }
 
+    if(g_controlPoints[0].length > 1 && g_controlPoints[1].length > 0) {
+        var startPoint = getControlPoint(0, 1);
+        var endPoint = getControlPoint(-1, 1);
+        var snap1 = snapToAVLine(startPoint.x, startPoint.y);
+        var snap2 = snapToAVLine(endPoint.x, endPoint.y);
+        g_controlPoints[1].splice(0, 0, createControlPoint(snap1.x, snap1.y, 1));
+        if(g_controlPoints[1].length > 5)
+            g_controlPoints[1].push(createControlPoint(snap2.x, snap2.y, 1));
+    }
+
     // Draw controlPoint
     for(var labelIndex = 0; labelIndex < 3; labelIndex++) {
         for (var i = 0; i < g_controlPoints[labelIndex].length; ++i) {
@@ -235,7 +281,7 @@ function redraw(){
             var c = getControlPoint(min(g_controlPoints[labelIndex].length - 1, i + 1), labelIndex);
             var d = getControlPoint(min(g_controlPoints[labelIndex].length - 1, i + 2), labelIndex);
 
-            var label = g_labelButtons[labelIndex];
+            var label = getLabelWithId(labelIndex);
 
             // Draw line as spline
             g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
@@ -276,6 +322,11 @@ function redraw(){
         g_controlPoints[2].splice(0, 1);
         g_controlPoints[2].splice(g_controlPoints[2].length - 1, 1);
     }
+    if(g_controlPoints[0].length > 1 && g_controlPoints[1].length > 0) {
+        g_controlPoints[1].splice(0, 1);
+        if(g_controlPoints[1].length > 5)
+            g_controlPoints[1].splice(g_controlPoints[1].length - 1, 1);
+    }
 
     // Draw AV plane line
     if(g_controlPoints[0].length > 4) {
@@ -298,7 +349,7 @@ function redraw(){
     if(g_drawLine !== false) {
         g_context.beginPath();
         g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
-        var label = g_labelButtons[g_currentSegmentationLabel];
+        var label = getLabelWithId(g_currentSegmentationLabel);
         g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         g_context.moveTo(g_drawLine.x0, g_drawLine.y0);
         g_context.lineTo(g_drawLine.x1, g_drawLine.y1);
