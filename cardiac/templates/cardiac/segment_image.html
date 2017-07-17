@@ -5,4 +5,15 @@
 loadSegmentationTask({{ image_sequence.id }}, {{ frame_nr }});
 {% endif %}
 
+addLabelButton(0, 0, 255, 0, 0);
+addLabelButton(1, 0, 0, 255, 0);
+addLabelButton(2, 255, 0, 0, 0);
 {% endblock task_javascript %}
+
+{% block label_buttons %}
+    <div class="flexButtons">
+        <button onclick="changeLabel(0)" class="labelButton" id="labelButton0">Endocardium</button>
+        <button onclick="changeLabel(1)" class="labelButton" id="labelButton1">Epicardium</button>
+        <button onclick="changeLabel(2)" class="labelButton" id="labelButton2">Left atrium</button>
+    </div>
+{% endblock %}

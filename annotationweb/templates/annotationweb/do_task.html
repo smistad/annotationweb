@@ -83,6 +83,7 @@ setReturnURL('{{ return_url|safe }}');
 </div>
 
 <div id="labelButtons">
+{% block label_buttons %}
 <div class="flexButtons">
     {% for label in toplabels %}
         <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
@@ -98,6 +99,7 @@ setReturnURL('{{ return_url|safe }}');
     </div>
     </div>
 {% endfor %}
+{% endblock label_buttons %}
 </div>
 
 

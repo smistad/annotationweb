@@ -9,9 +9,13 @@ var g_move = false;
 var g_pointToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
+var g_currentSegmentationLabel = 0;
 
 
 function setupSegmentation() {
+    g_controlPoints.push([]); // Endo
+    g_controlPoints.push([]); // Epi
+    g_controlPoints.push([]); // Atrium
 
     // Initialize canvas with background image
     g_context.clearRect(0, 0, g_context.canvas.width, g_context.canvas.height); // Clears the canvas
@@ -44,10 +48,10 @@ function setupSegmentation() {
             var section = isPointOnSpline(mouseX, mouseY);
             if(section >= 0) {
                 // Insert point
-                insertControlPoint(mouseX, mouseY, g_currentLabel, section);
+                insertControlPoint(mouseX, mouseY, g_currentSegmentationLabel, section);
             } else {
                 // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentLabel);
+                addControlPoint(mouseX, mouseY, g_currentSegmentationLabel);
             }
         }
         redraw();
@@ -58,14 +62,13 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         if(g_move) {
-            g_controlPoints[g_pointToMove].x = mouseX;
-            g_controlPoints[g_pointToMove].y = mouseY;
+            setControlPoint(g_pointToMove, g_currentSegmentationLabel, mouseX, mouseY);
             redraw();
         } else {
-            if(g_controlPoints.length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
+            if(g_controlPoints[g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
                 var line = {
-                    x0: g_controlPoints[g_controlPoints.length - 1].x,
-                    y0: g_controlPoints[g_controlPoints.length - 1].y,
+                    x0: getControlPoint(-1, g_currentSegmentationLabel).x,
+                    y0: getControlPoint(-1, g_currentSegmentationLabel).y,
                     x1: mouseX,
                     y1: mouseY
                 };
@@ -90,7 +93,7 @@ function setupSegmentation() {
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
         if(point >= 0) {
-            g_controlPoints.splice(point, 1);
+            g_controlPoints[g_currentSegmentationLabel].splice(point, 1);
         }
         redraw();
     });
@@ -104,7 +107,7 @@ function setupSegmentation() {
     });
 
     // Set first label active
-    changeLabel(g_labelButtons[0].id);
+    changeLabel(0);
     redraw();
 }
 
@@ -126,8 +129,8 @@ function getClosestPoint(x, y) {
     var minDistance = g_canvasWidth*g_canvasHeight;
     var minPoint = -1;
 
-    for(var i = 0; i < g_controlPoints.length; i++) {
-        var point = g_controlPoints[i];
+    for(var i = 0; i < g_controlPoints[g_currentSegmentationLabel].length; i++) {
+        var point = getControlPoint(i, g_currentSegmentationLabel);
         var distance = Math.sqrt((point.x-x)*(point.x-x) + (point.y-y)*(point.y-y));
         if(distance < minDistance) {
             minPoint = i;
@@ -163,20 +166,32 @@ function createControlPoint(x, y, label) {
 
 function insertControlPoint(x, y, label, index) {
     var controlPoint = createControlPoint(x, y, label);
-    g_controlPoints.splice(index+1, 0, controlPoint);
+    g_controlPoints[g_currentSegmentationLabel].splice(index+1, 0, controlPoint);
 }
 
 function addControlPoint(x, y, label) {
     var controlPoint = createControlPoint(x, y, label);
-    g_controlPoints.push(controlPoint);
+    g_controlPoints[g_currentSegmentationLabel].push(controlPoint);
+}
+
+function getControlPoint(index, label) {
+    if(index === -1) {
+        index = g_controlPoints[label].length-1;
+    }
+    return g_controlPoints[label][index];
+}
+
+function setControlPoint(index, label, x, y) {
+    g_controlPoints[label][index].x = x;
+    g_controlPoints[label][index].y = y;
 }
 
 function isPointOnSpline(pointX, pointY) {
-    for(var i = 0; i < g_controlPoints.length; ++i) {
-        var a = g_controlPoints[max(0, i - 1)];
-        var b = g_controlPoints[i];
-        var c = g_controlPoints[min(g_controlPoints.length - 1, i + 1)];
-        var d = g_controlPoints[min(g_controlPoints.length - 1, i + 2)];
+    for(var i = 0; i < g_controlPoints[g_currentSegmentationLabel].length; ++i) {
+        var a = getControlPoint(max(0, i - 1), g_currentSegmentationLabel);
+        var b = getControlPoint(i, g_currentSegmentationLabel);
+        var c = getControlPoint(min(g_controlPoints[g_currentSegmentationLabel].length - 1, i + 1), g_currentSegmentationLabel);
+        var d = getControlPoint(min(g_controlPoints[g_currentSegmentationLabel].length - 1, i + 2), g_currentSegmentationLabel);
 
         var step = 0.1;
         var tension = 0.5;
@@ -204,60 +219,73 @@ function redraw(){
     g_context.putImageData(g_image, 0, 0);
     var controlPointSize = 6;
     g_context.lineWidth = 2;
+
+    // For left atrium, insert endo endpoints
+    if(g_controlPoints[0].length > 1 && g_controlPoints[2].length > 0) {
+        g_controlPoints[2].splice(0, 0, getControlPoint(-1, 0));
+        g_controlPoints[2].push(getControlPoint(0, 0));
+    }
+
     // Draw controlPoint
-    for(var i = 0; i < g_controlPoints.length; ++i) {
-        g_context.beginPath();
-        var controlPoint = g_controlPoints[i];
-        var label = g_labelButtons[controlPoint.label];
+    for(var labelIndex = 0; labelIndex < 3; labelIndex++) {
+        for (var i = 0; i < g_controlPoints[labelIndex].length; ++i) {
+            g_context.beginPath();
+            var a = getControlPoint(max(0, i - 1), labelIndex);
+            var b = getControlPoint(i, labelIndex);
+            var c = getControlPoint(min(g_controlPoints[labelIndex].length - 1, i + 1), labelIndex);
+            var d = getControlPoint(min(g_controlPoints[labelIndex].length - 1, i + 2), labelIndex);
 
-        var a = g_controlPoints[max(0, i-1)];
-        var b = g_controlPoints[i];
-        var c = g_controlPoints[min(g_controlPoints.length-1, i+1)];
-        var d = g_controlPoints[min(g_controlPoints.length-1, i+2)];
+            var label = g_labelButtons[labelIndex];
 
+            // Draw line as spline
+            g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
+            var step = 0.1;
+            var prev_x = -1;
+            var prev_y = -1;
+            var tension = 0.5;
+            for (var t = 0.0; t < 1; t += step) {
+                var x =
+                    (2 * t * t * t - 3 * t * t + 1) * b.x +
+                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) +
+                    (-2 * t * t * t + 3 * t * t) * c.x +
+                    (1 - tension) * (t * t * t - t * t) * (d.x - b.x);
+                var y =
+                    (2 * t * t * t - 3 * t * t + 1) * b.y +
+                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) +
+                    (-2 * t * t * t + 3 * t * t) * c.y +
+                    (1 - tension) * (t * t * t - t * t) * (d.y - b.y);
 
-        // Draw line as spline
-        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
-        var step = 0.1;
-        var prev_x = -1;
-        var prev_y = -1;
-        var tension = 0.5;
-        for(var t = 0.0; t < 1; t += step) {
-            var x =
-                (2*t*t*t - 3*t*t + 1)*b.x +
-                (1-tension)*(t*t*t - 2.0*t*t + t)*(c.x - a.x) +
-                (-2*t*t*t + 3*t*t)*c.x +
-                (1-tension)*(t*t*t - t*t)*(d.x - b.x) ;
-            var y =
-                (2*t*t*t - 3*t*t + 1)*b.y +
-                (1-tension)*(t*t*t - 2.0*t*t + t)*(c.y - a.y) +
-                (-2*t*t*t + 3*t*t)*c.y +
-                (1-tension)*(t*t*t - t*t)*(d.y - b.y);
-
-            // Draw line
-            if(prev_x >= 0) {
-                g_context.moveTo(prev_x, prev_y);
-                g_context.lineTo(x, y);
-                g_context.stroke();
+                // Draw line
+                if (prev_x >= 0) {
+                    g_context.moveTo(prev_x, prev_y);
+                    g_context.lineTo(x, y);
+                    g_context.stroke();
+                }
+                prev_x = x;
+                prev_y = y;
             }
-            prev_x = x;
-            prev_y = y;
-        }
 
-        // Draw control point
-        g_context.fillStyle = colorToHexString(255, 255, 0);
-        g_context.fillRect(b.x - controlPointSize/2, b.y - controlPointSize/2, controlPointSize, controlPointSize);
+            // Draw control point
+            g_context.fillStyle = colorToHexString(255, 255, 0);
+            g_context.fillRect(b.x - controlPointSize / 2, b.y - controlPointSize / 2, controlPointSize, controlPointSize);
+        }
+    }
+
+    // Remove inserted LA endpoints
+    if(g_controlPoints[0].length > 1 && g_controlPoints[2].length > 0) {
+        g_controlPoints[2].splice(0, 1);
+        g_controlPoints[2].splice(g_controlPoints[2].length - 1, 1);
     }
 
     // Draw AV plane line
-    if(g_controlPoints.length > 4) {
-        var y0 = g_controlPoints[0].y;
-        var y1 = g_controlPoints[g_controlPoints.length - 1].y;
-        var x0 = g_controlPoints[0].x;
-        var x1 = g_controlPoints[g_controlPoints.length - 1].x;
+    if(g_controlPoints[0].length > 4) {
+        var y0 = getControlPoint(0, 0).y;
+        var y1 = getControlPoint(-1, 0).y;
+        var x0 = getControlPoint(0, 0).x;
+        var x1 = getControlPoint(-1, 0).x;
         var a = (y1 - y0) / (x1 - x0);
-        console.log(a);
-        if (Math.abs(a) < 1) {
+        if(Math.abs(a) < 1) {
+            g_context.beginPath();
             g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
             g_context.strokeStyle = colorToHexString(255, 255, 0);
             g_context.moveTo(0, -a * x1 + y1);
@@ -267,10 +295,11 @@ function redraw(){
         }
     }
 
-
     if(g_drawLine !== false) {
+        g_context.beginPath();
         g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
-        g_context.strokeStyle = colorToHexString(255, 255, 0);
+        var label = g_labelButtons[g_currentSegmentationLabel];
+        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         g_context.moveTo(g_drawLine.x0, g_drawLine.y0);
         g_context.lineTo(g_drawLine.x1, g_drawLine.y1);
         g_context.stroke();
@@ -287,4 +316,10 @@ function redrawSequence() {
         var index = g_currentFrameNr - g_startFrame;
         g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     }
+}
+
+// Override of annotationweb.js
+function changeLabel(label_id) {
+    console.log('changing label to: ', label_id)
+    g_currentSegmentationLabel = label_id;
 }
