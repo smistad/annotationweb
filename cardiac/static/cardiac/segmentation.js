@@ -8,6 +8,7 @@ var g_controlPoints = [];
 var g_move = false;
 var g_pointToMove = -1;
 var g_moveDistanceThreshold = 8;
+var g_drawLine = false;
 
 
 function setupSegmentation() {
@@ -53,12 +54,25 @@ function setupSegmentation() {
     });
 
     $('#canvas').mousemove(function(e) {
+        var scale =  g_canvasWidth / $('#canvas').width();
+        var mouseX = (e.pageX - this.offsetLeft)*scale;
+        var mouseY = (e.pageY - this.offsetTop)*scale;
         if(g_move) {
-            var scale =  g_canvasWidth / $('#canvas').width();
-            var mouseX = (e.pageX - this.offsetLeft)*scale;
-            var mouseY = (e.pageY - this.offsetTop)*scale;
             g_controlPoints[g_pointToMove].x = mouseX;
             g_controlPoints[g_pointToMove].y = mouseY;
+            redraw();
+        } else {
+            if(g_controlPoints.length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
+                var line = {
+                    x0: g_controlPoints[g_controlPoints.length - 1].x,
+                    y0: g_controlPoints[g_controlPoints.length - 1].y,
+                    x1: mouseX,
+                    y1: mouseY
+                };
+                g_drawLine = line;
+            } else {
+                g_drawLine = false;
+            }
             redraw();
         }
         e.preventDefault();
@@ -69,6 +83,8 @@ function setupSegmentation() {
     });
 
     $('#canvas').dblclick(function(e) {
+        if(g_move)
+            return;
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
@@ -157,18 +173,11 @@ function addControlPoint(x, y, label) {
 
 function isPointOnSpline(pointX, pointY) {
     for(var i = 0; i < g_controlPoints.length; ++i) {
-        g_context.beginPath();
-        var controlPoint = g_controlPoints[i];
-        var label = g_labelButtons[controlPoint.label];
-
         var a = g_controlPoints[max(0, i - 1)];
         var b = g_controlPoints[i];
         var c = g_controlPoints[min(g_controlPoints.length - 1, i + 1)];
         var d = g_controlPoints[min(g_controlPoints.length - 1, i + 2)];
 
-
-        // Draw line as spline
-        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         var step = 0.1;
         var tension = 0.5;
         for (var t = 0.0; t < 1; t += step) {
@@ -256,6 +265,16 @@ function redraw(){
             g_context.stroke();
             g_context.setLineDash([]); // Clear
         }
+    }
+
+
+    if(g_drawLine !== false) {
+        g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
+        g_context.strokeStyle = colorToHexString(255, 255, 0);
+        g_context.moveTo(g_drawLine.x0, g_drawLine.y0);
+        g_context.lineTo(g_drawLine.x1, g_drawLine.y1);
+        g_context.stroke();
+        g_context.setLineDash([]); // Clear
     }
 
 }
