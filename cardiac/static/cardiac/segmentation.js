@@ -5,6 +5,10 @@ var g_backgroundImage;
 var g_frameNr;
 var g_currentColor = null;
 var g_controlPoints = [];
+var g_move = false;
+var g_pointToMove = -1;
+var g_moveDistanceThreshold = 8;
+
 
 function setupSegmentation() {
 
@@ -30,8 +34,41 @@ function setupSegmentation() {
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
+        var point = getClosestPoint(mouseX, mouseY);
+        if(point >= 0) {
+            // Move point
+            g_move = true;
+            g_pointToMove = point
+        } else {
+            // Add point
+            addControlPoint(mouseX, mouseY, g_currentLabel);
+        }
+        redraw();
+    });
 
-        addControlPoint(mouseX, mouseY, g_currentLabel);
+    $('#canvas').mousemove(function(e) {
+        if(g_move) {
+            var scale =  g_canvasWidth / $('#canvas').width();
+            var mouseX = (e.pageX - this.offsetLeft)*scale;
+            var mouseY = (e.pageY - this.offsetTop)*scale;
+            g_controlPoints[g_pointToMove].x = mouseX;
+            g_controlPoints[g_pointToMove].y = mouseY;
+            redraw();
+        }
+    });
+
+    $('#canvas').mouseup(function(e) {
+        g_move = false;
+    });
+
+    $('#canvas').dblclick(function(e) {
+        var scale =  g_canvasWidth / $('#canvas').width();
+        var mouseX = (e.pageX - this.offsetLeft)*scale;
+        var mouseY = (e.pageY - this.offsetTop)*scale;
+        var point = getClosestPoint(mouseX, mouseY);
+        if(point >= 0) {
+            g_controlPoints.splice(point, 1);
+        }
         redraw();
     });
 
@@ -60,6 +97,26 @@ function loadSegmentationTask(image_sequence_id, frame_nr) {
         setupSegmentation();
     };
 
+}
+
+function getClosestPoint(x, y) {
+    var minDistance = g_canvasWidth*g_canvasHeight;
+    var minPoint = -1;
+
+    for(var i = 0; i < g_controlPoints.length; i++) {
+        var point = g_controlPoints[i];
+        var distance = Math.sqrt((point.x-x)*(point.x-x) + (point.y-y)*(point.y-y));
+        if(distance < minDistance) {
+            minPoint = i;
+            minDistance = distance;
+        }
+    }
+
+    if(minDistance < g_moveDistanceThreshold) {
+        return minPoint;
+    } else {
+        return -1;
+    }
 }
 
 function createControlPoint(x, y, label) {
@@ -109,7 +166,7 @@ function redraw(){
         var step = 0.1;
         var prev_x = -1;
         var prev_y = -1;
-        var tension = 0.25;
+        var tension = 0.5;
         for(var t = 0.0; t < 1; t += step) {
             var x =
                 (2*t*t*t - 3*t*t + 1)*b.x +
@@ -131,7 +188,6 @@ function redraw(){
             prev_x = x;
             prev_y = y;
         }
-
 
         // Draw control point
         g_context.fillStyle = colorToHexString(255, 255, 0);
