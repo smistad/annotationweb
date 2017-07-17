@@ -569,6 +569,8 @@ def get_redirection(task):
         return 'segmentation:segment_image'
     elif task.type == Task.LANDMARK:
         return 'landmark:process_image'
+    elif task.type == Task.CARDIAC_SEGMENTATION:
+        return 'cardiac:segment_image'
 
 
 # @register.simple_tag

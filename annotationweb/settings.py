@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'boundingbox',
     'landmark',
     'user',
+    'cardiac',
 ]
 
 MIDDLEWARE_CLASSES = [

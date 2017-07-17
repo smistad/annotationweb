@@ -50,11 +50,13 @@ class Task(models.Model):
     CLASSIFICATION = 'classification'
     BOUNDING_BOX = 'boundingbox'
     LANDMARK = 'landmark'
+    CARDIAC_SEGMENTATION = 'cardiac_segmentation'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
         (SEGMENTATION, 'Segmentation'),
         (BOUNDING_BOX, 'Bounding box'),
         (LANDMARK, 'Landmark'),
+        (CARDIAC_SEGMENTATION, 'Cardiac segmentation'),
     )
 
     name = models.CharField(max_length=200)
