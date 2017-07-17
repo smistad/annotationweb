@@ -1,3 +1,7 @@
+.idea
+environment
+segmentations
+*.sqlite3
 *.log
 *.pot
 *.pyc
