@@ -175,6 +175,7 @@ function insertControlPoint(x, y, label, index) {
 }
 
 function snapToAVLine(x, y) {
+    // See https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
     var y1 = getControlPoint(0, 0).y;
     var y2 = getControlPoint(-1, 0).y;
     var x1 = getControlPoint(0, 0).x;
@@ -195,16 +196,6 @@ function snapToAVLine(x, y) {
 }
 
 function addControlPoint(x, y, label) {
-    /*
-    if(label == 1) {
-        // If epicardium and close to AV plane line, snap to it
-        var snap = snapToAVLine(x, y);
-        if(snap.distance < 10) {
-            x = snap.x;
-            y = snap.y;
-        }
-    }
-    */
     var controlPoint = createControlPoint(x, y, label);
     g_controlPoints[g_currentSegmentationLabel].push(controlPoint);
 }
