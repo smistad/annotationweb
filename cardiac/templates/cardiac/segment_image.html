@@ -57,10 +57,14 @@
         </p>
         <div class="actionButtons">
             <button id="playButton" type="button">Play</button>
-            <button id="markAsED">Mark as ED</button>
-            <button id="markAsES">Mark as ES</button>
-            <button id="segmentED">Segment ED</button>
-            <button id="segmentES">Segment ES</button>
+            <div>
+                <button id="markAsED">Mark as ED</button>
+                <button id="markAsES">Mark as ES</button>
+            </div>
+            <div>
+                <button id="segmentED">Segment ED</button>
+                <button id="segmentES">Segment ES</button>
+            </div>
         </div>
     {% endif %}
     <h2>Actions</h2>
@@ -106,6 +110,8 @@
 {% block content_right %}
 
     <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+
+    <canvas id="m-mode-canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 
     {% block task_content %}
     {% endblock %}

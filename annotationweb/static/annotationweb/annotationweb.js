@@ -47,7 +47,6 @@ function setPlayButton(play) {
 function goToFrame(frameNr) {
     setPlayButton(false);
     g_currentFrameNr = frameNr;
-    $('#currentFrame').text(g_currentFrameNr);
     $('#slider').slider('value', frameNr); // Update slider
     redrawSequence();
 }
@@ -210,7 +209,11 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
     });
 
     $("#goToTargetFrame").click(function() {
-        goToFrame(target_frame);
+        goToFrame(target_frame)
+        setPlayButton(false);
+        g_currentFrameNr = target_frame;
+        $('#slider').slider('value', target_frame); // Update slider
+        redrawSequence();
     });
 
     $("#canvas").click(function() {

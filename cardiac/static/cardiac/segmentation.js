@@ -13,6 +13,11 @@ var g_currentSegmentationLabel = 0;
 var g_frameED = -1;
 var g_frameES = -1;
 var g_currentPhase = 0; // 0 == ED, 1 == ES
+var g_motionModeData;
+var g_motionModeImage;
+var g_motionModeContext;
+var g_createMotionModeImage = true;
+var g_motionModeLine = -1;
 
 
 function setupSegmentation() {
@@ -67,7 +72,7 @@ function setupSegmentation() {
                 addControlPoint(mouseX, mouseY, g_currentSegmentationLabel);
             }
         }
-        redraw();
+        redrawSequence();
     });
 
     $('#canvas').mousemove(function(e) {
@@ -77,7 +82,7 @@ function setupSegmentation() {
         if(g_move) {
             $(document.body).css({'cursor' : 'move'});
             setControlPoint(g_pointToMove, g_currentSegmentationLabel, mouseX, mouseY);
-            redraw();
+            redrawSequence();
         } else {
             if(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
                 var line = {
@@ -92,7 +97,7 @@ function setupSegmentation() {
                 g_drawLine = false;
                 $(document.body).css({'cursor' : 'pointer'});
             }
-            redraw();
+            redrawSequence();
         }
         e.preventDefault();
     });
@@ -103,7 +108,7 @@ function setupSegmentation() {
 
     $('#canvas').mouseleave(function(e) {
         g_drawLine = false;
-        redraw();
+        redrawSequence();
     });
 
     $('#canvas').dblclick(function(e) {
@@ -116,7 +121,7 @@ function setupSegmentation() {
         if(point >= 0) {
             g_controlPoints[g_currentPhase][g_currentSegmentationLabel].splice(point, 1);
         }
-        redraw();
+        redrawSequence();
     });
 
 
@@ -124,7 +129,7 @@ function setupSegmentation() {
         g_annotationHasChanged = true;
         g_controlPoints = [];
         $('#slider').slider('value', g_frameNr); // Update slider
-        redraw();
+        redrawSequence();
     });
 
     $('#markAsED').click(function() {
@@ -184,6 +189,63 @@ function loadSegmentationTask(image_sequence_id, frame_nr) {
         setupSegmentation();
     };
 
+}
+
+function createMotionModeCanvas() {
+    if(g_motionModeLine == -1) {
+        g_motionModeLine = g_canvasWidth / 2;
+    }
+    // Create canvas
+    var canvas = document.getElementById('m-mode-canvas');
+    canvas.setAttribute('width', g_framesLoaded);
+    canvas.setAttribute('height', g_canvasHeight);
+    // IE stuff
+    if(typeof G_vmlCanvasManager != 'undefined') {
+        canvas = G_vmlCanvasManager.initElement(canvas);
+    }
+    g_motionModeContext = canvas.getContext("2d");
+    var width = g_framesLoaded;
+    g_motionModeContext.clearRect(0, 0, g_motionModeContext.canvas.width, g_motionModeContext.canvas.height); // Clears the canvas
+
+    if(g_createMotionModeImage) {
+        g_motionModeImage = g_motionModeContext.getImageData(0, 0, width, g_canvasHeight);
+        g_motionModeData = g_motionModeImage.data;
+        console.log('Frames: ' + g_framesLoaded)
+        console.log('Width: ' + g_canvasWidth)
+        console.log('Height: ' + g_canvasHeight)
+        // Go through entire sequence
+        for (var t = 0; t < g_framesLoaded; t++) {
+            var frame = g_sequence[t];
+            var dummyCanvas = document.createElement('canvas');
+            dummyCanvas.setAttribute('width', g_canvasWidth);
+            dummyCanvas.setAttribute('height', g_canvasHeight);
+            var dummyContext = dummyCanvas.getContext('2d');
+            dummyContext.drawImage(frame, 0, 0);
+            var pixels = dummyContext.getImageData(g_motionModeLine, 0, 1, g_canvasHeight).data;
+            for (var y = 0; y < g_canvasHeight; y++) {
+                var value = pixels[y*4]
+                //console.log(value)
+                g_motionModeData[(t + y * width) * 4 + 0] = value;
+                g_motionModeData[(t + y * width) * 4 + 1] = value;
+                g_motionModeData[(t + y * width) * 4 + 2] = value;
+                g_motionModeData[(t + y * width) * 4 + 3] = 255;
+            }
+        }
+        g_createMotionModeImage = false;
+    }
+    g_motionModeContext.putImageData(g_motionModeImage, 0, 0);
+
+    // Draw line
+    g_motionModeContext.beginPath();
+    //g_motionModeContext.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
+    g_motionModeContext.strokeStyle = colorToHexString(0, 255, 0);
+    g_motionModeContext.moveTo(g_currentFrameNr, 0);
+    g_motionModeContext.lineTo(g_currentFrameNr, g_canvasHeight);
+    g_motionModeContext.stroke();
+    g_motionModeContext.setLineDash([]); // Clear
+
+    $('#m-mode-canvas').css('width', '100%');
+    $('#m-mode-canvas').css('height', g_canvasHeight+'px');
 }
 
 function getClosestPoint(x, y) {
@@ -406,16 +468,28 @@ function redraw(){
         g_context.setLineDash([]); // Clear
     }
 
+
 }
 
 // Override redraw sequence in sequence.js
 function redrawSequence() {
+    createMotionModeCanvas();
     if((g_currentPhase == 0 && g_currentFrameNr == g_frameED) || (g_currentPhase == 1 && g_currentFrameNr == g_frameES)) {
         redraw();
     } else {
         var index = g_currentFrameNr - g_startFrame;
         g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     }
+
+    // Draw motion mode line
+    g_context.beginPath();
+    g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
+    var label = getLabelWithId(g_currentSegmentationLabel);
+    g_context.strokeStyle = colorToHexString(0, 255, 255);
+    g_context.moveTo(g_motionModeLine, 0);
+    g_context.lineTo(g_motionModeLine, g_canvasHeight);
+    g_context.stroke();
+    g_context.setLineDash([]); // Clear
 }
 
 // Override of annotationweb.js
