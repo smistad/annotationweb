@@ -30,6 +30,7 @@ function incrementFrame() {
         return;
     g_currentFrameNr = ((g_currentFrameNr-g_startFrame) + 1) % g_framesLoaded + g_startFrame;
     $('#slider').slider('value', g_currentFrameNr); // Update slider
+    $('#currentFrame').text(g_currentFrameNr);
     redrawSequence();
     window.setTimeout(incrementFrame, 50);
 }
@@ -170,6 +171,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
                 value: g_currentFrameNr,
             slide: function(event, ui) {
                 g_currentFrameNr = ui.value;
+                $('#currentFrame').text(g_currentFrameNr);
                 setPlayButton(false);
                 redrawSequence();
             }

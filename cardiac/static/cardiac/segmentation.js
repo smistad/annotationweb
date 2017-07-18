@@ -10,6 +10,9 @@ var g_pointToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
 var g_currentSegmentationLabel = 0;
+var g_frameED = -1;
+var g_frameES = -1;
+var g_currentPhase = -1; // 0 == ED, 1 == ES
 
 
 function setupSegmentation() {
@@ -112,6 +115,32 @@ function setupSegmentation() {
         g_controlPoints = [];
         $('#slider').slider('value', g_frameNr); // Update slider
         redraw();
+    });
+
+    $('#markAsED').click(function() {
+        g_frameED = g_currentFrameNr;
+        $('#sliderEDmark').css('background-color', 'red');
+        $('#sliderEDmark').css('width', $('.ui-slider-handle').css('width'));
+        $('#sliderEDmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
+        $('#sliderEDmark').css('height', '100%');
+        $('#sliderEDmark').css('z-index', '99');
+        $('#sliderEDmark').css('left', $('.ui-slider-handle').css('left'));
+        $('#sliderEDmark').css('position', 'absolute');
+        $('#EDFrame').text(g_frameED);
+        console.log('Frame ED set to ' + g_frameED);
+    });
+
+    $('#markAsES').click(function() {
+        g_frameES = g_currentFrameNr;
+        $('#sliderESmark').css('background-color', 'blue');
+        $('#sliderESmark').css('width', $('.ui-slider-handle').css('width'));
+        $('#sliderESmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
+        $('#sliderESmark').css('height', '100%');
+        $('#sliderESmark').css('z-index', '99');
+        $('#sliderESmark').css('left', $('.ui-slider-handle').css('left'));
+        $('#sliderESmark').css('position', 'absolute');
+        $('#ESFrame').text(g_frameES);
+        console.log('Frame ES set to ' + g_frameES);
     });
 
     // Set first label active
