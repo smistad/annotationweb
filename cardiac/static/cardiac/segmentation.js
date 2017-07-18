@@ -18,6 +18,7 @@ var g_motionModeImage;
 var g_motionModeContext;
 var g_createMotionModeImage = true;
 var g_motionModeLine = -1;
+var g_moveMotionModeLIne = false;
 
 
 function setupSegmentation() {
@@ -62,6 +63,8 @@ function setupSegmentation() {
             // Move point
             g_move = true;
             g_pointToMove = point;
+        } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold) {
+            g_moveMotionModeLIne = true;
         } else {
             var section = isPointOnSpline(mouseX, mouseY);
             if(section >= 0) {
@@ -79,12 +82,18 @@ function setupSegmentation() {
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
+        var cursor = 'default';
         if(g_move) {
-            $(document.body).css({'cursor' : 'move'});
+            cursor = 'move';
             setControlPoint(g_pointToMove, g_currentSegmentationLabel, mouseX, mouseY);
+            redrawSequence();
+        } else if(g_moveMotionModeLIne) {
+            cursor = 'move';
+            g_motionModeLine = mouseX;
             redrawSequence();
         } else {
             if(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
+                // If mouse is not close to spline, draw dotted drawing line
                 var line = {
                     x0: getControlPoint(-1, g_currentSegmentationLabel).x,
                     y0: getControlPoint(-1, g_currentSegmentationLabel).y,
@@ -92,18 +101,24 @@ function setupSegmentation() {
                     y1: mouseY
                 };
                 g_drawLine = line;
-                $(document.body).css({'cursor' : 'default'});
+            } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold) {
+                cursor = 'pointer';
             } else {
+                cursor = 'pointer';
                 g_drawLine = false;
-                $(document.body).css({'cursor' : 'pointer'});
             }
             redrawSequence();
         }
+        $('#canvas').css({'cursor' : cursor});
         e.preventDefault();
     });
 
     $('#canvas').mouseup(function(e) {
         g_move = false;
+        if(g_moveMotionModeLIne) {
+            g_moveMotionModeLIne = false;
+            g_createMotionModeImage = true;
+        }
     });
 
     $('#canvas').mouseleave(function(e) {
