@@ -44,6 +44,14 @@ function setPlayButton(play) {
     }
 }
 
+function goToFrame(frameNr) {
+    setPlayButton(false);
+    g_currentFrameNr = frameNr;
+    $('#currentFrame').text(g_currentFrameNr);
+    $('#slider').slider('value', frameNr); // Update slider
+    redrawSequence();
+}
+
 function save() {
     var messageBox = document.getElementById("message")
     messageBox.innerHTML = '<span class="info">Please wait while saving..</span>';
@@ -202,10 +210,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
     });
 
     $("#goToTargetFrame").click(function() {
-        setPlayButton(false);
-        g_currentFrameNr = target_frame;
-        $('#slider').slider('value', target_frame); // Update slider
-        redrawSequence();
+        goToFrame(target_frame);
     });
 
     $("#canvas").click(function() {

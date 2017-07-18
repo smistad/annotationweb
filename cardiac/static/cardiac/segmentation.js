@@ -12,13 +12,18 @@ var g_drawLine = false;
 var g_currentSegmentationLabel = 0;
 var g_frameED = -1;
 var g_frameES = -1;
-var g_currentPhase = -1; // 0 == ED, 1 == ES
+var g_currentPhase = 0; // 0 == ED, 1 == ES
 
 
 function setupSegmentation() {
-    g_controlPoints.push([]); // Endo
-    g_controlPoints.push([]); // Epi
-    g_controlPoints.push([]); // Atrium
+    g_controlPoints.push([]); // ED
+    g_controlPoints.push([]); // ES
+    g_controlPoints[0].push([]); // Endo
+    g_controlPoints[0].push([]); // Epi
+    g_controlPoints[0].push([]); // Atrium
+    g_controlPoints[1].push([]); // Endo
+    g_controlPoints[1].push([]); // Epi
+    g_controlPoints[1].push([]); // Atrium
 
     // Initialize canvas with background image
     g_context.clearRect(0, 0, g_context.canvas.width, g_context.canvas.height); // Clears the canvas
@@ -28,8 +33,12 @@ function setupSegmentation() {
     g_image = g_context.getImageData(0, 0, g_canvasWidth, g_canvasHeight);
     g_imageData = g_image.data;
 
+    // Remove any previous event handlers
+    $('#canvas').off();
+
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
+        /*
         // If current frame is not the frame to segment
         if(g_currentFrameNr != g_frameNr) {
             // Move slider to frame to segment
@@ -38,6 +47,7 @@ function setupSegmentation() {
             redraw();
             return;
         }
+        */
 
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
@@ -69,7 +79,7 @@ function setupSegmentation() {
             setControlPoint(g_pointToMove, g_currentSegmentationLabel, mouseX, mouseY);
             redraw();
         } else {
-            if(g_controlPoints[g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
+            if(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
                 var line = {
                     x0: getControlPoint(-1, g_currentSegmentationLabel).x,
                     y0: getControlPoint(-1, g_currentSegmentationLabel).y,
@@ -104,7 +114,7 @@ function setupSegmentation() {
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
         if(point >= 0) {
-            g_controlPoints[g_currentSegmentationLabel].splice(point, 1);
+            g_controlPoints[g_currentPhase][g_currentSegmentationLabel].splice(point, 1);
         }
         redraw();
     });
@@ -143,6 +153,20 @@ function setupSegmentation() {
         console.log('Frame ES set to ' + g_frameES);
     });
 
+    $('#slider').resize(function() {
+        // TODO Move slider ED/ES mark
+    });
+
+    $('#segmentED').click(function() {
+        g_currentPhase = 0;
+        goToFrame(g_frameED);
+    });
+
+    $('#segmentES').click(function() {
+        g_currentPhase = 1;
+        goToFrame(g_frameES);
+    });
+
     // Set first label active
     changeLabel(0);
     redraw();
@@ -166,7 +190,7 @@ function getClosestPoint(x, y) {
     var minDistance = g_canvasWidth*g_canvasHeight;
     var minPoint = -1;
 
-    for(var i = 0; i < g_controlPoints[g_currentSegmentationLabel].length; i++) {
+    for(var i = 0; i < g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length; i++) {
         var point = getControlPoint(i, g_currentSegmentationLabel);
         var distance = Math.sqrt((point.x-x)*(point.x-x) + (point.y-y)*(point.y-y));
         if(distance < minDistance) {
@@ -203,7 +227,7 @@ function createControlPoint(x, y, label) {
 
 function insertControlPoint(x, y, label, index) {
     var controlPoint = createControlPoint(x, y, label);
-    g_controlPoints[g_currentSegmentationLabel].splice(index+1, 0, controlPoint);
+    g_controlPoints[g_currentPhase][g_currentSegmentationLabel].splice(index+1, 0, controlPoint);
 }
 
 function snapToAVLine(x, y) {
@@ -229,28 +253,28 @@ function snapToAVLine(x, y) {
 
 function addControlPoint(x, y, label) {
     var controlPoint = createControlPoint(x, y, label);
-    g_controlPoints[g_currentSegmentationLabel].push(controlPoint);
+    g_controlPoints[g_currentPhase][g_currentSegmentationLabel].push(controlPoint);
 }
 
 function getControlPoint(index, label) {
     if(index === -1) {
-        index = g_controlPoints[label].length-1;
+        index = g_controlPoints[g_currentPhase][label].length-1;
     }
-    return g_controlPoints[label][index];
+    return g_controlPoints[g_currentPhase][label][index];
 }
 
 function setControlPoint(index, label, x, y) {
-    g_controlPoints[label][index].x = x;
-    g_controlPoints[label][index].y = y;
+    g_controlPoints[g_currentPhase][label][index].x = x;
+    g_controlPoints[g_currentPhase][label][index].y = y;
 
 }
 
 function isPointOnSpline(pointX, pointY) {
-    for(var i = 0; i < g_controlPoints[g_currentSegmentationLabel].length; ++i) {
+    for(var i = 0; i < g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length; ++i) {
         var a = getControlPoint(max(0, i - 1), g_currentSegmentationLabel);
         var b = getControlPoint(i, g_currentSegmentationLabel);
-        var c = getControlPoint(min(g_controlPoints[g_currentSegmentationLabel].length - 1, i + 1), g_currentSegmentationLabel);
-        var d = getControlPoint(min(g_controlPoints[g_currentSegmentationLabel].length - 1, i + 2), g_currentSegmentationLabel);
+        var c = getControlPoint(min(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length - 1, i + 1), g_currentSegmentationLabel);
+        var d = getControlPoint(min(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length - 1, i + 2), g_currentSegmentationLabel);
 
         var step = 0.1;
         var tension = 0.5;
@@ -275,34 +299,36 @@ function isPointOnSpline(pointX, pointY) {
 
 
 function redraw(){
-    g_context.putImageData(g_image, 0, 0);
+    //g_context.putImageData(g_image, 0, 0);
+    var index = g_currentFrameNr - g_startFrame;
+    g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     var controlPointSize = 6;
     g_context.lineWidth = 2;
 
     // For left atrium, insert endo endpoints
-    if(g_controlPoints[0].length > 1 && g_controlPoints[2].length > 0) {
-        g_controlPoints[2].splice(0, 0, getControlPoint(-1, 0));
-        g_controlPoints[2].push(getControlPoint(0, 0));
+    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][2].length > 0) {
+        g_controlPoints[g_currentPhase][2].splice(0, 0, getControlPoint(-1, 0));
+        g_controlPoints[g_currentPhase][2].push(getControlPoint(0, 0));
     }
 
-    if(g_controlPoints[0].length > 1 && g_controlPoints[1].length > 0) {
+    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][1].length > 0) {
         var startPoint = getControlPoint(0, 1);
         var endPoint = getControlPoint(-1, 1);
         var snap1 = snapToAVLine(startPoint.x, startPoint.y);
         var snap2 = snapToAVLine(endPoint.x, endPoint.y);
-        g_controlPoints[1].splice(0, 0, createControlPoint(snap1.x, snap1.y, 1));
-        if(g_controlPoints[1].length > 5)
-            g_controlPoints[1].push(createControlPoint(snap2.x, snap2.y, 1));
+        g_controlPoints[g_currentPhase][1].splice(0, 0, createControlPoint(snap1.x, snap1.y, 1));
+        if(g_controlPoints[g_currentPhase][1].length > 5)
+            g_controlPoints[g_currentPhase][1].push(createControlPoint(snap2.x, snap2.y, 1));
     }
 
     // Draw controlPoint
     for(var labelIndex = 0; labelIndex < 3; labelIndex++) {
-        for (var i = 0; i < g_controlPoints[labelIndex].length; ++i) {
+        for (var i = 0; i < g_controlPoints[g_currentPhase][labelIndex].length; ++i) {
             g_context.beginPath();
             var a = getControlPoint(max(0, i - 1), labelIndex);
             var b = getControlPoint(i, labelIndex);
-            var c = getControlPoint(min(g_controlPoints[labelIndex].length - 1, i + 1), labelIndex);
-            var d = getControlPoint(min(g_controlPoints[labelIndex].length - 1, i + 2), labelIndex);
+            var c = getControlPoint(min(g_controlPoints[g_currentPhase][labelIndex].length - 1, i + 1), labelIndex);
+            var d = getControlPoint(min(g_controlPoints[g_currentPhase][labelIndex].length - 1, i + 2), labelIndex);
 
             var label = getLabelWithId(labelIndex);
 
@@ -341,18 +367,18 @@ function redraw(){
     }
 
     // Remove inserted LA endpoints
-    if(g_controlPoints[0].length > 1 && g_controlPoints[2].length > 0) {
-        g_controlPoints[2].splice(0, 1);
-        g_controlPoints[2].splice(g_controlPoints[2].length - 1, 1);
+    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][2].length > 0) {
+        g_controlPoints[g_currentPhase][2].splice(0, 1);
+        g_controlPoints[g_currentPhase][2].splice(g_controlPoints[g_currentPhase][2].length - 1, 1);
     }
-    if(g_controlPoints[0].length > 1 && g_controlPoints[1].length > 0) {
-        g_controlPoints[1].splice(0, 1);
-        if(g_controlPoints[1].length > 5)
-            g_controlPoints[1].splice(g_controlPoints[1].length - 1, 1);
+    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][1].length > 0) {
+        g_controlPoints[g_currentPhase][1].splice(0, 1);
+        if(g_controlPoints[g_currentPhase][1].length > 5)
+            g_controlPoints[g_currentPhase][1].splice(g_controlPoints[g_currentPhase][1].length - 1, 1);
     }
 
     // Draw AV plane line
-    if(g_controlPoints[0].length > 4) {
+    if(g_controlPoints[g_currentPhase][0].length > 4) {
         var y0 = getControlPoint(0, 0).y;
         var y1 = getControlPoint(-1, 0).y;
         var x0 = getControlPoint(0, 0).x;
@@ -384,7 +410,7 @@ function redraw(){
 
 // Override redraw sequence in sequence.js
 function redrawSequence() {
-    if(g_currentFrameNr == g_frameNr) {
+    if((g_currentPhase == 0 && g_currentFrameNr == g_frameED) || (g_currentPhase == 1 && g_currentFrameNr == g_frameES)) {
         redraw();
     } else {
         var index = g_currentFrameNr - g_startFrame;
