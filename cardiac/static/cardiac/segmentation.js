@@ -12,7 +12,7 @@ var g_drawLine = false;
 var g_currentSegmentationLabel = 0;
 var g_frameED = -1;
 var g_frameES = -1;
-var g_currentPhase = 0; // 0 == ED, 1 == ES
+var g_currentPhase = -1; // -1 == None, 0 == ED, 1 == ES
 var g_motionModeData;
 var g_motionModeImage;
 var g_motionModeContext;
@@ -44,16 +44,6 @@ function setupSegmentation() {
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
-        /*
-        // If current frame is not the frame to segment
-        if(g_currentFrameNr != g_frameNr) {
-            // Move slider to frame to segment
-            $('#slider').slider("value", g_frameNr);
-            g_currentFrameNr = g_frameNr;
-            redraw();
-            return;
-        }
-        */
 
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
@@ -65,7 +55,7 @@ function setupSegmentation() {
             g_pointToMove = point;
         } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight/10) {
             g_moveMotionModeLIne = true;
-        } else {
+        } else if(g_currentPhase >= 0) {
             var section = isPointOnSpline(mouseX, mouseY);
             if(section >= 0) {
                 // Insert point
@@ -83,7 +73,7 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var cursor = 'default';
-        if(g_move) {
+        if(g_move && g_currentPhase >= 0) {
             cursor = 'move';
             setControlPoint(g_pointToMove, g_currentSegmentationLabel, mouseX, mouseY);
             redrawSequence();
@@ -92,7 +82,7 @@ function setupSegmentation() {
             g_motionModeLine = mouseX;
             redrawSequence();
         } else {
-            if(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
+            if(g_currentPhase >= 0 && g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
                 // If mouse is not close to spline, draw dotted drawing line
                 var line = {
                     x0: getControlPoint(-1, g_currentSegmentationLabel).x,
@@ -127,7 +117,7 @@ function setupSegmentation() {
     });
 
     $('#canvas').dblclick(function(e) {
-        if(g_move)
+        if(g_move || g_currentPhase == -1)
             return;
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
@@ -142,7 +132,7 @@ function setupSegmentation() {
 
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
-        g_controlPoints = [];
+        g_controlPoints = []; // TODO FIX
         $('#slider').slider('value', g_frameNr); // Update slider
         redrawSequence();
     });
@@ -178,12 +168,10 @@ function setupSegmentation() {
     });
 
     $('#segmentED').click(function() {
-        g_currentPhase = 0;
         goToFrame(g_frameED);
     });
 
     $('#segmentES').click(function() {
-        g_currentPhase = 1;
         goToFrame(g_frameES);
     });
 
@@ -376,6 +364,8 @@ function isPointOnSpline(pointX, pointY) {
 
 
 function redraw(){
+    if(g_currentPhase == -1)
+        return;
     //g_context.putImageData(g_image, 0, 0);
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
@@ -489,12 +479,16 @@ function redraw(){
 // Override redraw sequence in sequence.js
 function redrawSequence() {
     createMotionModeCanvas();
-    if((g_currentPhase == 0 && g_currentFrameNr == g_frameED) || (g_currentPhase == 1 && g_currentFrameNr == g_frameES)) {
-        redraw();
+    if(g_currentFrameNr == g_frameED) {
+        g_currentPhase = 0;
+    } else if(g_currentFrameNr == g_frameES) {
+        g_currentPhase = 1;
     } else {
+        g_currentPhase = -1;
         var index = g_currentFrameNr - g_startFrame;
         g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     }
+    redraw();
 
     // Draw motion mode line
     g_context.beginPath();
