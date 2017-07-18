@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
+import json
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import HttpResponse, Http404, JsonResponse
@@ -30,7 +31,43 @@ def segment_image(request, task_id, image_id):
 
 
 def save_segmentation(request):
-    pass
+    print(request.POST)
+    error_messages = ''
+    frame_ED = int(request.POST['frame_ed'])
+    frame_ES = int(request.POST['frame_es'])
+    control_points = json.loads(request.POST['control_points'])
+    objects = ('Endocardium', 'Epicardium', 'Left atrium')
+
+    if frame_ED == -1:
+        error_messages += 'End Diastole frame not annotated<br>'
+    else:
+        # Check if all control points for ED is present
+        for i in range(len(objects)):
+            if len(control_points[0][i]) < 1:
+                error_messages += objects[i] + ' annotation missing in End Diastole<br>'
+
+    if frame_ES == -1:
+        error_messages += 'End Systole frame not annotated<br>'
+    else:
+        # Check if all control points for ES is present
+        # Check if all control points for ED is present
+        for i in range(len(objects)):
+            if len(control_points[1][i]) < 1:
+                error_messages += objects[i] + ' annotation missing in End Systole<br>'
+
+    if len(error_messages):
+        response = {
+            'success': 'false',
+            'message': error_messages,
+        }
+    else:
+        # TODO store data in database
+        response = {
+            'success': 'true',
+            'message': 'Annotation saved',
+        }
+
+    return JsonResponse(response)
 
 
 def show_segmentation(request, task_id, image_id):

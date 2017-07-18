@@ -244,13 +244,12 @@ function createMotionModeCanvas() {
     g_motionModeContext.putImageData(g_motionModeImage, 0, 0);
 
     // Draw line
+    g_motionModeContext.lineWidth = 1;
     g_motionModeContext.beginPath();
-    //g_motionModeContext.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
     g_motionModeContext.strokeStyle = colorToHexString(0, 255, 0);
     g_motionModeContext.moveTo(g_currentFrameNr, 0);
     g_motionModeContext.lineTo(g_currentFrameNr, g_canvasHeight);
     g_motionModeContext.stroke();
-    g_motionModeContext.setLineDash([]); // Clear
 
     $('#m-mode-canvas').css('width', '100%');
     $('#m-mode-canvas').css('height', g_canvasHeight+'px');
@@ -518,4 +517,22 @@ function changeLabel(label_id) {
     g_currentSegmentationLabel = label_id;
     $('.labelButton').removeClass('activeLabel');
     $('#labelButton' + label_id).addClass('activeLabel');
+}
+
+function sendDataForSave() {
+    return $.ajax({
+        type: "POST",
+        url: "/cardiac/segmentation/save/",
+        data: {
+            control_points: JSON.stringify(g_controlPoints),
+            frame_ed: g_frameED,
+            frame_es: g_frameES,
+            width: g_canvasWidth,
+            height: g_canvasHeight,
+            image_id: g_imageID,
+            task_id: g_taskID,
+            quality: $('input[name=quality]:checked').val(),
+        },
+        dataType: "json" // Need this do get result back as JSON
+    });
 }

@@ -69,7 +69,7 @@ function save() {
                 location.reload();
             }
         } else {
-            messageBox.innerHTML = '<span class="error">Save failed! ' + data.message + '</span>';
+            messageBox.innerHTML = '<div class="error"><strong>Save failed!</strong><br> ' + data.message + '</div>';
         }
         console.log(data.message);
     }).fail(function(data) {
