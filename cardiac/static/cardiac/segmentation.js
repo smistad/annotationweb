@@ -132,8 +132,11 @@ function setupSegmentation() {
 
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
-        g_controlPoints = []; // TODO FIX
-        $('#slider').slider('value', g_frameNr); // Update slider
+        if(g_currentPhase >= 0) {
+            g_controlPoints[g_currentPhase][0] = [];
+            g_controlPoints[g_currentPhase][1] = [];
+            g_controlPoints[g_currentPhase][2] = [];
+        }
         redrawSequence();
     });
 
@@ -168,10 +171,12 @@ function setupSegmentation() {
     });
 
     $('#segmentED').click(function() {
+        changeLabel(0);
         goToFrame(g_frameED);
     });
 
     $('#segmentES').click(function() {
+        changeLabel(0);
         goToFrame(g_frameES);
     });
 
@@ -252,6 +257,8 @@ function createMotionModeCanvas() {
 }
 
 function getClosestPoint(x, y) {
+    if(g_currentPhase == -1)
+        return -1;
     var minDistance = g_canvasWidth*g_canvasHeight;
     var minPoint = -1;
 
@@ -509,4 +516,6 @@ function redrawSequence() {
 function changeLabel(label_id) {
     console.log('changing label to: ', label_id)
     g_currentSegmentationLabel = label_id;
+    $('.labelButton').removeClass('activeLabel');
+    $('#labelButton' + label_id).addClass('activeLabel');
 }
