@@ -63,7 +63,7 @@ function setupSegmentation() {
             // Move point
             g_move = true;
             g_pointToMove = point;
-        } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold) {
+        } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight/10) {
             g_moveMotionModeLIne = true;
         } else {
             var section = isPointOnSpline(mouseX, mouseY);
@@ -101,7 +101,7 @@ function setupSegmentation() {
                     y1: mouseY
                 };
                 g_drawLine = line;
-            } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold) {
+            } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight/10) {
                 cursor = 'pointer';
             } else {
                 cursor = 'pointer';
@@ -498,10 +498,14 @@ function redrawSequence() {
 
     // Draw motion mode line
     g_context.beginPath();
-    g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
-    var label = getLabelWithId(g_currentSegmentationLabel);
     g_context.strokeStyle = colorToHexString(0, 255, 255);
+    // Draw solid line where it can be moved
     g_context.moveTo(g_motionModeLine, 0);
+    g_context.lineTo(g_motionModeLine, g_canvasHeight/10);
+    g_context.stroke();
+    // Draw dashed line for the rest
+    g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
+    g_context.moveTo(g_motionModeLine, g_canvasHeight/10);
     g_context.lineTo(g_motionModeLine, g_canvasHeight);
     g_context.stroke();
     g_context.setLineDash([]); // Clear
