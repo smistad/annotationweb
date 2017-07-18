@@ -62,6 +62,7 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         if(g_move) {
+            $(document.body).css({'cursor' : 'move'});
             setControlPoint(g_pointToMove, g_currentSegmentationLabel, mouseX, mouseY);
             redraw();
         } else {
@@ -73,8 +74,10 @@ function setupSegmentation() {
                     y1: mouseY
                 };
                 g_drawLine = line;
+                $(document.body).css({'cursor' : 'default'});
             } else {
                 g_drawLine = false;
+                $(document.body).css({'cursor' : 'pointer'});
             }
             redraw();
         }
