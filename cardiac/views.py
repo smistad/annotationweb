@@ -46,6 +46,7 @@ def save_segmentation(request):
     error_messages = ''
     frame_ED = int(request.POST['frame_ed'])
     frame_ES = int(request.POST['frame_es'])
+    motion_mode_line = int(round(float(request.POST['motion_mode_line'])))
     control_points = json.loads(request.POST['control_points'])
     print(control_points)
     objects = ('Endocardium', 'Epicardium', 'Left atrium')
@@ -81,6 +82,7 @@ def save_segmentation(request):
             segmentation.image = annotation
             segmentation.frame_ED = frame_ED
             segmentation.frame_ES = frame_ES
+            segmentation.motion_mode_line = motion_mode_line
             segmentation.save()
 
             # Save control points

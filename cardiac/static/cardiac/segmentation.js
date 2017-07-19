@@ -539,6 +539,7 @@ function sendDataForSave() {
             control_points: JSON.stringify(g_controlPoints),
             frame_ed: g_frameED,
             frame_es: g_frameES,
+            motion_mode_line: g_motionModeLine,
             width: g_canvasWidth,
             height: g_canvasHeight,
             image_id: g_imageID,

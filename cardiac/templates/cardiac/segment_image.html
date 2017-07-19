@@ -25,6 +25,7 @@
     {% endif %}
 
     {% if segmentation %}
+        g_motionModeLine = {{ segmentation.motion_mode_line }};
         markED({{ segmentation.frame_ED }}, {{ image_sequence.nr_of_frames }});
         markES({{ segmentation.frame_ES }}, {{ image_sequence.nr_of_frames }});
 

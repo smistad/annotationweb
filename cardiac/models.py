@@ -18,6 +18,7 @@ class Segmentation(models.Model):
     image = models.OneToOneField(ProcessedImage, on_delete=models.CASCADE)
     frame_ED = models.PositiveIntegerField()
     frame_ES = models.PositiveIntegerField()
+    motion_mode_line = models.PositiveIntegerField()
 
 
 class ControlPoint(models.Model):
