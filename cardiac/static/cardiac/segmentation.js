@@ -75,22 +75,24 @@ function setupSegmentation() {
             g_motionModeLine = mouseX;
             redrawSequence();
         } else {
-            if(g_currentPhase >= 0 && g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
-                // If mouse is not close to spline, draw dotted drawing line
-                var line = {
-                    x0: getControlPoint(-1, g_currentSegmentationLabel).x,
-                    y0: getControlPoint(-1, g_currentSegmentationLabel).y,
-                    x1: mouseX,
-                    y1: mouseY
-                };
-                g_drawLine = line;
-            } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight/10) {
-                cursor = 'pointer';
-            } else {
-                cursor = 'pointer';
-                g_drawLine = false;
+            if(g_currentPhase >= 0) {
+                if(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
+                    // If mouse is not close to spline, draw dotted drawing line
+                    var line = {
+                        x0: getControlPoint(-1, g_currentSegmentationLabel).x,
+                        y0: getControlPoint(-1, g_currentSegmentationLabel).y,
+                        x1: mouseX,
+                        y1: mouseY
+                    };
+                    g_drawLine = line;
+                } else if (Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight / 10) {
+                    cursor = 'pointer';
+                } else {
+                    cursor = 'pointer';
+                    g_drawLine = false;
+                }
+                redrawSequence();
             }
-            redrawSequence();
         }
         $('#canvas').css({'cursor' : cursor});
         e.preventDefault();
