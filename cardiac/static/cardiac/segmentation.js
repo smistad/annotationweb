@@ -22,14 +22,7 @@ var g_moveMotionModeLIne = false;
 
 
 function setupSegmentation() {
-    g_controlPoints.push([]); // ED
-    g_controlPoints.push([]); // ES
-    g_controlPoints[0].push([]); // Endo
-    g_controlPoints[0].push([]); // Epi
-    g_controlPoints[0].push([]); // Atrium
-    g_controlPoints[1].push([]); // Endo
-    g_controlPoints[1].push([]); // Epi
-    g_controlPoints[1].push([]); // Atrium
+
 
     // Initialize canvas with background image
     g_context.clearRect(0, 0, g_context.canvas.width, g_context.canvas.height); // Clears the canvas
@@ -62,7 +55,7 @@ function setupSegmentation() {
                 insertControlPoint(mouseX, mouseY, g_currentSegmentationLabel, section);
             } else {
                 // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentSegmentationLabel);
+                addControlPoint(mouseX, mouseY, g_currentSegmentationLabel, g_currentPhase);
             }
         }
         redrawSequence();
@@ -140,30 +133,15 @@ function setupSegmentation() {
         redrawSequence();
     });
 
+
     $('#markAsED').click(function() {
-        g_frameED = g_currentFrameNr;
-        $('#sliderEDmark').css('background-color', 'red');
-        $('#sliderEDmark').css('width', $('.ui-slider-handle').css('width'));
-        $('#sliderEDmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
-        $('#sliderEDmark').css('height', '100%');
-        $('#sliderEDmark').css('z-index', '99');
-        $('#sliderEDmark').css('left', $('.ui-slider-handle').css('left'));
-        $('#sliderEDmark').css('position', 'absolute');
-        $('#EDFrame').text(g_frameED);
-        console.log('Frame ED set to ' + g_frameED);
+        markED(g_currentFrameNr, g_framesLoaded);
+        redrawSequence();
     });
 
     $('#markAsES').click(function() {
-        g_frameES = g_currentFrameNr;
-        $('#sliderESmark').css('background-color', 'blue');
-        $('#sliderESmark').css('width', $('.ui-slider-handle').css('width'));
-        $('#sliderESmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
-        $('#sliderESmark').css('height', '100%');
-        $('#sliderESmark').css('z-index', '99');
-        $('#sliderESmark').css('left', $('.ui-slider-handle').css('left'));
-        $('#sliderESmark').css('position', 'absolute');
-        $('#ESFrame').text(g_frameES);
-        console.log('Frame ES set to ' + g_frameES);
+        markES(g_currentFrameNr, g_framesLoaded);
+        redrawSequence();
     });
 
     $('#slider').resize(function() {
@@ -185,8 +163,42 @@ function setupSegmentation() {
     redraw();
 }
 
+function markED(frame, totalNrOfFrames) {
+    g_frameED = frame;
+    $('#sliderEDmark').css('background-color', '#CC3434');
+    $('#sliderEDmark').css('width', $('.ui-slider-handle').css('width'));
+    $('#sliderEDmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
+    $('#sliderEDmark').css('height', '100%');
+    $('#sliderEDmark').css('z-index', '99');
+    $('#sliderEDmark').css('left', ''+(100.0*(frame+1)/totalNrOfFrames)+'%');
+    $('#sliderEDmark').css('position', 'absolute');
+    $('#EDFrame').text(g_frameED);
+    console.log('Frame ED set to ' + g_frameED);
+}
+
+function markES(frame, totalNrOfFrames) {
+    g_frameES = frame;
+    $('#sliderESmark').css('background-color', '#0077b3');
+    $('#sliderESmark').css('width', $('.ui-slider-handle').css('width'));
+    $('#sliderESmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
+    $('#sliderESmark').css('height', '100%');
+    $('#sliderESmark').css('z-index', '99');
+    $('#sliderESmark').css('left', ''+(100.0*(frame+1)/totalNrOfFrames)+'%');
+    $('#sliderESmark').css('position', 'absolute');
+    $('#ESFrame').text(g_frameES);
+    console.log('Frame ES set to ' + g_frameES);
+}
+
 function loadSegmentationTask(image_sequence_id, frame_nr) {
     console.log('In seg task load')
+    g_controlPoints.push([]); // ED
+    g_controlPoints.push([]); // ES
+    g_controlPoints[0].push([]); // Endo
+    g_controlPoints[0].push([]); // Epi
+    g_controlPoints[0].push([]); // Atrium
+    g_controlPoints[1].push([]); // Endo
+    g_controlPoints[1].push([]); // Epi
+    g_controlPoints[1].push([]); // Atrium
 
     g_backgroundImage = new Image();
     g_frameNr = frame_nr;
@@ -322,9 +334,9 @@ function snapToAVLine(x, y) {
     };
 }
 
-function addControlPoint(x, y, label) {
+function addControlPoint(x, y, label, phase) {
     var controlPoint = createControlPoint(x, y, label);
-    g_controlPoints[g_currentPhase][g_currentSegmentationLabel].push(controlPoint);
+    g_controlPoints[phase][label].push(controlPoint);
 }
 
 function getControlPoint(index, label) {
