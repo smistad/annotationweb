@@ -16,7 +16,7 @@ var g_currentPhase = -1; // -1 == None, 0 == ED, 1 == ES
 var g_motionModeData;
 var g_motionModeImage;
 var g_motionModeContext;
-var g_createMotionModeImage = true;
+var g_createMotionModeImage = 0;
 var g_motionModeLine = -1;
 var g_moveMotionModeLIne = false;
 
@@ -100,7 +100,7 @@ function setupSegmentation() {
         g_move = false;
         if(g_moveMotionModeLIne) {
             g_moveMotionModeLIne = false;
-            g_createMotionModeImage = true;
+            g_createMotionModeImage = 0;
         }
     });
 
@@ -225,7 +225,7 @@ function createMotionModeCanvas() {
     var width = g_framesLoaded;
     g_motionModeContext.clearRect(0, 0, g_motionModeContext.canvas.width, g_motionModeContext.canvas.height); // Clears the canvas
 
-    if(g_createMotionModeImage) {
+    if(g_createMotionModeImage != g_framesLoaded) {
         g_motionModeImage = g_motionModeContext.getImageData(0, 0, width, g_canvasHeight);
         g_motionModeData = g_motionModeImage.data;
         console.log('Frames: ' + g_framesLoaded)
@@ -249,7 +249,7 @@ function createMotionModeCanvas() {
                 g_motionModeData[(t + y * width) * 4 + 3] = 255;
             }
         }
-        g_createMotionModeImage = false;
+        g_createMotionModeImage = g_framesLoaded;
     }
     g_motionModeContext.putImageData(g_motionModeImage, 0, 0);
 
