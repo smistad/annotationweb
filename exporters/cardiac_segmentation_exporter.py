@@ -62,7 +62,6 @@ class CardiacSegmentationExporter(Exporter):
             create_folder(subject_path)
             images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
             for image in images:
-                print('asd')
                 # Get image sequence
                 key_frame = KeyFrame.objects.get(image=image.image)
                 image_sequence = key_frame.image_sequence
@@ -101,7 +100,9 @@ class CardiacSegmentationExporter(Exporter):
             b = control_points[i]
             c = control_points[min(len(control_points)-1, i+1)]
             d = control_points[min(len(control_points)-1, i+2)]
-            for t in np.arange(0, 1, 0.01):
+            length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
+            step_size = min(0.01, 1.0 / (length*2))
+            for t in np.arange(0, 1, step_size):
                 x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
                     (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
                     (-2 * t * t * t + 3 * t * t) * c.x + \
@@ -111,13 +112,15 @@ class CardiacSegmentationExporter(Exporter):
                     (-2 * t * t * t + 3 * t * t) * c.y + \
                     (1 - tension) * (t * t * t - t * t) * (d.y - b.y)
 
-                try:
-                    segmentation[int(round(y)), int(round(x))] = 1
-                except:
-                    # Out of bounds
-                    pass
+                # Round and snap to borders
+                x = int(round(x))
+                x = min(image_size[1]-1, max(0, x))
+                y = int(round(y))
+                y = min(image_size[0]-1, max(0, y))
 
-        # Draw line over endpoints
+                segmentation[int(round(y)), int(round(x))] = 1
+
+        # Draw AV plane line over endpoints
         a = np.array([control_points[0].x, control_points[0].y])
         b = np.array([control_points[len(control_points)-1].x, control_points[len(control_points)-1].y])
         length = np.linalg.norm(a - b)
@@ -153,6 +156,7 @@ class CardiacSegmentationExporter(Exporter):
         return point
 
     def save_segmentation(self, image_size, control_points, filename):
+        image_size = [image_size[1], image_size[0]]
         # Get control points for all objects
         control_points0 = list(control_points.filter(object=0))
         control_points1 = list(control_points.filter(object=1))
