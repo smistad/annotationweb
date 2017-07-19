@@ -78,6 +78,10 @@ class MetaImage:
             raise ValueError('Spacing must have 2 or 3 components')
         self.attributes['ElementSpacing'] = spacing
 
+    def get_spacing(self):
+        print(self.attributes)
+        return self.attributes['ElementSpacing']
+
     def get_metaimage_type(self):
         np_type = self.data.dtype
         if np_type == np.float32:
