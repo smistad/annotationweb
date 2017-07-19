@@ -144,10 +144,6 @@ function setupSegmentation() {
         redrawSequence();
     });
 
-    $('#slider').resize(function() {
-        // TODO Move slider ED/ES mark
-    });
-
     $('#segmentED').click(function() {
         changeLabel(0);
         goToFrame(g_frameED);
@@ -160,6 +156,8 @@ function setupSegmentation() {
 
     // Set first label active
     changeLabel(0);
+    if(g_frameED >= 0)
+        goToFrame(g_frameED);
     redraw();
 }
 
