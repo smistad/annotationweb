@@ -7,6 +7,7 @@ var g_currentColor = null;
 var g_controlPoints = [];
 var g_move = false;
 var g_pointToMove = -1;
+var g_labelToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
 var g_currentSegmentationLabel = 0;
@@ -42,10 +43,11 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
-        if(point >= 0) {
+        if(point !== false) {
             // Move point
             g_move = true;
-            g_pointToMove = point;
+            g_pointToMove = point.index;
+            g_labelToMove = point.label;
         } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight/10) {
             g_moveMotionModeLIne = true;
         } else if(g_currentPhase >= 0) {
@@ -68,7 +70,7 @@ function setupSegmentation() {
         var cursor = 'default';
         if(g_move && g_currentPhase >= 0) {
             cursor = 'move';
-            setControlPoint(g_pointToMove, g_currentSegmentationLabel, mouseX, mouseY);
+            setControlPoint(g_pointToMove, g_labelToMove, mouseX, mouseY);
             redrawSequence();
         } else if(g_moveMotionModeLIne) {
             cursor = 'move';
@@ -118,8 +120,8 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
-        if(point >= 0) {
-            g_controlPoints[g_currentPhase][g_currentSegmentationLabel].splice(point, 1);
+        if(point !== false) {
+            g_controlPoints[g_currentPhase][point.label].splice(point.index, 1);
         }
         redrawSequence();
     });
@@ -269,23 +271,27 @@ function createMotionModeCanvas() {
 
 function getClosestPoint(x, y) {
     if(g_currentPhase == -1)
-        return -1;
+        return false;
     var minDistance = g_canvasWidth*g_canvasHeight;
     var minPoint = -1;
+    var minLabel = -1;
 
-    for(var i = 0; i < g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length; i++) {
-        var point = getControlPoint(i, g_currentSegmentationLabel);
-        var distance = Math.sqrt((point.x-x)*(point.x-x) + (point.y-y)*(point.y-y));
-        if(distance < minDistance) {
-            minPoint = i;
-            minDistance = distance;
+    for(var label = 0; label < 3; label++) {
+        for(var i = 0; i < g_controlPoints[g_currentPhase][label].length; i++) {
+            var point = getControlPoint(i, label);
+            var distance = Math.sqrt((point.x - x) * (point.x - x) + (point.y - y) * (point.y - y));
+            if(distance < minDistance) {
+                minPoint = i;
+                minDistance = distance;
+                minLabel = label;
+            }
         }
     }
 
     if(minDistance < g_moveDistanceThreshold) {
-        return minPoint;
+        return {index: minPoint, label: minLabel};
     } else {
-        return -1;
+        return false;
     }
 }
 
@@ -353,27 +359,29 @@ function setControlPoint(index, label, x, y) {
 }
 
 function isPointOnSpline(pointX, pointY) {
-    for(var i = 0; i < g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length; ++i) {
-        var a = getControlPoint(max(0, i - 1), g_currentSegmentationLabel);
-        var b = getControlPoint(i, g_currentSegmentationLabel);
-        var c = getControlPoint(min(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length - 1, i + 1), g_currentSegmentationLabel);
-        var d = getControlPoint(min(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length - 1, i + 2), g_currentSegmentationLabel);
+    for(var label = 0; label < 3; label++) {
+        for (var i = 0; i < g_controlPoints[g_currentPhase][label].length; ++i) {
+            var a = getControlPoint(max(0, i - 1), label);
+            var b = getControlPoint(i, label);
+            var c = getControlPoint(min(g_controlPoints[g_currentPhase][label].length - 1, i + 1), label);
+            var d = getControlPoint(min(g_controlPoints[g_currentPhase][label].length - 1, i + 2), label);
 
-        var step = 0.1;
-        var tension = 0.5;
-        for (var t = 0.0; t < 1; t += step) {
-            var x =
-                (2 * t * t * t - 3 * t * t + 1) * b.x +
-                (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) +
-                (-2 * t * t * t + 3 * t * t) * c.x +
-                (1 - tension) * (t * t * t - t * t) * (d.x - b.x);
-            var y =
-                (2 * t * t * t - 3 * t * t + 1) * b.y +
-                (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) +
-                (-2 * t * t * t + 3 * t * t) * c.y +
-                (1 - tension) * (t * t * t - t * t) * (d.y - b.y);
-            if(Math.sqrt((pointX-x)*(pointX-x) + (pointY-y)*(pointY-y)) < g_moveDistanceThreshold) {
-                return i;
+            var step = 0.1;
+            var tension = 0.5;
+            for (var t = 0.0; t < 1; t += step) {
+                var x =
+                    (2 * t * t * t - 3 * t * t + 1) * b.x +
+                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) +
+                    (-2 * t * t * t + 3 * t * t) * c.x +
+                    (1 - tension) * (t * t * t - t * t) * (d.x - b.x);
+                var y =
+                    (2 * t * t * t - 3 * t * t + 1) * b.y +
+                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) +
+                    (-2 * t * t * t + 3 * t * t) * c.y +
+                    (1 - tension) * (t * t * t - t * t) * (d.y - b.y);
+                if (Math.sqrt((pointX - x) * (pointX - x) + (pointY - y) * (pointY - y)) < g_moveDistanceThreshold) {
+                    return i;
+                }
             }
         }
     }
