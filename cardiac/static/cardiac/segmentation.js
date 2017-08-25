@@ -58,7 +58,7 @@ function setupSegmentation() {
                 insertControlPoint(mouseX, mouseY, g_currentSegmentationLabel, section);
             } else {
                 // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentSegmentationLabel, g_currentPhase);
+                addControlPoint(mouseX, mouseY, g_currentSegmentationLabel, g_currentPhase, g_shiftKeyPressed);
             }
         }
         redrawSequence();
@@ -347,8 +347,8 @@ function snapToAVLine(x, y) {
     };
 }
 
-function addControlPoint(x, y, label, phase) {
-    var controlPoint = createControlPoint(x, y, label, g_shiftKeyPressed);
+function addControlPoint(x, y, label, phase, uncertain) {
+    var controlPoint = createControlPoint(x, y, label, uncertain);
     g_controlPoints[phase][label].push(controlPoint);
 }
 
@@ -438,7 +438,7 @@ function redraw(){
             var prev_x = -1;
             var prev_y = -1;
             var tension = 0.5;
-            if(c.uncertain) {
+            if(b.uncertain || c.uncertain) {
                 // Draw uncertain segments with dashed line
                 g_context.setLineDash([1, 5]); // dashes are 5px and spaces are 5px
             } else {

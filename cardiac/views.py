@@ -96,6 +96,7 @@ def save_segmentation(request):
                         control_point.index = point
                         control_point.phase = phase
                         control_point.object = object
+                        control_point.uncertain = bool(control_points[phase][object][point]['uncertain'])
                         control_point.save()
 
             response = {

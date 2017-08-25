@@ -30,7 +30,7 @@
         markES({{ segmentation.frame_ES }}, {{ image_sequence.nr_of_frames }});
 
         {% for control_point in control_points %}
-            addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.object }}, {{ control_point.phase }});
+            addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.object }}, {{ control_point.phase }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
         {% endfor %}
 
     {% endif %}

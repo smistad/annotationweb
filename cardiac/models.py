@@ -28,3 +28,4 @@ class ControlPoint(models.Model):
     index = models.PositiveIntegerField()
     phase = models.PositiveIntegerField(choices=PHASES)
     object = models.PositiveIntegerField(choices=OBJECTS)
+    uncertain = models.BooleanField()
