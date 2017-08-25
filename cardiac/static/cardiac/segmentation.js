@@ -20,6 +20,7 @@ var g_motionModeContext;
 var g_createMotionModeImage = 0;
 var g_motionModeLine = -1;
 var g_moveMotionModeLIne = false;
+var g_shiftKeyPressed = false;
 
 
 function setupSegmentation() {
@@ -159,6 +160,10 @@ function setupSegmentation() {
         goToFrame(g_frameES);
     });
 
+    $(document).on('keyup keydown', function(event) {
+        g_shiftKeyPressed = event.shiftKey;
+    });
+
     // Set first label active
     changeLabel(0);
     if(g_frameED >= 0)
@@ -193,7 +198,6 @@ function markES(frame, totalNrOfFrames) {
 }
 
 function loadSegmentationTask(image_sequence_id, frame_nr) {
-    console.log('In seg task load')
     g_controlPoints.push([]); // ED
     g_controlPoints.push([]); // ES
     g_controlPoints[0].push([]); // Endo
@@ -297,7 +301,7 @@ function getClosestPoint(x, y) {
     }
 }
 
-function createControlPoint(x, y, label) {
+function createControlPoint(x, y, label, uncertain) {
     // Find label index
     var labelIndex = 0;
     for(var i = 0; i < g_labelButtons.length; i++) {
@@ -311,13 +315,14 @@ function createControlPoint(x, y, label) {
         x: x,
         y: y,
         label_id: label, // actual DB id
-        label: labelIndex // index: only used for color
+        label: labelIndex, // index: only used for color
+        uncertain: uncertain    // whether the user is uncertain about this point or not
     };
     return controlPoint;
 }
 
 function insertControlPoint(x, y, label, index) {
-    var controlPoint = createControlPoint(x, y, label);
+    var controlPoint = createControlPoint(x, y, label, g_shiftKeyPressed);
     g_controlPoints[g_currentPhase][g_currentSegmentationLabel].splice(index+1, 0, controlPoint);
 }
 
@@ -343,7 +348,7 @@ function snapToAVLine(x, y) {
 }
 
 function addControlPoint(x, y, label, phase) {
-    var controlPoint = createControlPoint(x, y, label);
+    var controlPoint = createControlPoint(x, y, label, g_shiftKeyPressed);
     g_controlPoints[phase][label].push(controlPoint);
 }
 
@@ -411,9 +416,9 @@ function redraw(){
         var endPoint = getControlPoint(-1, 1);
         var snap1 = snapToAVLine(startPoint.x, startPoint.y);
         var snap2 = snapToAVLine(endPoint.x, endPoint.y);
-        g_controlPoints[g_currentPhase][1].splice(0, 0, createControlPoint(snap1.x, snap1.y, 1));
+        g_controlPoints[g_currentPhase][1].splice(0, 0, createControlPoint(snap1.x, snap1.y, 1, false));
         if(g_controlPoints[g_currentPhase][1].length > 5)
-            g_controlPoints[g_currentPhase][1].push(createControlPoint(snap2.x, snap2.y, 1));
+            g_controlPoints[g_currentPhase][1].push(createControlPoint(snap2.x, snap2.y, 1, false));
     }
 
     // Draw controlPoint
@@ -433,7 +438,13 @@ function redraw(){
             var prev_x = -1;
             var prev_y = -1;
             var tension = 0.5;
-            for (var t = 0.0; t < 1; t += step) {
+            if(c.uncertain) {
+                // Draw uncertain segments with dashed line
+                g_context.setLineDash([1, 5]); // dashes are 5px and spaces are 5px
+            } else {
+                g_context.setLineDash([]); // reset
+            }
+            for(var t = 0.0; t < 1; t += step) {
                 var x =
                     (2 * t * t * t - 3 * t * t + 1) * b.x +
                     (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) +
@@ -446,7 +457,8 @@ function redraw(){
                     (1 - tension) * (t * t * t - t * t) * (d.y - b.y);
 
                 // Draw line
-                if (prev_x >= 0) {
+                if(prev_x >= 0) {
+
                     g_context.moveTo(prev_x, prev_y);
                     g_context.lineTo(x, y);
                     g_context.stroke();
@@ -520,11 +532,14 @@ function redrawSequence() {
 
     // Draw motion mode line
     g_context.beginPath();
+    g_context.setLineDash([]); // Clear
+    g_context.lineWidth = 8;
     g_context.strokeStyle = colorToHexString(0, 255, 255);
     // Draw solid line where it can be moved
     g_context.moveTo(g_motionModeLine, 0);
     g_context.lineTo(g_motionModeLine, g_canvasHeight/10);
     g_context.stroke();
+    g_context.lineWidth = 2;
     // Draw dashed line for the rest
     g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
     g_context.moveTo(g_motionModeLine, g_canvasHeight/10);
