@@ -49,20 +49,18 @@
     {{ number_of_labeled_images }} of {{ total_number_of_images}} images has been labeled ({{ percentage_finished }}%).<br />
 
     {% if image_sequence %}
-        <h2>Sequence</h2>
         <div id="progressbar"><div class="progress-label">Loading...</div></div>
-        <div id="sliderText">Drag the slider to view the other frames in the sequence:</div>
+        <canvas id="m-mode-canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
         <div id="slider">
             <div id="sliderEDmark"></div>
             <div id="sliderESmark"></div>
         </div>
-        <p>
+        <!--<p>
             Current frame: <span id="currentFrame"></span>
             ED frame: <span id="EDFrame">Not selected</span>
             ES frame: <span id="ESFrame">Not selected</span>
-        </p>
+        </p>-->
         <div class="actionButtons">
-            <button id="playButton" type="button">Play</button>
             <div class="flexButtons">
                 <button id="markAsED" style="background-color: #CC3434">Mark as End Diastole</button>
                 <button id="markAsES" style="background-color: #0077b3">Mark as End Systole</button>
@@ -75,6 +73,7 @@
     {% endif %}
     <h2>Actions</h2>
     <div class="actionButtons">
+        <button id="playButton" type="button">Play</button>
         {% if previous_image_id %}
             <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?{{ request.GET.urlencode }}');">Previous</button>
         {% endif %}
@@ -117,7 +116,6 @@
 
     <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 
-    <canvas id="m-mode-canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 
     {% block task_content %}
     {% endblock %}

@@ -105,6 +105,7 @@ function setupSegmentation() {
         if(g_moveMotionModeLIne) {
             g_moveMotionModeLIne = false;
             g_createMotionModeImage = 0;
+            redrawSequence();
         }
     });
 
@@ -254,6 +255,7 @@ function createMotionModeCanvas() {
             }
         }
         g_createMotionModeImage = g_framesLoaded;
+        console.log('Finished creating m-mode')
     }
     g_motionModeContext.putImageData(g_motionModeImage, 0, 0);
 
@@ -266,7 +268,7 @@ function createMotionModeCanvas() {
     g_motionModeContext.stroke();
 
     $('#m-mode-canvas').css('width', '100%');
-    $('#m-mode-canvas').css('height', g_canvasHeight+'px');
+    $('#m-mode-canvas').css('height', '200px');
 }
 
 function getClosestPoint(x, y) {
