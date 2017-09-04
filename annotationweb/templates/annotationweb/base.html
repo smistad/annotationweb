@@ -31,11 +31,10 @@
                 <li><h1>Annotation Web</h1></li>
                 {% if user.is_authenticated %}
                 <li><a href="{%  url 'index' %}">Task list</a></li>
-                {% ifequal user.groups.all.0.name 'annotater' %}
-                {% else %}
+                {% if user.is_staff %}
                 <li><a href="{% url 'datasets' %}">Datasets</a></li>
                 <li><a href="{% url 'admin:index' %}">Admin</a></li>
-                {% endifequal %}
+                {% endif %}
                 <li><a href="{% url 'user:logout' %}">Logout</a></li>
                 <li id="loggedIn">Logged in as {{ user }}</li>
                 {% endif %}
