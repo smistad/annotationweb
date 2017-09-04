@@ -26,8 +26,12 @@
 
     {% if segmentation %}
         g_motionModeLine = {{ segmentation.motion_mode_line }};
-        markED({{ segmentation.frame_ED }}, {{ image_sequence.nr_of_frames }});
-        markES({{ segmentation.frame_ES }}, {{ image_sequence.nr_of_frames }});
+        {% if segmentation.frame_ED >= 0 %}
+            markED({{ segmentation.frame_ED }}, {{ image_sequence.nr_of_frames }});
+        {% endif %}
+        {% if segmentation.frame_ES >= 0 %}
+            markES({{ segmentation.frame_ES }}, {{ image_sequence.nr_of_frames }});
+        {% endif %}
 
         {% for control_point in control_points %}
             addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.object }}, {{ control_point.phase }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
@@ -81,10 +85,7 @@
             <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
         {% endif %}
         <button id="clearButton">Clear</button>
-        {% if next_image_id or previous_image_id %}
-        {% else %}
-            <button id="skipButton">Skip</button>
-        {% endif %}
+        <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected.">Save as rejected</button>
         <button id="saveButton">Save</button>
         <button onclick="javascript:window.location.href='{% url 'task' task.id %}'">Image list</button>
     </div>
@@ -110,6 +111,10 @@
         </div>
     </div>
 
+    <div>
+    <h2>Comments</h2>
+    <textarea id="comments" style="width: 100%; height: 100px">{{ comments }}</textarea>
+    </div>
 
 {% endblock content_left %}
 {% block content_right %}

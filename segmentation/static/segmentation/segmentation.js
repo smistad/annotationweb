@@ -205,6 +205,8 @@ function sendDataForSave() {
             image_id: g_imageID,
             task_id: g_taskID,
             quality: $('input[name=quality]:checked').val(),
+            rejected: g_rejected ? 'true':'false',
+            comments: $('#comments').val(),
         },
         dataType: "json" // Need this do get result back as JSON
     });

@@ -36,20 +36,23 @@ def label_image(request, task_id, image_id):
 
 def save_labels(request):
     try:
-        try:
-            label_id = int(request.POST['label_id'])
-            label = Label.objects.get(pk=label_id)
-        except:
-            raise Exception('You must select a classification label.')
+        rejected = request.POST['rejected'] == 'true'
+        if rejected:
+            annotation = common.task.save_annotation(request)
+        else:
+            try:
+                label_id = int(request.POST['label_id'])
+                label = Label.objects.get(pk=label_id)
+            except:
+                raise Exception('You must select a classification label.')
 
-        annotation = common.task.save_annotation(request)
+            annotation = common.task.save_annotation(request)
+            labeled_image = ImageLabel()
+            labeled_image.image = annotation
+            labeled_image.label = label
+            labeled_image.task = annotation.task
 
-        labeled_image = ImageLabel()
-        labeled_image.image = annotation
-        labeled_image.label = label
-        labeled_image.task = annotation.task
-
-        labeled_image.save()
+            labeled_image.save()
 
         response = {
             'success': 'true',

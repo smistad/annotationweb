@@ -16,6 +16,7 @@ var g_currentLabel = -1;
 // if user press next or previous
 var g_annotationHasChanged = false;
 var g_nextURL = '';
+var g_rejected = false;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -99,9 +100,10 @@ function initializeAnnotation(taskID, imageID) {
     // Setup save button
     $('#saveButton').click(save);
 
-    // If skip is selected, refresh page
-    $('#skipButton').click(function() {
-        window.location.reload();
+    // If reject is selected, mark as rejected, then save
+    $('#rejectButton').click(function() {
+        g_rejected = true;
+        save();
     });
 
     $('#imageQualityForm input[type="radio"]').change(function(){

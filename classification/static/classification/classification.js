@@ -8,6 +8,8 @@ function sendDataForSave() {
             task_id: g_taskID,
             label_id: g_currentLabel,
             quality: $('input[name=quality]:checked').val(),
+            rejected: g_rejected ? 'true':'false',
+            comments: $('#comments').val(),
         },
         dataType: "json" // Need this do get result back as JSON
     });

@@ -51,22 +51,25 @@ def save_segmentation(request):
     print(control_points)
     objects = ('Endocardium', 'Epicardium', 'Left atrium')
 
-    if frame_ED == -1:
-        error_messages += 'End Diastole frame not annotated<br>'
-    else:
-        # Check if all control points for ED is present
-        for i in range(len(objects)):
-            if len(control_points[0][i]) < 1:
-                error_messages += objects[i] + ' annotation missing in End Diastole<br>'
+    rejected = request.POST['rejected'] == 'true'
 
-    if frame_ES == -1:
-        error_messages += 'End Systole frame not annotated<br>'
-    else:
-        # Check if all control points for ES is present
-        # Check if all control points for ED is present
-        for i in range(len(objects)):
-            if len(control_points[1][i]) < 1:
-                error_messages += objects[i] + ' annotation missing in End Systole<br>'
+    if not rejected:
+        if frame_ED == -1:
+            error_messages += 'End Diastole frame not annotated<br>'
+        else:
+            # Check if all control points for ED is present
+            for i in range(len(objects)):
+                if len(control_points[0][i]) < 1:
+                    error_messages += objects[i] + ' annotation missing in End Diastole<br>'
+
+        if frame_ES == -1:
+            error_messages += 'End Systole frame not annotated<br>'
+        else:
+            # Check if all control points for ES is present
+            # Check if all control points for ED is present
+            for i in range(len(objects)):
+                if len(control_points[1][i]) < 1:
+                    error_messages += objects[i] + ' annotation missing in End Systole<br>'
 
     if len(error_messages):
         response = {

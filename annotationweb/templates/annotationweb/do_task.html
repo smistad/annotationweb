@@ -61,10 +61,7 @@ setReturnURL('{{ return_url|safe }}');
     <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
     {% endif %}
     <button id="clearButton">Clear</button>
-    {% if next_image_id or previous_image_id %}
-    {% else %}
-    <button id="skipButton">Skip</button>
-    {% endif %}
+    <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected.">Save as rejected</button>
     <button id="saveButton">Save</button>
     <button onclick="javascript:window.location.href='{% url 'task' task.id %}'">Image list</button>
 </div>
@@ -102,6 +99,10 @@ setReturnURL('{{ return_url|safe }}');
 {% endblock label_buttons %}
 </div>
 
+<div>
+    <h2>Comments</h2>
+    <textarea id="comments" style="width: 100%; height: 100px">{{ comments }}</textarea>
+</div>
 
 {% endblock content_left %}
 {% block content_right %}

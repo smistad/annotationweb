@@ -255,6 +255,7 @@ def setup_task_context(request, task_id, type, image_id):
     processed = ProcessedImage.objects.filter(image=image, task=task)
     if processed.exists():
         context['chosen_quality'] = processed[0].image_quality
+        context['comments'] = processed[0].comments
     else:
         context['chosen_quality'] = -1
 
@@ -271,6 +272,8 @@ def save_annotation(request):
 
     image_id = int(request.POST['image_id'])
     task_id = int(request.POST['task_id'])
+    rejected = request.POST['rejected'] == 'true'
+    comments = request.POST['comments']
 
     # Delete old annotations if it exists
     annotations = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
@@ -278,6 +281,8 @@ def save_annotation(request):
 
     # Save to DB
     annotation = ProcessedImage()
+    annotation.rejected = rejected
+    annotation.comments = comments
     annotation.image_id = image_id
     annotation.task_id = task_id
     annotation.user = request.user

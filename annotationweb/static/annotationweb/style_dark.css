@@ -93,3 +93,11 @@ hr {
     flex-direction: row;
     flex-wrap: wrap;
 }
+
+#saveButton {
+    background-color: #6ea863;
+}
+
+#rejectButton {
+    background-color: #a84a4a;
+}

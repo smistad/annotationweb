@@ -569,6 +569,8 @@ function sendDataForSave() {
             height: g_canvasHeight,
             image_id: g_imageID,
             task_id: g_taskID,
+            rejected: g_rejected ? 'true':'false',
+            comments: $('#comments').val(),
             quality: $('input[name=quality]:checked').val(),
         },
         dataType: "json" // Need this do get result back as JSON

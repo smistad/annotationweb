@@ -116,6 +116,8 @@ class ProcessedImage(models.Model):
         (QUALITY_GOOD, 'Good'),
     )
     image_quality = models.CharField(max_length=50, choices=IMAGE_QUALITY_CHOICES)
+    comments = models.TextField()
+    rejected = models.BooleanField()
 
 
 # Used to attach metadata to images, such as acquisition parameters

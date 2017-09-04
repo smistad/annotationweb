@@ -16,8 +16,8 @@ OBJECTS = (
 
 class Segmentation(models.Model):
     image = models.OneToOneField(ProcessedImage, on_delete=models.CASCADE)
-    frame_ED = models.PositiveIntegerField()
-    frame_ES = models.PositiveIntegerField()
+    frame_ED = models.IntegerField()
+    frame_ES = models.IntegerField()
     motion_mode_line = models.PositiveIntegerField()
 
 
