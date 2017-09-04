@@ -8,19 +8,38 @@
 
 <h2>Tasks</h2>
 
-
-<ul>
-{% for task in tasks %}
-    <li>
-        {% if task.started %}
-            <a href="{% url 'annotate' task.id %}">
-        {% else %}
-            <a href="{% url 'task_description' task.id %}">
-        {% endif %}
-        {{ task.name }}</a> -
-        <a href="{% url 'task' task.id %}">Image list</a> -
-        ({{task.total_number_of_images}} images, {{task.percentage_finished}}% done)
-    </li>
-{% endfor %}
-</ul>
+{% if tasks.count == 0 %}
+    You have no assigned tasks
+{% else %}
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Nr of images</th>
+        <th>Progress</th>
+        <th>Image list</th>
+        <th>Annotate</th>
+    </tr>
+    {% for task in tasks %}
+    <tr>
+        <td>{{ task.name }}</td>
+        <td>{{ task.type }}</td>
+        <td>{{task.total_number_of_images}}</td>
+        <td>{{task.percentage_finished}}%</td>
+        <td><a href="{% url 'task' task.id %}">Image list</a></td>
+        <td>
+            {% if task.finished %}
+            Task is finished
+            {% else %}
+                {% if task.started %}
+                    <a href="{% url 'annotate' task.id %}">Continue annotation</a>
+                {% else %}
+                    <a href="{% url 'task_description' task.id %}">Start annotation</a>
+                {% endif %}
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{%  endif %}
 {% endblock %}
