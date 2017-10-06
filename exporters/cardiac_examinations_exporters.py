@@ -221,6 +221,7 @@ class CardiacHDFExaminationsExporter(Exporter):
                         # Get image
                         filename = image_sequence.format.replace('#', str(i))
                         image = PIL.Image.open(filename)
+
                         # Resize
                         image = image.resize((width, height), PIL.Image.BILINEAR)
                         # Convert to numpy array and normalize
@@ -237,6 +238,7 @@ class CardiacHDFExaminationsExporter(Exporter):
 
                         if form.cleaned_data['categorical']:
                             output = np.ndarray((len(sequence_frames), len(label_dict)))
+
                         for i in range(len(sequence_frames)):
                             if form.cleaned_data['image_dim_ordering'] is 'theano':
                                 input[i, 0, :, :] = sequence_frames[i]
@@ -286,94 +288,3 @@ class CardiacHDFExaminationsExporter(Exporter):
                     f.create_dataset("data", data=input, compression="gzip", compression_opts=4, dtype='float32')
                     f.create_dataset("label", data=output, compression="gzip", compression_opts=4, dtype='uint8')
                     f.close()
-
-
-class CardiacSequenceHDFExaminationsExporter(Exporter):
-    """
-    This exporter will create a folder with 1 hdf5 file for each subject.
-    A labels.txt file is also created.
-    """
-
-    task_type = Task.CLASSIFICATION
-    name = 'Cardiac examinations sequence classification exporter (HDF5)'
-
-    def get_form(self, data=None):
-        return CardiacHDFExaminationsExporterForm(self.task, data=data)
-
-    def export(self, form):
-        delete_existing_data = form.cleaned_data['delete_existing_data']
-        # Create dir, delete old if it exists
-        path = form.cleaned_data['path']
-        if delete_existing_data:
-            # Delete path
-            try:
-                os.stat(path)
-                rmtree(path)
-            except:
-                # Folder does not exist
-                pass
-
-        # Create folder if it doesn't exist
-        create_folder(path)
-        try:
-            os.stat(path)
-        except:
-            return False, 'Failed to create directory at ' + path
-
-        self.add_subjects_to_path(path)
-
-        return True, path
-
-    def add_subjects_to_path(self, path):
-        # Create label file
-        label_file = open(join(path, 'labels.txt'), 'w')
-        labels = Label.objects.filter(task=self.task)
-        label_dict = {}
-        counter = 0
-        for label in labels:
-            label_file.write(label.name + '\n')
-            label_dict[label.name] = counter
-            counter += 1
-        label_file.close()
-
-        # For each subject
-        subjects = Subject.objects.filter(dataset__task=self.task)
-        for subject in subjects:
-            # Get labeled images
-            labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
-            if labeled_images.count() == 0:
-                continue
-            width = 128
-            height = 128
-            frames = 10
-            samples = len(labeled_images)
-            input = np.zeros((samples, frames, height, width))
-            output = np.zeros((samples, len(label_dict)))
-            current_sample = 0
-            for labeled_image in labeled_images:
-                label = ImageLabel.objects.get(image=labeled_image)
-
-                # Get sequence
-                key_frame = KeyFrame.objects.get(image=labeled_image.image)
-                image_sequence = key_frame.image_sequence
-                nr_of_frames = image_sequence.nr_of_frames
-                for frame_nr in range(min(nr_of_frames, frames)):
-                    # Get image
-                    filename = image_sequence.format.replace('#', str(frame_nr))
-                    image = PIL.Image.open(filename)
-                    # Resize
-                    image = image.resize((width, height), PIL.Image.BILINEAR)
-                    # Convert to numpy array and normalize
-                    image_array = np.array(image).astype(np.float32)
-                    image_array /= 255
-                    input[current_sample, frame_nr, :, :] = image_array
-
-                output[current_sample, label_dict[label.label.name]] = 1
-                current_sample += 1
-
-
-            # Create hdf5 file for each subject
-            f = h5py.File(join(path, subject.name + '.hd5'), 'w')
-            f.create_dataset("data", data=input, compression="gzip", compression_opts=4)
-            f.create_dataset("label", data=output, compression="gzip", compression_opts=4)
-            f.close()
