@@ -201,11 +201,14 @@ class CardiacHDFExaminationsExporter(Exporter):
             labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
             if labeled_images.count() == 0:
                 continue
-            sequence_frames = []
-            labels = []
+
             width = form.cleaned_data['width']
             height = form.cleaned_data['height']
-            frames = 10
+            min_frames = 10
+
+            sequence_frames = []
+            labels = []
+
             for labeled_image in labeled_images:
                 label = ImageLabel.objects.get(image=labeled_image)
 
@@ -215,8 +218,9 @@ class CardiacHDFExaminationsExporter(Exporter):
                     image_sequence = key_frame.image_sequence
                     nr_of_frames = image_sequence.nr_of_frames
                     # Skip sequence if too small
-                    if nr_of_frames < frames:
+                    if nr_of_frames < min_frames:
                         continue
+
                     for i in range(nr_of_frames):
                         # Get image
                         filename = image_sequence.format.replace('#', str(i))
@@ -224,31 +228,26 @@ class CardiacHDFExaminationsExporter(Exporter):
 
                         # Resize
                         image = image.resize((width, height), PIL.Image.BILINEAR)
+
                         # Convert to numpy array and normalize
                         image_array = np.array(image).astype(np.float32)
                         image_array /= 255
+
+                        if len(image_array.shape) != 3:
+                            image_array = image_array[..., None]
+
                         sequence_frames.append(image_array)
                         labels.append(label_dict[label.label.name])
 
                     if form.cleaned_data['sequence_wise']:
-                        if form.cleaned_data['image_dim_ordering'] is 'theano':
-                            input = np.ndarray((len(sequence_frames), 1, height, width))
-                        else:
-                            input = np.ndarray((len(sequence_frames), height, width, 1))
+                        input = np.array(sequence_frames, dtype=np.float32)
+                        output = np.array(labels, dtype=np.uint8)
+
+                        if form.cleaned_data['image_dim_ordering'] == 'theano':
+                            input = np.transpose(input, [0,3,1,2])
 
                         if form.cleaned_data['categorical']:
-                            output = np.ndarray((len(sequence_frames), len(label_dict)))
-
-                        for i in range(len(sequence_frames)):
-                            if form.cleaned_data['image_dim_ordering'] is 'theano':
-                                input[i, 0, :, :] = sequence_frames[i]
-                            else:
-                                input[i, :, :, 0] = sequence_frames[i]
-
-                            if form.cleaned_data['categorical']:
-                                output[i] = to_categorical(labels[i], nb_classes=len(label_dict))
-                            else:
-                                output[i] = labels[i]
+                            output = to_categorical(output, nb_classes=len(label_dict))
 
                         subj_path = join(path, subject.name)
                         create_folder(subj_path)
@@ -265,26 +264,19 @@ class CardiacHDFExaminationsExporter(Exporter):
                         sequence_frames = []
                         labels = []
 
-                if not form.cleaned_data['sequence_wise']:
-                    if form.cleaned_data['image_dim_ordering'] is 'theano':
-                        input = np.ndarray((len(sequence_frames), 1, height, width))
-                    else:
-                        input = np.ndarray((len(sequence_frames), height, width, 1))
+            if not form.cleaned_data['sequence_wise']:
+                input = np.array(sequence_frames, dtype=np.float32)
+                output = np.array(labels, dtype=np.uint8)
 
-                    if form.cleaned_data['categorical']:
-                        output = np.ndarray((len(sequence_frames), len(label_dict)))
-                    for i in range(len(sequence_frames)):
-                        if form.cleaned_data['image_dim_ordering'] is 'theano':
-                            input[i, 0, :, :] = sequence_frames[i]
-                        else:
-                            input[i, :, :, 0] = sequence_frames[i]
+                print(input.shape)
 
-                        if form.cleaned_data['categorical']:
-                            output[i] = to_categorical(labels[i], nb_classes=len(label_dict))
-                        else:
-                            output[i] = labels[i]
+                if form.cleaned_data['image_dim_ordering'] == 'theano':
+                    input = np.transpose(input, [0, 3, 1, 2])
 
-                    f = h5py.File(join(path, subject.name + '.hd5'), 'w')
-                    f.create_dataset("data", data=input, compression="gzip", compression_opts=4, dtype='float32')
-                    f.create_dataset("label", data=output, compression="gzip", compression_opts=4, dtype='uint8')
-                    f.close()
+                if form.cleaned_data['categorical']:
+                    output = to_categorical(output, nb_classes=len(label_dict))
+
+                f = h5py.File(join(path, subject.name + '.hd5'), 'w')
+                f.create_dataset("data", data=input, compression="gzip", compression_opts=4, dtype='float32')
+                f.create_dataset("label", data=output, compression="gzip", compression_opts=4, dtype='uint8')
+                f.close()
