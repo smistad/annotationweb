@@ -130,6 +130,12 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
                                            )
     sequence_wise = forms.BooleanField(label='Export by sequence', initial=False, required=False)
     categorical = forms.BooleanField(label='Categorical labels', initial=False, required=False)
+    colormode = forms.ChoiceField(label='Color model',
+                                  choices=(('L', 'Grayscale'), ('RGB', 'RGB')),
+                                  required=False,
+                                  widget=forms.RadioSelect(renderer=HorizontalRadioRenderer),
+                                  initial='L'
+                                  )
     width = forms.IntegerField(max_value=512, label='Width', initial=128) # TODO: Fix layout...
     height = forms.IntegerField(max_value=512, label='Height', initial=128)
 
@@ -226,6 +232,10 @@ class CardiacHDFExaminationsExporter(Exporter):
                         filename = image_sequence.format.replace('#', str(i))
                         image = PIL.Image.open(filename)
 
+                        # Setup assigned colormode
+                        if form.cleaned_data['colormode'] != image.mode:
+                            image = image.convert(form.cleaned_data['colormode'])
+
                         # Resize
                         image = image.resize((width, height), PIL.Image.BILINEAR)
 
@@ -267,8 +277,6 @@ class CardiacHDFExaminationsExporter(Exporter):
             if not form.cleaned_data['sequence_wise']:
                 input = np.array(sequence_frames, dtype=np.float32)
                 output = np.array(labels, dtype=np.uint8)
-
-                print(input.shape)
 
                 if form.cleaned_data['image_dim_ordering'] == 'theano':
                     input = np.transpose(input, [0, 3, 1, 2])
