@@ -2,8 +2,8 @@ from common.importer import Importer
 from django import forms
 from annotationweb.models import Image, ImageSequence, KeyFrame, Dataset, Subject, Metadata
 import os
-from os.path import join
-
+from os.path import join, basename
+import glob
 
 class CardiacExaminationsImporterForm(forms.Form):
     path = forms.CharField(label='Data path', max_length=1000)
@@ -69,7 +69,11 @@ class CardiacExaminationsImporter(Importer):
                     continue
 
                 image_sequence = ImageSequence()
-                image_sequence.format = join(image_sequence_dir, 'US-2D_#.png') # TODO How to determine this??
+                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*.png'))]
+                if filenames[0].startswith('MR'): # TODO: Need to solve this in a more elegant way.
+                    image_sequence.format = join(image_sequence_dir, 'MR#.png')
+                else:
+                    image_sequence.format = join(image_sequence_dir, 'US-2D_#.png') # TODO How to determine this??
                 image_sequence.subject = subject
                 image_sequence.nr_of_frames = len(frames)
                 image_sequence.save()
