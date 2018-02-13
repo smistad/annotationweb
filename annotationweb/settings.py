@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'landmark',
     'user',
     'cardiac',
+    'cardiac_landmark',
 ]
 
 MIDDLEWARE_CLASSES = [

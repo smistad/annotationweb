@@ -417,7 +417,7 @@ def task_description(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
-        return Http404('The task does not exist')
+        return Http404('The Task does not exist')
 
     if task.type == task.CLASSIFICATION:
         url = reverse('classification:label_image', args=[task_id])
@@ -429,6 +429,8 @@ def task_description(request, task_id):
         url = reverse('landmark:process_image', args=[task_id])
     elif task.type == task.CARDIAC_SEGMENTATION:
         url = reverse('cardiac:segment_image', args=[task_id])
+    elif task.type == task.CARDIAC_LANDMARK:
+        url = reverse('cardiac_landmark:process_image', args=[task_id])
     else:
         raise NotImplementedError()
 
@@ -454,7 +456,7 @@ def reset_filters(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
-        return Http404('The task does not exist')
+        return Http404('The Task does not exist')
 
     search_filters = SearchFilter(request, task)
     search_filters.delete()
@@ -466,7 +468,7 @@ def task(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
-        return Http404('The task does not exist')
+        return Http404('The Task does not exist')
 
     search_filters = SearchFilter(request, task)
 
@@ -573,6 +575,8 @@ def get_redirection(task):
         return 'landmark:process_image'
     elif task.type == Task.CARDIAC_SEGMENTATION:
         return 'cardiac:segment_image'
+    elif task.type == Task.CARDIAC_LANDMARK:
+        return 'cardiac_landmark:landmark_image'
 
 
 # @register.simple_tag
@@ -602,7 +606,7 @@ def annotate_next_image(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
-        return Http404('The task does not exist')
+        return Http404('The Task does not exist')
 
     url = reverse(get_redirection(task), kwargs={'task_id': task.id})
     return redirect(url + '?' + request.GET.urlencode())
@@ -613,7 +617,7 @@ def annotate_image(request, task_id, image_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
-        return Http404('The task does not exist')
+        return Http404('The Task does not exist')
 
     url = reverse(get_redirection(task), kwargs={'task_id': task.id, 'image_id': image_id})
     return redirect(url + '?' + request.GET.urlencode())
