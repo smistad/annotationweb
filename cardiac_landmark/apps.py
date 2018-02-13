@@ -1,5 +1,4 @@
 from django.apps import AppConfig
 
-
-class LandmarkConfig(AppConfig):
-    name = 'landmark'
+class CardiacLandmarkConfig(AppConfig):
+    name = 'cardiac_landmark'
