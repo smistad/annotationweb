@@ -255,7 +255,7 @@ function redraw(){
 
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
-    var controlPointSize = 10;
+    var controlPointSize = g_canvasWidth/50;
     g_context.lineWidth = 2;
 
     // Draw controlPoint
