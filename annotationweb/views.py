@@ -430,7 +430,7 @@ def task_description(request, task_id):
     elif task.type == task.CARDIAC_SEGMENTATION:
         url = reverse('cardiac:segment_image', args=[task_id])
     elif task.type == task.CARDIAC_LANDMARK:
-        url = reverse('cardiac_landmark:process_image', args=[task_id])
+        url = reverse('cardiac_landmark:landmark_image', args=[task_id])
     else:
         raise NotImplementedError()
 
