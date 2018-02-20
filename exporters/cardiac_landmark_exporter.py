@@ -70,8 +70,6 @@ class CardiacSegmentationExporter(Exporter):
             create_folder(subject_path)
             processed_sequences = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
 
-            import matplotlib.pyplot as plt
-
             for seq in processed_sequences:
                 # Get segmentation
                 landmark = CardiacLandmark.objects.get(image=seq)
