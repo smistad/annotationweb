@@ -124,7 +124,7 @@ class CardiacSegmentationExporter(Exporter):
         metadata = open(os.path.join(folder, "Metafile.txt"), 'r')
         _, spacing, view, _, corners, _, _ = metadata.readlines()
 
-        translator = {'4-CHAMBER': '4ch', '3-CHAMBER': 'lax', '2-CHAMBER': '2ch'}
+        translator = {'4-CHAMBER': '4ch', '3-CHAMBER': 'lax', '2-CHAMBER': '2ch', '10SL': 'sax'}
         view = translator[view.replace('\n','')]
         spacing = list(literal_eval(spacing.split(': ')[1]))
 
