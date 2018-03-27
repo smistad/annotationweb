@@ -3,7 +3,7 @@ from math import sqrt, floor
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
-from annotationweb.models import ProcessedImage, Dataset, Task, Label, Subject, KeyFrame
+from annotationweb.models import ProcessedImage, Dataset, Task, Label, Subject, KeyFrame, Metadata
 from cardiac.models import Segmentation, ControlPoint, OBJECTS
 from django import forms
 import os
@@ -74,23 +74,24 @@ class CardiacSegmentationExporter(Exporter):
 
                 # Copy image frames
                 image_id = image.image.pk
+                create_folder(join(subject_path, str(image_id)))
 
                 filename = image_sequence.format.replace('#', str(segmentation.frame_ED))
-                new_filename_ED = join(subject_path, str(image_id) + '_ED.mhd')
+                new_filename_ED = join(subject_path, str(image_id), 'ED.mhd')
                 copy_image(filename, new_filename_ED)
 
                 filename = image_sequence.format.replace('#', str(segmentation.frame_ES))
-                new_filename_ES = join(subject_path, str(image_id) + '_ES.mhd')
+                new_filename_ES = join(subject_path, str(image_id), 'ES.mhd')
                 copy_image(filename, new_filename_ES)
 
                 # Get control points to create segmentation
                 image_mhd = MetaImage(filename=new_filename_ED)
                 control_points = ControlPoint.objects.filter(segmentation=segmentation, phase=0).order_by('index')
-                self.save_segmentation(image_mhd.get_size(), control_points, join(subject_path, str(image_id) + '_ED_segmentation.mhd'))
+                self.save_segmentation(image, image_mhd.get_size(), control_points, join(subject_path, str(image_id), 'ED_segmentation.mhd'))
 
                 image_mhd = MetaImage(filename=new_filename_ES)
                 control_points = ControlPoint.objects.filter(segmentation=segmentation, phase=1).order_by('index')
-                self.save_segmentation(image_mhd.get_size(), control_points, join(subject_path, str(image_id) + '_ES_segmentation.mhd'))
+                self.save_segmentation(image, image_mhd.get_size(), control_points, join(subject_path, str(image_id), 'ES_segmentation.mhd'))
                 
 
         return True, path
@@ -159,7 +160,7 @@ class CardiacSegmentationExporter(Exporter):
 
         return point
 
-    def save_segmentation(self, image_size, control_points, filename):
+    def save_segmentation(self, annotation, image_size, control_points, filename):
         image_size = [image_size[1], image_size[0]]
         # Get control points for all objects
         control_points0 = list(control_points.filter(object=0))
@@ -186,5 +187,10 @@ class CardiacSegmentationExporter(Exporter):
         segmentation[object_segmentation == 1] = 1
 
         segmentation_mhd = MetaImage(data=segmentation)
+        segmentation_mhd.set_attribute('ImageQuality', annotation.image_quality)
+        segmentation_mhd.set_attribute('OriginalFilename', annotation.image.filename)
+        metadata = Metadata.objects.filter(image=annotation.image)
+        for item in metadata:
+            segmentation_mhd.set_attribute(item.name, item.value)
         segmentation_mhd.write(filename)
 
