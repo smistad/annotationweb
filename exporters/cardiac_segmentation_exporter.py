@@ -1,5 +1,4 @@
-from math import sqrt, floor
-
+from math import sqrt, floor, ceil
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
@@ -130,7 +129,7 @@ class CardiacSegmentationExporter(Exporter):
         b = np.array([control_points[len(control_points)-1].x, control_points[len(control_points)-1].y])
         length = np.linalg.norm(a - b)
         direction = (b - a) / length
-        for t in np.arange(0, floor(length), 0.1):
+        for t in np.arange(0, ceil(length), 0.1):
             position = a + t*direction
             segmentation[int(round(position[1])), int(round(position[0]))] = 1
 
