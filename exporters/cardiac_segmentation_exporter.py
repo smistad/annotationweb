@@ -62,6 +62,9 @@ class CardiacSegmentationExporter(Exporter):
             create_folder(subject_path)
             images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
             for image in images:
+                # Check if image was rejected
+                if image.rejected:
+                    continue
                 # Get image sequence
                 key_frame = KeyFrame.objects.get(image=image.image)
                 image_sequence = key_frame.image_sequence
@@ -88,6 +91,7 @@ class CardiacSegmentationExporter(Exporter):
                 image_mhd = MetaImage(filename=new_filename_ES)
                 control_points = ControlPoint.objects.filter(segmentation=segmentation, phase=1).order_by('index')
                 self.save_segmentation(image_mhd.get_size(), control_points, join(subject_path, str(image_id) + '_ES_segmentation.mhd'))
+                
 
         return True, path
 
