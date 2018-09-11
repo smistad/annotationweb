@@ -59,7 +59,7 @@ class MetaImage:
 
         print(self.data.shape)
         self.ndims = int(self.attributes['NDims'])
-        #self.data = self.data.reshape(self.get_size())
+        self.data = self.data.reshape((self.dim_size[1], self.dim_size[0]))
 
 
     def get_size(self):
@@ -69,8 +69,7 @@ class MetaImage:
         return self.data
 
     def get_image(self):
-        pil_image = PIL.Image.new('L', self.get_size(), color='white')
-        pil_image.putdata(self.data)
+        pil_image = PIL.Image.fromarray(self.data, mode='L')
 
         return pil_image
 
