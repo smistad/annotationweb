@@ -12,6 +12,7 @@ def tuple_to_string(tuple):
 class MetaImage:
     def __init__(self, filename=None, data=None):
         self.attributes = {}
+        self.attributes['ElementSpacing'] = [1, 1, 1]
         if filename is not None:
             self.read(filename)
         else:
@@ -36,6 +37,9 @@ class MetaImage:
                 if len(parts) != 2:
                     raise Exception('Unable to parse metaimage file')
                 self.attributes[parts[0].strip()] = parts[1].strip()
+                if parts[0].strip() == 'ElementSpacing':
+                    self.attributes['ElementSpacing'] = [float(x) for x in self.attributes['ElementSpacing'].split()]
+
 
         if 'CompressedData' in self.attributes and self.attributes['CompressedData'] == 'True':
             # Read compressed raw file (.zraw)
@@ -79,7 +83,6 @@ class MetaImage:
         self.attributes['ElementSpacing'] = spacing
 
     def get_spacing(self):
-        print(self.attributes)
         return self.attributes['ElementSpacing']
 
     def get_metaimage_type(self):
@@ -110,6 +113,7 @@ class MetaImage:
             f.write('NDims = ' + str(self.ndims) + '\n')
             f.write('DimSize = ' + tuple_to_string(self.dim_size) + '\n')
             f.write('ElementType = ' + self.get_metaimage_type() + '\n')
+            f.write('ElementSpacing = ' + tuple_to_string(self.attributes['ElementSpacing']) + '\n')
             for key, value in self.attributes.items():
                 if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize']:
                     f.write(key + ' = ' + value + '\n')

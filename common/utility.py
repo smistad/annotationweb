@@ -14,6 +14,14 @@ def get_image_as_http_response(filename):
         # Convert raw data to image, and then to a http response
         buffer = BytesIO()
         pil_image = reader.get_image()
+        spacing = reader.get_spacing()
+        if spacing[0] != spacing[1]:
+            # Compensate for anistropic pixel spacing
+            real_aspect = pil_image.width*spacing[0] / (pil_image.height*spacing[1])
+            current_aspect = float(pil_image.width) / pil_image.height
+            new_width = int(pil_image.width*(real_aspect / current_aspect))
+            new_height = pil_image.height
+            pil_image = pil_image.resize((new_width, new_height))
         pil_image.save(buffer, "PNG")
     elif extension.lower() == '.png':
         buffer = BytesIO()
