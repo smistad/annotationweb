@@ -19,8 +19,8 @@ class CardiacExaminationsImporter(Importer):
     Data should be sorted in the following way in the root folder:
     Subject 1/
         Sequence 1/
-            Image_0.png
-            Image_1.png
+            US-2D_0.mhd
+            US-2D_1.mhd
             ...
         Sequence 2/
             ...
@@ -61,7 +61,7 @@ class CardiacExaminationsImporter(Importer):
                 # Count nr of frames
                 frames = []
                 for file3 in os.listdir(image_sequence_dir):
-                    if file3[-4:] == '.png':
+                    if file3[-4:] == '.mhd':
                         image_filename = join(image_sequence_dir, file3)
                         frames.append(image_filename)
 
@@ -69,11 +69,11 @@ class CardiacExaminationsImporter(Importer):
                     continue
 
                 image_sequence = ImageSequence()
-                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*.png'))]
+                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*.mhd'))]
                 if filenames[0].startswith('MR'): # TODO: Need to solve this in a more elegant way.
-                    image_sequence.format = join(image_sequence_dir, 'MR#.png')
+                    image_sequence.format = join(image_sequence_dir, 'MR#.mhd')
                 else:
-                    image_sequence.format = join(image_sequence_dir, 'US-2D_#.png') # TODO How to determine this??
+                    image_sequence.format = join(image_sequence_dir, 'US-2D_#.mhd') # TODO How to determine this??
                 image_sequence.subject = subject
                 image_sequence.nr_of_frames = len(frames)
                 image_sequence.save()
