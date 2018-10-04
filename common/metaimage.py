@@ -114,7 +114,7 @@ class MetaImage:
             f.write('ElementType = ' + self.get_metaimage_type() + '\n')
             f.write('ElementSpacing = ' + tuple_to_string(self.attributes['ElementSpacing']) + '\n')
             for key, value in self.attributes.items():
-                if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize']:
+                if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize', 'ElementSpacing']:
                     f.write(key + ' = ' + value + '\n')
             f.write('ElementDataFile = ' + raw_filename + '\n')
 
