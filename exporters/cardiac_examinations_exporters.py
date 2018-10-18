@@ -129,6 +129,7 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
                                            initial='tf'
                                            )
     sequence_wise = forms.BooleanField(label='Export by sequence', initial=False, required=False)
+    displayed_frames_only = forms.BooleanField(label='Only export the frames displayed in the task.', initial=False, required=False, help_text='If a task only shows the X frames before and after target frame, only those frames are exported.')
     categorical = forms.BooleanField(label='Categorical labels', initial=False, required=False)
     colormode = forms.ChoiceField(label='Color model',
                                   choices=(('L', 'Grayscale'), ('RGB', 'RGB')),
@@ -227,10 +228,20 @@ class CardiacHDFExaminationsExporter(Exporter):
                     if nr_of_frames < min_frames:
                         continue
 
-                    for i in range(nr_of_frames):
+                    start_frame = 0
+                    end_frame = nr_of_frames
+                    if form.cleaned_data['displayed_frames_only'] and not self.task.show_entire_sequence:
+                        start_frame = max(0, key_frame.frame_nr - self.task.frames_before)
+                        end_frame = min(nr_of_frames, key_frame.frame_nr + self.task.frames_after + 1)
+
+                    for i in range(start_frame, end_frame):
                         # Get image
                         filename = image_sequence.format.replace('#', str(i))
-                        image = PIL.Image.open(filename)
+                        if filename[-4:] == '.mhd':
+                            metaimage = MetaImage(filename=filename)
+                            image = metaimage.get_image()
+                        else:
+                            image = PIL.Image.open(filename)
 
                         # Setup assigned colormode
                         if form.cleaned_data['colormode'] != image.mode:
@@ -249,7 +260,7 @@ class CardiacHDFExaminationsExporter(Exporter):
                         sequence_frames.append(image_array)
                         labels.append(label_dict[label.label.name])
 
-                    if form.cleaned_data['sequence_wise']:
+                    if form.cleaned_data['sequence_wise'] and len(sequence_frames) > 0:
                         input = np.array(sequence_frames, dtype=np.float32)
                         output = np.array(labels, dtype=np.uint8)
 
@@ -274,7 +285,7 @@ class CardiacHDFExaminationsExporter(Exporter):
                         sequence_frames = []
                         labels = []
 
-            if not form.cleaned_data['sequence_wise']:
+            if not form.cleaned_data['sequence_wise'] and len(sequence_frames) > 0:
                 input = np.array(sequence_frames, dtype=np.float32)
                 output = np.array(labels, dtype=np.uint8)
 
