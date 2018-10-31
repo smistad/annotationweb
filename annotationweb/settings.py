@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'user',
     'cardiac',
     'cardiac_landmark',
+    'segmentation_polygon',
 ]
 
 MIDDLEWARE_CLASSES = [

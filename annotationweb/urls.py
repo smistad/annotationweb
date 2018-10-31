@@ -50,7 +50,8 @@ urlpatterns = [
     url(r'^boundingbox/', include('boundingbox.urls')),
     url(r'^landmark/', include('landmark.urls')),
     url(r'^cardiac/', include('cardiac.urls')),
-    url(r'^cardiac_landmark/', include('cardiac_landmark.urls'))
+    url(r'^cardiac_landmark/', include('cardiac_landmark.urls')),
+    url(r'^segmentation_polygon/', include('segmentation_polygon.urls'))
 ]
 
 # This is for making statics in a development environment

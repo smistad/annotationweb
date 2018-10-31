@@ -52,13 +52,15 @@ class Task(models.Model):
     LANDMARK = 'landmark'
     CARDIAC_SEGMENTATION = 'cardiac_segmentation'
     CARDIAC_LANDMARK = 'cardiac_landmark'
+    SEGMENTATION_POLYGON = 'segmentation_polygon'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
         (SEGMENTATION, 'Segmentation'),
         (BOUNDING_BOX, 'Bounding box'),
         (LANDMARK, 'Landmark'),
         (CARDIAC_SEGMENTATION, 'Cardiac segmentation'),
-        (CARDIAC_LANDMARK, 'Cardiac landmark')
+        (CARDIAC_LANDMARK, 'Cardiac landmark'),
+        (SEGMENTATION_POLYGON, 'Polygon segmentation')
     )
 
     name = models.CharField(max_length=200)
