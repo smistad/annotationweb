@@ -7,6 +7,7 @@ var g_currentFrameNr;
 var g_startFrame;
 var g_progressbar;
 var g_framesLoaded;
+var g_sequenceLength;
 var g_isPlaying = true;
 var g_returnURL = '';
 var g_taskID;
@@ -169,6 +170,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
         totalToLoad = end - start;
     }
     g_startFrame = start;
+    g_sequenceLength = end-start;
 
     // Create slider
     $("#slider").slider(
@@ -226,7 +228,6 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
         redrawSequence();
     });
 
-
     // Load images
     g_framesLoaded = 0;
     //console.log('start: ' + start + ' end: ' + end)
@@ -244,10 +245,8 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
             g_framesLoaded++;
             g_progressbar.progressbar( "value", g_framesLoaded*100/totalToLoad);
         }
-
         g_sequence.push(image);
     }
-
 }
 
 function redrawSequence() {
