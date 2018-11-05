@@ -62,12 +62,10 @@ def save_segmentation(request):
         try:
             annotation = common.task.save_annotation(request)
 
-            # Save segmentation (frame_ED and frame_ES)
+            # Save segmentation
             segmentation = SegmentationPolygon()
             segmentation.image = annotation
             segmentation.target_frames = str(target_frames)
-            #segmentation.frame_ES = frame_ES
-            #segmentation.motion_mode_line = motion_mode_line
             segmentation.save()
 
             # Save control points
