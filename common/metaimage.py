@@ -40,27 +40,35 @@ class MetaImage:
                 if parts[0].strip() == 'ElementSpacing':
                     self.attributes['ElementSpacing'] = [float(x) for x in self.attributes['ElementSpacing'].split()]
 
-
-        if 'CompressedData' in self.attributes and self.attributes['CompressedData'] == 'True':
-            # Read compressed raw file (.zraw)
-            with open(os.path.join(base_path, self.attributes['ElementDataFile']), 'rb') as raw_file:
-                raw_data_compressed = raw_file.read()
-                raw_data_uncompressed = zlib.decompress(raw_data_compressed)
-                self.data = np.fromstring(raw_data_uncompressed, dtype=np.uint8)
-        else:
-            # Read uncompressed raw file (.raw)
-            self.data = np.fromfile(os.path.join(base_path, self.attributes['ElementDataFile']), dtype=np.uint8)
-
         dims = self.attributes['DimSize'].split(' ')
         if len(dims) == 2:
             self.dim_size = (int(dims[0]), int(dims[1]))
         elif len(dims) == 3:
             self.dim_size = (int(dims[0]), int(dims[1]), int(dims[2]))
 
-        print(self.data.shape)
         self.ndims = int(self.attributes['NDims'])
+
+        compressed_data = 'CompressedData' in self.attributes and self.attributes['CompressedData'] == 'True'
+
+        if compressed_data:
+            # Read compressed raw file (.zraw)
+            with open(os.path.join(base_path, self.attributes['ElementDataFile']), 'rb') as raw_file:
+                raw_data_compressed = raw_file.read()
+                raw_data_uncompressed = zlib.decompress(raw_data_compressed)
+
+                if self.attributes['ElementType'] == 'MET_FLOAT':
+                    self.data = (np.fromstring(raw_data_uncompressed, dtype=np.float32)*255).astype(dtype=np.uint8)
+                else:
+                    self.data = np.fromstring(raw_data_uncompressed, dtype=np.uint8)
+        else:
+            # Read uncompressed raw file (.raw)
+            self.data = np.fromfile(os.path.join(base_path, self.attributes['ElementDataFile']), dtype=np.uint8)
+
         self.data = self.data.reshape((self.dim_size[1], self.dim_size[0]))
 
+        if compressed_data:
+            # This is a quick fix to handle y-x convention used in annotationweb..
+            self.data = self.data.T
 
     def get_size(self):
         return self.dim_size
