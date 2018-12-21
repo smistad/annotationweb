@@ -67,6 +67,7 @@ function save() {
             } else {
                 // Reset image quality form before refreshing
                 $('#imageQualityForm')[0].reset();
+                $('#comments').val('');
                 // Refresh page
                 location.reload();
             }
