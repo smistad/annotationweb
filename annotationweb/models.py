@@ -74,6 +74,7 @@ class Task(models.Model):
                      ' type="button">Add new label</button>')
     user = models.ManyToManyField(User)
     description = models.TextField(default='', blank=True)
+    large_image_layout = models.BooleanField(default=False, help_text='Use a large image layout for annotation')
 
     def __str__(self):
         return self.name
