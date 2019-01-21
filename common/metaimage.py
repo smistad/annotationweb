@@ -13,6 +13,7 @@ class MetaImage:
     def __init__(self, filename=None, data=None):
         self.attributes = {}
         self.attributes['ElementSpacing'] = [1, 1, 1]
+        self.attributes['ElementNumberOfChannels'] = 1
         if filename is not None:
             self.read(filename)
         else:
@@ -59,17 +60,22 @@ class MetaImage:
 
         print(self.data.shape)
         self.ndims = int(self.attributes['NDims'])
-        self.data = self.data.reshape((self.dim_size[1], self.dim_size[0]))
-
+        if self.get_channels() == 1:
+            self.data = self.data.reshape((self.dim_size[1], self.dim_size[0]))
+        else:
+            self.data = self.data.reshape((self.dim_size[1], self.dim_size[0], self.get_channels()))
 
     def get_size(self):
         return self.dim_size
+
+    def get_channels(self):
+        return int(self.attributes['ElementNumberOfChannels'])
 
     def get_pixel_data(self):
         return self.data
 
     def get_image(self):
-        pil_image = PIL.Image.fromarray(self.data, mode='L')
+        pil_image = PIL.Image.fromarray(self.data, mode='L' if self.get_channels() == 1 else 'RGB')
 
         return pil_image
 
@@ -113,8 +119,9 @@ class MetaImage:
             f.write('DimSize = ' + tuple_to_string(self.dim_size) + '\n')
             f.write('ElementType = ' + self.get_metaimage_type() + '\n')
             f.write('ElementSpacing = ' + tuple_to_string(self.attributes['ElementSpacing']) + '\n')
+            f.write('ElementNumberOfChannels = ' + str(self.attributes['ElementNumberOfChannels']) + '\n')
             for key, value in self.attributes.items():
-                if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize', 'ElementSpacing']:
+                if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize', 'ElementSpacing', 'ElementNumberOfChannels']:
                     f.write(key + ' = ' + value + '\n')
             f.write('ElementDataFile = ' + raw_filename + '\n')
 
