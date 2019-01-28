@@ -1,12 +1,14 @@
 {% extends 'annotationweb/base.html' %}
 
 {% block page_content %}
-    <div id="contentLeft">
-        {% block content_left %}
-        {% endblock %}
-    </div>
-    <div id="contentRight">
-        {% block content_right %}
-        {% endblock %}
+    <div id="pageContent"{% if task.large_image_layout %} style="max-width: none;"{% endif %}>
+        <div id="contentLeft"{% if task.large_image_layout %} style="width: 30%;"{% endif %}>
+            {% block content_left %}
+            {% endblock %}
+        </div>
+        <div id="contentRight"{% if task.large_image_layout %} style="width: 70%;"{% endif %}>
+            {% block content_right %}
+            {% endblock %}
+        </div>
     </div>
 {% endblock %}
