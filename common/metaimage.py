@@ -66,9 +66,6 @@ class MetaImage:
 
         self.data = self.data.reshape((self.dim_size[1], self.dim_size[0]))
 
-        if compressed_data:
-            # This is a quick fix to handle y-x convention used in annotationweb..
-            self.data = self.data.T
 
     def get_size(self):
         return self.dim_size
