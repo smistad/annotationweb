@@ -4,7 +4,6 @@ from annotationweb.models import Image, ImageSequence, KeyFrame, Dataset, Subjec
 import os
 from os.path import join, basename
 import glob
-from itertools import chain
 
 class CardiacExaminationsImporterForm(forms.Form):
     path = forms.CharField(label='Data path', max_length=1000)
@@ -67,22 +66,23 @@ class CardiacExaminationsImporter(Importer):
                     continue
 
                 # Count nr of frames
+                # Handle only monotype sequence: .mhd or .png
                 frames = []
+                extension = '.mhd'
                 for file3 in os.listdir(image_sequence_dir):
-                    if file3[-4:] == '.mhd' or '.png':
+                    if file3[-4:] == '.mhd':
                         image_filename = join(image_sequence_dir, file3)
                         frames.append(image_filename)
+                    elif file3[-4:] == '.png':
+                        image_filename = join(image_sequence_dir, file3)
+                        frames.append(image_filename)
+                        extension = '.png'
 
                 if len(frames) == 0:
                     continue
 
-                filenames = [basename(file) for file in chain.from_iterable(
-                    glob.glob(join(image_sequence_dir, ext)) for ext in ('*.mhd', '*.png'))]
+                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*'+extension))]
 
-                # Handle only monotype sequence: .mhd or .png
-                extension = '.mhd'
-                if filenames[0].endswith('.png'):
-                    extension = '.png'
                 if filenames[0].startswith('MR'): # TODO: Need to solve this in a more elegant way.
                     filename_format = join(image_sequence_dir, 'MR#')
                     filename_format += extension
