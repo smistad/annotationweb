@@ -27,6 +27,8 @@ class CardiacExaminationsImporter(Importer):
             ...
     Subject 2/
         ...
+    Allow both .mhd and .png sequences from the same root folder.
+    Assumes that a single sequence does not mix .mhd and .png
 
     This importer will create a subject for each subject folder and an image sequence for each subfolder.
     A key frame in the middle of the sequence will be added for each sequence.
@@ -77,7 +79,7 @@ class CardiacExaminationsImporter(Importer):
                 filenames = [basename(file) for file in chain.from_iterable(
                     glob.glob(join(image_sequence_dir, ext)) for ext in ('*.mhd', '*.png'))]
 
-                # Handle only monotype datasets: .mhd or .png
+                # Handle only monotype sequence: .mhd or .png
                 extension = '.mhd'
                 if filenames[0].endswith('.png'):
                     extension = '.png'
