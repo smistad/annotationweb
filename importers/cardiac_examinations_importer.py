@@ -4,6 +4,7 @@ from annotationweb.models import Image, ImageSequence, KeyFrame, Dataset, Subjec
 import os
 from os.path import join, basename
 import glob
+from itertools import chain
 
 class CardiacExaminationsImporterForm(forms.Form):
     path = forms.CharField(label='Data path', max_length=1000)
@@ -19,8 +20,8 @@ class CardiacExaminationsImporter(Importer):
     Data should be sorted in the following way in the root folder:
     Subject 1/
         Sequence 1/
-            US-2D_0.mhd
-            US-2D_1.mhd
+            US-2D_0.mhd or .png
+            US-2D_1.mhd or .png
             ...
         Sequence 2/
             ...
@@ -66,19 +67,26 @@ class CardiacExaminationsImporter(Importer):
                 # Count nr of frames
                 frames = []
                 for file3 in os.listdir(image_sequence_dir):
-                    if file3[-4:] == '.mhd':
+                    if file3[-4:] == '.mhd' or '.png':
                         image_filename = join(image_sequence_dir, file3)
                         frames.append(image_filename)
 
                 if len(frames) == 0:
                     continue
 
-            
-                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*.mhd'))]
+                filenames = [basename(file) for file in chain.from_iterable(
+                    glob.glob(join(image_sequence_dir, ext)) for ext in ('*.mhd', '*.png'))]
+
+                # Handle only monotype datasets: .mhd or .png
+                extension = '.mhd'
+                if filenames[0].endswith('.png'):
+                    extension = '.png'
                 if filenames[0].startswith('MR'): # TODO: Need to solve this in a more elegant way.
-                    filename_format = join(image_sequence_dir, 'MR#.mhd')
+                    filename_format = join(image_sequence_dir, 'MR#')
+                    filename_format += extension
                 else:
-                    filename_format = join(image_sequence_dir, 'US-2D_#.mhd') # TODO How to determine this??
+                    filename_format = join(image_sequence_dir, 'US-2D_#') # TODO How to determine this??
+                    filename_format += extension
                 try:
                     # Check to see if sequence exist
                     image_sequence = ImageSequence.objects.get(format=filename_format, subject=subject)
