@@ -146,8 +146,8 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
         self.fields['labels'] = forms.MultipleChoiceField(
             choices=((label['id'], label['name']) for label in labels),
             initial=[label['id'] for label in labels],
-            help_text='Not implemented yet: Images assigned to sublabels which are not selected will be added '
-                      'to first selected parent label. If no parent labels are selected, the images will be excluded.'
+            help_text='When parent labels are selected, sublabels selected will be linked to the parent label '
+                      '(and only those ones). '
         )
 
 
@@ -190,15 +190,36 @@ class CardiacHDFExaminationsExporter(Exporter):
     def add_subjects_to_path(self, path, form):
         # Create label file
         label_file = open(join(path, 'labels.txt'), 'w')
+
+        # Find labels with parents
         labels = form.cleaned_data['labels']
         label_dict = {}
-        counter = 0 
+        has_parent_dict = {}
+        label_file.write('All labels involved: \n\n')
         for label_id in labels:
             label = Label.objects.get(pk=label_id)
             label_name = get_complete_label_name(label)
             label_file.write(label_name + '\n')
-            label_dict[label_name] = counter
-            counter += 1
+            has_parent_dict[label_name] = False
+            label_dict[label_name] = None
+
+        for start_label in has_parent_dict:
+            for full_label in has_parent_dict:
+                if full_label.startswith(start_label) & (start_label != full_label):
+                    has_parent_dict[full_label] = True
+
+        # Assign children to the parent class
+        label_file.write('\nClassification based on the following parent labels: \n\n')
+        counter = 0
+        for label in has_parent_dict:
+            if has_parent_dict[label] == False:
+                label_file.write(label + '\n')
+                for label_name in label_dict:
+                    if label_name.startswith(label):
+                        label_dict[label_name] = counter
+                counter += 1
+        nb_parent_classes = counter
+
         label_file.close()
 
         # For each subject
@@ -259,12 +280,11 @@ class CardiacHDFExaminationsExporter(Exporter):
                     if form.cleaned_data['sequence_wise'] and len(sequence_frames) > 0:
                         input = np.array(sequence_frames, dtype=np.float32)
                         output = np.array(labels, dtype=np.uint8)
-
                         if form.cleaned_data['image_dim_ordering'] == 'theano':
                             input = np.transpose(input, [0,3,1,2])
 
                         if form.cleaned_data['categorical']:
-                            output = to_categorical(output, nb_classes=len(label_dict))
+                            output = to_categorical(output, nb_classes=nb_parent_classes)
 
                         subj_path = join(path, subject.name)
                         create_folder(subj_path)
@@ -295,3 +315,4 @@ class CardiacHDFExaminationsExporter(Exporter):
                 f.create_dataset("data", data=input, compression="gzip", compression_opts=4, dtype='float32')
                 f.create_dataset("label", data=output, compression="gzip", compression_opts=4, dtype='uint8')
                 f.close()
+
