@@ -68,7 +68,7 @@ class CardiacSegmentationExporter(Exporter):
         for subject in data:
             subject_path = join(path, subject.name)
             create_folder(subject_path)
-            processed_sequences = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
+            processed_sequences = ProcessedImage.objects.filter(task=self.task, image__subject=subject, rejected=False)
 
             for seq in processed_sequences:
                 # Get segmentation

@@ -205,13 +205,12 @@ class CardiacHDFExaminationsExporter(Exporter):
         subjects = Subject.objects.filter(dataset__task=self.task)
         for subject in subjects:
             # Get labeled images
-            labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
+            labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject, rejected=False)
             if labeled_images.count() == 0:
                 continue
 
             width = form.cleaned_data['width']
             height = form.cleaned_data['height']
-            min_frames = 10
 
             sequence_frames = []
             labels = []
@@ -219,14 +218,11 @@ class CardiacHDFExaminationsExporter(Exporter):
             for labeled_image in labeled_images:
                 label = ImageLabel.objects.get(image=labeled_image)
 
-                if label.label.name in label_dict.keys():
+                if get_complete_label_name(label.label) in label_dict.keys():
                     # Get sequence
                     key_frame = KeyFrame.objects.get(image=labeled_image.image)
                     image_sequence = key_frame.image_sequence
                     nr_of_frames = image_sequence.nr_of_frames
-                    # Skip sequence if too small
-                    if nr_of_frames < min_frames:
-                        continue
 
                     start_frame = 0
                     end_frame = nr_of_frames
@@ -258,7 +254,7 @@ class CardiacHDFExaminationsExporter(Exporter):
                             image_array = image_array[..., None]
 
                         sequence_frames.append(image_array)
-                        labels.append(label_dict[label.label.name])
+                        labels.append(label_dict[get_complete_label_name(label.label)])
 
                     if form.cleaned_data['sequence_wise'] and len(sequence_frames) > 0:
                         input = np.array(sequence_frames, dtype=np.float32)
