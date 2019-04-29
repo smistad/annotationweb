@@ -151,8 +151,9 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
+        console.log(point);
         if(point !== false) {
-            g_controlPoints[g_currentTargetFrameIdx][point.label].splice(point.index, 1);
+            g_controlPoints[g_currentTargetFrameIdx][point.label_idx].splice(point.index, 1);
         }
         redrawSequence();
     });
