@@ -59,7 +59,7 @@ class CardiacSegmentationExporter(Exporter):
         for subject in data:
             subject_path = join(path, subject.name)
             create_folder(subject_path)
-            images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
+            images = ProcessedImage.objects.filter(task=self.task, image__subject=subject, rejected=False)
             for image in images:
                 # Check if image was rejected
                 if image.rejected:

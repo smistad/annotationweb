@@ -79,7 +79,7 @@ class ClassificationExporter(Exporter):
 
         # Create file_list.txt file
         file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets)
+        labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets, rejected=False)
         for labeled_image in labeled_images:
             name = labeled_image.image.filename
             dataset_path = os.path.join(path, labeled_image.image.dataset.name)

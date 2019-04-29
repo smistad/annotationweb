@@ -129,6 +129,7 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
                                            initial='tf'
                                            )
     sequence_wise = forms.BooleanField(label='Export by sequence', initial=False, required=False)
+    displayed_frames_only = forms.BooleanField(label='Only export the frames displayed in the task.', initial=False, required=False, help_text='If a task only shows the X frames before and after target frame, only those frames are exported.')
     categorical = forms.BooleanField(label='Categorical labels', initial=False, required=False)
     colormode = forms.ChoiceField(label='Color model',
                                   choices=(('L', 'Grayscale'), ('RGB', 'RGB')),
@@ -145,8 +146,8 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
         self.fields['labels'] = forms.MultipleChoiceField(
             choices=((label['id'], label['name']) for label in labels),
             initial=[label['id'] for label in labels],
-            help_text='Not implemented yet: Images assigned to sublabels which are not selected will be added '
-                      'to first selected parent label. If no parent labels are selected, the images will be excluded.'
+            help_text='When parent labels are selected, sublabels selected will be linked to the parent label '
+                      '(and only those ones). '
         )
 
 
@@ -189,28 +190,48 @@ class CardiacHDFExaminationsExporter(Exporter):
     def add_subjects_to_path(self, path, form):
         # Create label file
         label_file = open(join(path, 'labels.txt'), 'w')
+
+        # Find labels with parents
         labels = form.cleaned_data['labels']
         label_dict = {}
-        counter = 0 
+        has_parent_dict = {}
+        label_file.write('All labels involved: \n\n')
         for label_id in labels:
             label = Label.objects.get(pk=label_id)
             label_name = get_complete_label_name(label)
             label_file.write(label_name + '\n')
-            label_dict[label_name] = counter
-            counter += 1
+            has_parent_dict[label_name] = False
+            label_dict[label_name] = None
+
+        for start_label in has_parent_dict:
+            for full_label in has_parent_dict:
+                if full_label.startswith(start_label) & (start_label != full_label):
+                    has_parent_dict[full_label] = True
+
+        # Assign children to the parent class
+        label_file.write('\nClassification based on the following parent labels: \n\n')
+        counter = 0
+        for label in has_parent_dict:
+            if has_parent_dict[label] == False:
+                label_file.write(label + '\n')
+                for label_name in label_dict:
+                    if label_name.startswith(label):
+                        label_dict[label_name] = counter
+                counter += 1
+        nb_parent_classes = counter
+
         label_file.close()
 
         # For each subject
         subjects = Subject.objects.filter(dataset__task=self.task)
         for subject in subjects:
             # Get labeled images
-            labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject)
+            labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject, rejected=False)
             if labeled_images.count() == 0:
                 continue
 
             width = form.cleaned_data['width']
             height = form.cleaned_data['height']
-            min_frames = 10
 
             sequence_frames = []
             labels = []
@@ -218,19 +239,26 @@ class CardiacHDFExaminationsExporter(Exporter):
             for labeled_image in labeled_images:
                 label = ImageLabel.objects.get(image=labeled_image)
 
-                if label.label.name in label_dict.keys():
+                if get_complete_label_name(label.label) in label_dict.keys():
                     # Get sequence
                     key_frame = KeyFrame.objects.get(image=labeled_image.image)
                     image_sequence = key_frame.image_sequence
                     nr_of_frames = image_sequence.nr_of_frames
-                    # Skip sequence if too small
-                    if nr_of_frames < min_frames:
-                        continue
 
-                    for i in range(nr_of_frames):
+                    start_frame = 0
+                    end_frame = nr_of_frames
+                    if form.cleaned_data['displayed_frames_only'] and not self.task.show_entire_sequence:
+                        start_frame = max(0, key_frame.frame_nr - self.task.frames_before)
+                        end_frame = min(nr_of_frames, key_frame.frame_nr + self.task.frames_after + 1)
+
+                    for i in range(start_frame, end_frame):
                         # Get image
                         filename = image_sequence.format.replace('#', str(i))
-                        image = PIL.Image.open(filename)
+                        if filename[-4:] == '.mhd':
+                            metaimage = MetaImage(filename=filename)
+                            image = metaimage.get_image()
+                        else:
+                            image = PIL.Image.open(filename)
 
                         # Setup assigned colormode
                         if form.cleaned_data['colormode'] != image.mode:
@@ -247,17 +275,16 @@ class CardiacHDFExaminationsExporter(Exporter):
                             image_array = image_array[..., None]
 
                         sequence_frames.append(image_array)
-                        labels.append(label_dict[label.label.name])
+                        labels.append(label_dict[get_complete_label_name(label.label)])
 
-                    if form.cleaned_data['sequence_wise']:
+                    if form.cleaned_data['sequence_wise'] and len(sequence_frames) > 0:
                         input = np.array(sequence_frames, dtype=np.float32)
                         output = np.array(labels, dtype=np.uint8)
-
                         if form.cleaned_data['image_dim_ordering'] == 'theano':
                             input = np.transpose(input, [0,3,1,2])
 
                         if form.cleaned_data['categorical']:
-                            output = to_categorical(output, nb_classes=len(label_dict))
+                            output = to_categorical(output, nb_classes=nb_parent_classes)
 
                         subj_path = join(path, subject.name)
                         create_folder(subj_path)
@@ -274,7 +301,7 @@ class CardiacHDFExaminationsExporter(Exporter):
                         sequence_frames = []
                         labels = []
 
-            if not form.cleaned_data['sequence_wise']:
+            if not form.cleaned_data['sequence_wise'] and len(sequence_frames) > 0:
                 input = np.array(sequence_frames, dtype=np.float32)
                 output = np.array(labels, dtype=np.uint8)
 
@@ -288,3 +315,4 @@ class CardiacHDFExaminationsExporter(Exporter):
                 f.create_dataset("data", data=input, compression="gzip", compression_opts=4, dtype='float32')
                 f.create_dataset("label", data=output, compression="gzip", compression_opts=4, dtype='uint8')
                 f.close()
+

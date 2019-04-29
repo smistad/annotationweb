@@ -33,10 +33,19 @@ def segment_image(request, task_id, image_id):
 def save_segmentation(request):
 
     try:
+        image_id = int(request.POST['image_id'])
+        task_id = int(request.POST['task_id'])
+        base_path = BASE_DIR + '/segmentations/' + str(task_id) + '/'
+
+        # Have to delete any old segmentations images stored on disk before proceeding
+        annotations = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
+        for annotation in annotations:
+            os.remove(os.path.join(base_path, str(annotation.id) + '.png'))
+            os.remove(os.path.join(base_path, str(annotation.id) + '.mhd'))
+            os.remove(os.path.join(base_path, str(annotation.id) + '.raw'))
         annotation = common.task.save_annotation(request)
 
         # Save segmentation image to disk
-        base_path = BASE_DIR + '/segmentations/' + str(annotation.task_id) + '/'
         try:
             os.makedirs(base_path)
         except:

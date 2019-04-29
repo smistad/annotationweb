@@ -19,13 +19,15 @@ class CardiacExaminationsImporter(Importer):
     Data should be sorted in the following way in the root folder:
     Subject 1/
         Sequence 1/
-            US-2D_0.mhd
-            US-2D_1.mhd
+            US-2D_0.mhd or .png
+            US-2D_1.mhd or .png
             ...
         Sequence 2/
             ...
     Subject 2/
         ...
+    Allow both .mhd and .png sequences from the same root folder.
+    Assumes that a single sequence does not mix .mhd and .png
 
     This importer will create a subject for each subject folder and an image sequence for each subfolder.
     A key frame in the middle of the sequence will be added for each sequence.
@@ -48,10 +50,15 @@ class CardiacExaminationsImporter(Importer):
             if not os.path.isdir(subject_dir):
                 continue
 
-            subject = Subject()
-            subject.name = file
-            subject.dataset = self.dataset
-            subject.save()
+            try:
+                # Check if subject exists in this dataset first
+                subject = Subject.objects.get(name=file, dataset=self.dataset)
+            except Subject.DoesNotExist:
+                # Create new subject
+                subject = Subject()
+                subject.name = file
+                subject.dataset = self.dataset
+                subject.save()
 
             for file2 in os.listdir(subject_dir):
                 image_sequence_dir = join(subject_dir, file2)
@@ -59,24 +66,52 @@ class CardiacExaminationsImporter(Importer):
                     continue
 
                 # Count nr of frames
+                # Handle only monotype sequence: .mhd or .png
                 frames = []
+                extension = '.mhd'
                 for file3 in os.listdir(image_sequence_dir):
                     if file3[-4:] == '.mhd':
                         image_filename = join(image_sequence_dir, file3)
                         frames.append(image_filename)
+                    elif file3[-4:] == '.png':
+                        image_filename = join(image_sequence_dir, file3)
+                        frames.append(image_filename)
+                        extension = '.png'
 
                 if len(frames) == 0:
                     continue
 
-                image_sequence = ImageSequence()
-                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*.mhd'))]
+                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*'+extension))]
+
                 if filenames[0].startswith('MR'): # TODO: Need to solve this in a more elegant way.
-                    image_sequence.format = join(image_sequence_dir, 'MR#.mhd')
+                    filename_format = join(image_sequence_dir, 'MR#')
+                    filename_format += extension
                 else:
-                    image_sequence.format = join(image_sequence_dir, 'US-2D_#.mhd') # TODO How to determine this??
-                image_sequence.subject = subject
-                image_sequence.nr_of_frames = len(frames)
-                image_sequence.save()
+                    filename_format = join(image_sequence_dir, 'US-2D_#') # TODO How to determine this??
+                    filename_format += extension
+                try:
+                    # Check to see if sequence exist
+                    image_sequence = ImageSequence.objects.get(format=filename_format, subject=subject)
+                    # Check to see that nr of sequences is correct
+                    if image_sequence.nr_of_frames < len(frames):
+                        # Delete this sequnce, and redo it
+                        image_sequence.delete()
+                        # Create new
+                        image_sequence = ImageSequence()
+                        image_sequence.format = filename_format
+                        image_sequence.subject = subject
+                        image_sequence.nr_of_frames = len(frames)
+                        image_sequence.save()
+                    else:
+                        # Skip importing data, as this has already have been done
+                        continue
+                except ImageSequence.DoesNotExist:
+                    # Create new image sequence
+                    image_sequence = ImageSequence()
+                    image_sequence.format = filename_format
+                    image_sequence.subject = subject
+                    image_sequence.nr_of_frames = len(frames)
+                    image_sequence.save()
 
                 # Create key frame
                 key_frame_nr = int(len(frames)/2)
