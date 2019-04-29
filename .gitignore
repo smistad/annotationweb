@@ -1,9 +1,9 @@
-.idea
-environment
-segmentations
+/.idea
+/environment
+/segmentations
 *.sqlite3
 *.log
 *.pot
 *.pyc
 __pycache__/
-static/
+/static
