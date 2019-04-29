@@ -46,12 +46,6 @@ def save_segmentation(request):
     if not rejected:
         if target_frames == []:
             error_messages += 'No target frames<br>'
-        else:
-            # Check if all control points is present
-            for i in range(len(target_frames)):
-                for j in range(n_labels):
-                    if len(control_points[i][j]) < 1:
-                        error_messages += 'Label {1} annotation missing in target frame {0}<br>'.format(i, j)
 
     if len(error_messages):
         response = {
