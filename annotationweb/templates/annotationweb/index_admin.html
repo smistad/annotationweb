@@ -16,7 +16,7 @@
     <tr>
         <th>Name</th>
         <th>Type</th>
-        <th>Nr of images</th>
+        <th>Images/Videos</th>
         <th>Progress</th>
         <th>Image list</th>
         <th>Annotate</th>
@@ -26,19 +26,19 @@
     {% for task in tasks %}
     <tr>
         <td>{{ task.name }}</td>
-        <td>{{ task.type }}</td>
-        <td>{{task.total_number_of_images}}</td>
-        <td>{{task.percentage_finished}}%</td>
-        <td><a href="{% url 'task' task.id %}">Image list</a></td>
-        <td>
+        <td align="center">{{ task.type }}</td>
+        <td align="center">{{task.total_number_of_images}}</td>
+        <td align="center">{{task.percentage_finished}}%</td>
+        <td align="center"><a href="{% url 'task' task.id %}">Image list</a></td>
+        <td align="center">
             {% if task.finished %}
             Task is finished
             {% else %}
             <a href="{% url 'annotate' task.id %}">Continue annotation</a>
             {% endif %}
         </td>
-        <td><a href="{% url 'export' task.id %}">Export</a>
-        <td><a href="{% url 'delete_task' task.id %}">Delete</a></td>
+        <td align="center"><a href="{% url 'export' task.id %}">Export</a>
+        <td align="center"><a href="{% url 'delete_task' task.id %}">Delete</a></td>
     </tr>
     {% endfor %}
 </table>

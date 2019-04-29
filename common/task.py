@@ -15,8 +15,12 @@ def get_next_unprocessed_image(task):
     :return image:
     """
     count = Image.objects.filter(subject__dataset__task=task).exclude(processedimage__task=task).aggregate(count=Count('id'))['count']
-    random_index = random.randint(0, count - 1)
-    return Image.objects.filter(subject__dataset__task=task).exclude(processedimage__task=task)[random_index]
+    if task.shuffle_videos:
+        index = random.randint(0, count - 1)
+    else:
+        index = 0
+
+    return Image.objects.filter(subject__dataset__task=task).exclude(processedimage__task=task).order_by("subject", "filename")[index]
 
 
 # TODO cleanup these to functions, extract common functionality

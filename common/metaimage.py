@@ -41,16 +41,30 @@ class MetaImage:
                 if parts[0].strip() == 'ElementSpacing':
                     self.attributes['ElementSpacing'] = [float(x) for x in self.attributes['ElementSpacing'].split()]
 
+        dims = self.attributes['DimSize'].split(' ')
+        if len(dims) == 2:
+            self.dim_size = (int(dims[0]), int(dims[1]))
+        elif len(dims) == 3:
+            self.dim_size = (int(dims[0]), int(dims[1]), int(dims[2]))
 
-        if 'CompressedData' in self.attributes and self.attributes['CompressedData'] == 'True':
+        self.ndims = int(self.attributes['NDims'])
+
+        compressed_data = 'CompressedData' in self.attributes and self.attributes['CompressedData'] == 'True'
+
+        if compressed_data:
             # Read compressed raw file (.zraw)
             with open(os.path.join(base_path, self.attributes['ElementDataFile']), 'rb') as raw_file:
                 raw_data_compressed = raw_file.read()
                 raw_data_uncompressed = zlib.decompress(raw_data_compressed)
-                self.data = np.fromstring(raw_data_uncompressed, dtype=np.uint8)
+
+                if self.attributes['ElementType'] == 'MET_FLOAT':
+                    self.data = (np.fromstring(raw_data_uncompressed, dtype=np.float32)*255).astype(dtype=np.uint8)
+                else:
+                    self.data = np.fromstring(raw_data_uncompressed, dtype=np.uint8)
         else:
             # Read uncompressed raw file (.raw)
             self.data = np.fromfile(os.path.join(base_path, self.attributes['ElementDataFile']), dtype=np.uint8)
+
 
         dims = self.attributes['DimSize'].split(' ')
         if len(dims) == 2:

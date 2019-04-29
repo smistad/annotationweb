@@ -4,6 +4,7 @@ from annotationweb.models import Image, ImageSequence, KeyFrame, Dataset, Subjec
 import os
 from os.path import join, basename
 import glob
+from collections import Counter
 
 class ExaminationsImporterForm(forms.Form):
     path = forms.CharField(label='Data path', max_length=1000)
@@ -81,7 +82,9 @@ class ExaminationsImporter(Importer):
 
                     image_sequence = ImageSequence()
                     filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*' + file_extension))]
-                    image_sequence.format = join(image_sequence_dir, longest_common_substring(filenames[0], filenames[1]) +'#'+file_extension) # TODO How to determine this??
+                    most_common_tag = [tag for tag,count in Counter([longest_common_substring(filenames[0], f)
+                                                                     for f in filenames]).most_common(1)][0]
+                    image_sequence.format = join(image_sequence_dir, most_common_tag +'#'+file_extension) # TODO How to determine this??
                     image_sequence.subject = subject
                     image_sequence.nr_of_frames = len(frames)
                     image_sequence.save()

@@ -28,7 +28,7 @@ def get_image_as_http_response(filename):
         pil_image = PIL.Image.open(filename)
         pil_image.save(buffer, "PNG")
     else:
-        raise Exception('Uknown output image extension ' + extension)
+        raise Exception('Unknown output image extension ' + extension)
 
     return HttpResponse(buffer.getvalue(), content_type="image/png")
 
@@ -46,7 +46,7 @@ def copy_image(filename, new_filename):
             pil_image = metaimage.get_image()
             pil_image.save(new_filename)
         else:
-            raise Exception('Uknown output image extension ' + new_extension)
+            raise Exception('Unknown output image extension ' + new_extension)
     elif original_extension.lower() == '.png':
         if new_extension.lower() == '.mhd':
             pil_image = PIL.Image.open(filename)
@@ -55,9 +55,9 @@ def copy_image(filename, new_filename):
         elif new_extension.lower() == '.png':
             copyfile(filename, new_filename)
         else:
-            raise Exception('Uknown output image extension ' + new_extension)
+            raise Exception('Unknown output image extension ' + new_extension)
     else:
-        raise Exception('Uknown input image extension ' + original_extension)
+        raise Exception('Unknown input image extension ' + original_extension)
 
 
 def create_folder(path):
