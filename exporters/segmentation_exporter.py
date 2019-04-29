@@ -51,7 +51,7 @@ class SegmentationExporter(Exporter):
                 return False, 'Path does not exist: ' + path
 
 
-        segmented_images = ProcessedImage.objects.filter(task=self.task, image__subject__dataset__in=datasets)
+        segmented_images = ProcessedImage.objects.filter(task=self.task, image__subject__dataset__in=datasets, rejected=False)
         for segmented_image in segmented_images:
             name = segmented_image.image.filename
             image_filename = name[name.rfind('/')+1:]

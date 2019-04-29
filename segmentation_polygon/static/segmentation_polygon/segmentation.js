@@ -126,23 +126,9 @@ function setupSegmentation() {
         e.preventDefault();
     };
 
-    var addMouseWheelEventListener = function (scrollHandler)
-    {
-      if (window.addEventListener)
-      {
-        // IE9+, Chrome, Safari, Opera
-        window.addEventListener("mousewheel", scrollHandler, false);
-        // Firefox
-        window.addEventListener("DOMMouseScroll", scrollHandler, false);
-      }
-      else
-      {
-        // // IE 6/7/8
-        window.attachEvent("onmousewheel", scrollHandler);
-      }
-    };
-
-    addMouseWheelEventListener(handleWheel);
+    $('#canvas').bind('mousewheel DOMMouseScroll', function(event){
+        handleWheel(event);
+    });
 
     $('#canvas').dblclick(function(e) {
         if(g_move || g_currentTargetFrameIdx == -1)
@@ -152,7 +138,7 @@ function setupSegmentation() {
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
         if(point !== false) {
-            g_controlPoints[g_currentTargetFrameIdx][point.label].splice(point.index, 1);
+            g_controlPoints[g_currentTargetFrameIdx][point.label_idx].splice(point.index, 1);
         }
         redrawSequence();
     });
