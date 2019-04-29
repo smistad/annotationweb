@@ -431,8 +431,8 @@ def task_description(request, task_id):
         url = reverse('cardiac:segment_image', args=[task_id])
     elif task.type == task.CARDIAC_LANDMARK:
         url = reverse('cardiac_landmark:landmark_image', args=[task_id])
-    elif task.type == task.SEGMENTATION_POLYGON:
-        url = reverse('segmentation_polygon:segment_image', args=[task_id])
+    elif task.type == task.SPLINE_SEGMENTATION:
+        url = reverse('spline_segmentation:segment_image', args=[task_id])
     else:
         raise NotImplementedError()
 
@@ -579,8 +579,8 @@ def get_redirection(task):
         return 'cardiac:segment_image'
     elif task.type == Task.CARDIAC_LANDMARK:
         return 'cardiac_landmark:landmark_image'
-    elif task.type == Task.SEGMENTATION_POLYGON:
-        return 'segmentation_polygon:segment_image'
+    elif task.type == Task.SPLINE_SEGMENTATION:
+        return 'spline_segmentation:segment_image'
 
 
 # @register.simple_tag

@@ -52,7 +52,7 @@ class Task(models.Model):
     LANDMARK = 'landmark'
     CARDIAC_SEGMENTATION = 'cardiac_segmentation'
     CARDIAC_LANDMARK = 'cardiac_landmark'
-    SEGMENTATION_POLYGON = 'segmentation_polygon'
+    SPLINE_SEGMENTATION = 'spline_segmentation'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
         (SEGMENTATION, 'Segmentation'),
@@ -60,7 +60,7 @@ class Task(models.Model):
         (LANDMARK, 'Landmark'),
         (CARDIAC_SEGMENTATION, 'Cardiac segmentation'),
         (CARDIAC_LANDMARK, 'Cardiac landmark'),
-        (SEGMENTATION_POLYGON, 'Polygon segmentation')
+        (SPLINE_SEGMENTATION, 'Spline segmentation')
     )
 
     name = models.CharField(max_length=200)

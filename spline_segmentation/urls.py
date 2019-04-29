@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from . import views
 
-app_name = 'segmentation_polygon'
+app_name = 'spline_segmentation'
 urlpatterns = [
     url(r'^segment-image/(?P<task_id>[0-9]+)/$', views.segment_next_image, name='segment_image'),
     url(r'^segment-image/(?P<task_id>[0-9]+)/(?P<image_id>[0-9]+)/$', views.segment_image, name='segment_image'),

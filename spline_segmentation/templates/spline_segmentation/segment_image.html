@@ -1,0 +1,12 @@
+{% extends 'annotationweb/do_task.html' %}
+
+{% block task_javascript %}
+    {% if image_sequence %}
+        loadSegmentationTask({{ image_sequence.id }}, {{ frame_nr }});
+    {% endif %}
+
+    {% for control_point in control_points %}
+        addControlPoint({{ control_point.x }}, {{ control_point.y }}, 0, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
+    {% endfor %}
+
+{% endblock task_javascript %}

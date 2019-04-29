@@ -3,7 +3,7 @@ from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
 from annotationweb.models import ProcessedImage, Dataset, Task, Label, Subject, KeyFrame, Metadata
-from segmentation_polygon.models import SegmentationPolygon, ControlPoint
+from spline_segmentation.models import ControlPoint
 from django import forms
 import os
 from os.path import join
@@ -12,7 +12,8 @@ import numpy as np
 import json
 from scipy.ndimage.morphology import binary_fill_holes
 
-class PolygonSegmentationExporterForm(forms.Form):
+
+class SplineSegmentationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
     delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=False, required=False)
 
@@ -22,16 +23,16 @@ class PolygonSegmentationExporterForm(forms.Form):
             queryset=Subject.objects.filter(dataset__task=task))
 
 
-class PolygonSegmentationExporter(Exporter):
+class SplineSegmentationExporter(Exporter):
     """
     asdads
     """
 
-    task_type = Task.SEGMENTATION_POLYGON
+    task_type = Task.SPLINE_SEGMENTATION
     name = 'Polygon segmentation exporter'
 
     def get_form(self, data=None):
-        return PolygonSegmentationExporterForm(self.task, data=data)
+        return SplineSegmentationExporterForm(self.task, data=data)
 
     def export(self, form):
         delete_existing_data = form.cleaned_data['delete_existing_data']
@@ -68,9 +69,6 @@ class PolygonSegmentationExporter(Exporter):
                 key_frame = KeyFrame.objects.get(image=image.image)
                 image_sequence = key_frame.image_sequence
 
-                # Get segmentation
-                segmentation = SegmentationPolygon.objects.get(image=image)
-
                 # Copy image frames
                 image_id = image.image.pk
                 sequence_id = os.path.basename(os.path.dirname(image_sequence.format))
@@ -90,7 +88,7 @@ class PolygonSegmentationExporter(Exporter):
 
                     # Get control points to create segmentation
                     image_mhd = MetaImage(filename=new_filename)
-                    control_points = ControlPoint.objects.filter(segmentation=segmentation, frame=idx).order_by('index')
+                    control_points = ControlPoint.objects.filter(image=image).order_by('index')
                     self.save_segmentation(image, image_mhd.get_size(), control_points, join(subject_subfolder, target_gt_name))
 
         return True, path
