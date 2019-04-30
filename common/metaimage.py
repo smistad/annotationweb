@@ -97,7 +97,7 @@ class MetaImage:
         self.attributes[key] = value
 
     def set_spacing(self, spacing):
-        if len(spacing) != 2 or len(spacing) != 3:
+        if len(spacing) != 2 and len(spacing) != 3:
             raise ValueError('Spacing must have 2 or 3 components')
         self.attributes['ElementSpacing'] = spacing
 
