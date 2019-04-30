@@ -11,6 +11,7 @@ from shutil import rmtree, copyfile
 import numpy as np
 import json
 from scipy.ndimage.morphology import binary_fill_holes
+import PIL
 
 
 class SplineSegmentationExporterForm(forms.Form):
@@ -29,7 +30,7 @@ class SplineSegmentationExporter(Exporter):
     """
 
     task_type = Task.SPLINE_SEGMENTATION
-    name = 'Polygon segmentation exporter'
+    name = 'Spline segmentation exporter'
 
     def get_form(self, data=None):
         return SplineSegmentationExporterForm(self.task, data=data)
@@ -76,78 +77,80 @@ class SplineSegmentationExporter(Exporter):
                 subject_subfolder = join(subject_path, str(sequence_id))
                 create_folder(subject_subfolder)
 
-                target_frames = json.loads(segmentation.target_frames)
+                target_name = os.path.basename(image_sequence.format).replace('#',str(key_frame.frame_nr))
+                target_gt_name = os.path.splitext(target_name)[0]+"_gt.mhd"
 
-                for idx, target in enumerate(target_frames):
-                    target_name = os.path.basename(image_sequence.format).replace('#',str(target))
-                    target_gt_name = os.path.splitext(target_name)[0]+"_gt.mhd"
+                filename = image_sequence.format.replace('#', str(key_frame.frame_nr))
+                new_filename = join(subject_subfolder, target_name)
+                copy_image(filename, new_filename)
 
-                    filename = image_sequence.format.replace('#', str(target))
-                    new_filename = join(subject_subfolder, target_name)
-                    copy_image(filename, new_filename)
-
-                    # Get control points to create segmentation
+                # Get control points to create segmentation
+                if new_filename.endswith('.mhd'):
                     image_mhd = MetaImage(filename=new_filename)
-                    control_points = ControlPoint.objects.filter(image=image).order_by('index')
-                    self.save_segmentation(image, image_mhd.get_size(), control_points, join(subject_subfolder, target_gt_name))
+                    image_size = image_mhd.get_size()
+                    spacing = image_mhd.get_spacing()
+                else:
+                    image_pil = PIL.Image.open(new_filename)
+                    image_size = image_pil.size
+                    spacing = [1, 1]
+                self.save_segmentation(image, image_size, join(subject_subfolder, target_gt_name), spacing)
 
         return True, path
 
-    def get_object_segmentation(self, image_size, control_points):
+    def get_object_segmentation(self, image_size, annotation):
         segmentation = np.zeros(image_size, dtype=np.uint8)
         tension = 0.5
 
-        for i in range(len(control_points)-1):
-            a = control_points[max(0, i-1)]
-            b = control_points[i]
-            c = control_points[min(len(control_points)-1, i+1)]
-            d = control_points[min(len(control_points)-1, i+2)]
-            length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
-            step_size = min(0.01, 1.0 / (length*2))
-            for t in np.arange(0, 1, step_size):
-                x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
-                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
-                    (-2 * t * t * t + 3 * t * t) * c.x + \
-                    (1 - tension) * (t * t * t - t * t) * (d.x - b.x)
-                y = (2 * t * t * t - 3 * t * t + 1) * b.y + \
-                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) + \
-                    (-2 * t * t * t + 3 * t * t) * c.y + \
-                    (1 - tension) * (t * t * t - t * t) * (d.y - b.y)
+        labels = Label.objects.filter(task=annotation.task).order_by('id')
+        counter = 1
+        for label in labels:
+            control_points = ControlPoint.objects.filter(label=label, image=annotation).order_by('index')
+            max_index = len(control_points)
+            for i in range(max_index):
+                if i == 0:
+                    first = max_index-1
+                else:
+                    first = i-1
+                a = control_points[first]
+                b = control_points[i]
+                c = control_points[(i+1) % max_index]
+                d = control_points[(i+2) % max_index]
+                length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
+                step_size = min(0.01, 1.0 / (length*2))
+                for t in np.arange(0, 1, step_size):
+                    x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
+                        (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
+                        (-2 * t * t * t + 3 * t * t) * c.x + \
+                        (1 - tension) * (t * t * t - t * t) * (d.x - b.x)
+                    y = (2 * t * t * t - 3 * t * t + 1) * b.y + \
+                        (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) + \
+                        (-2 * t * t * t + 3 * t * t) * c.y + \
+                        (1 - tension) * (t * t * t - t * t) * (d.y - b.y)
 
-                # Round and snap to borders
-                x = int(round(x))
-                x = min(image_size[1]-1, max(0, x))
-                y = int(round(y))
-                y = min(image_size[0]-1, max(0, y))
+                    # Round and snap to borders
+                    x = int(round(x))
+                    x = min(image_size[1]-1, max(0, x))
+                    y = int(round(y))
+                    y = min(image_size[0]-1, max(0, y))
 
-                segmentation[int(round(y)), int(round(x))] = 1
+                    segmentation[int(round(y)), int(round(x))] = counter
 
-        # Draw AV plane line over endpoints
-        a = np.array([control_points[0].x, control_points[0].y])
-        b = np.array([control_points[len(control_points)-1].x, control_points[len(control_points)-1].y])
-        length = np.linalg.norm(a - b)
-        direction = (b - a) / length
-        for t in np.arange(0, ceil(length), 0.1):
-            position = a + t*direction
-            segmentation[int(round(position[1])), int(round(position[0]))] = 1
+            # Fill the hole
+            segmentation[binary_fill_holes(segmentation == counter)] = counter
 
-        segmentation = binary_fill_holes(segmentation).astype(np.uint8)
+            counter += 1
 
         return segmentation
 
-    def save_segmentation(self, annotation, image_size, control_points, filename):
+    def save_segmentation(self, annotation, image_size, filename, spacing):
         image_size = [image_size[1], image_size[0]]
 
-        # Get control points for all objects
-        control_points = list(control_points.filter(object=0))
-
         # Create compounded segmentation object
-        segmentation = np.zeros(image_size, dtype=np.uint8)
-        object_segmentation = self.get_object_segmentation(image_size, control_points)
-        segmentation[object_segmentation == 1] = 1
+        segmentation = self.get_object_segmentation(image_size, annotation)
 
         segmentation_mhd = MetaImage(data=segmentation)
         segmentation_mhd.set_attribute('ImageQuality', annotation.image_quality)
+        segmentation_mhd.set_spacing(spacing)
         metadata = Metadata.objects.filter(image=annotation.image)
         for item in metadata:
             segmentation_mhd.set_attribute(item.name, item.value)
