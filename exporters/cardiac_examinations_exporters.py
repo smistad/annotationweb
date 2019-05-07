@@ -280,6 +280,12 @@ class CardiacHDFExaminationsExporter(Exporter):
                     if form.cleaned_data['sequence_wise'] and len(sequence_frames) > 0:
                         input = np.array(sequence_frames, dtype=np.float32)
                         output = np.array(labels, dtype=np.uint8)
+
+                        # Create a .txt file with the labels matching the sequence name
+                        sequence_label_file = open(join(path, 'sequence_to_label.txt'), 'a')
+                        sequence_label_file.write(join(subject.name, os.path.basename(os.path.dirname(image_sequence.format))) + '\t' + str(output[0]) + '\n')
+                        sequence_label_file.close()
+
                         if form.cleaned_data['image_dim_ordering'] == 'theano':
                             input = np.transpose(input, [0,3,1,2])
 
