@@ -246,7 +246,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
 
     $("#addFrameButton").click(function() {
         setPlayButton(false);
-        if(g_currentFrameNr in g_targetFrames) // Already exists
+        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
             return;
         setupSliderMark(g_currentFrameNr, g_framesLoaded);
         g_targetFrames.push(g_currentFrameNr);
@@ -295,7 +295,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             // Update progressbar
             g_framesLoaded++;
             g_progressbar.progressbar( "value", g_framesLoaded*100/totalToLoad);
-        }
+        };
         g_sequence.push(image);
     }
 }

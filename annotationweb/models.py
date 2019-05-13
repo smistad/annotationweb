@@ -94,6 +94,7 @@ class ImageSequence(models.Model):
 class KeyFrame(models.Model):
     frame_nr = models.PositiveIntegerField()
     image_sequence = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.frame_nr)
@@ -101,7 +102,7 @@ class KeyFrame(models.Model):
 
 class Annotation(models.Model):
     keyframe = models.ForeignKey(KeyFrame, on_delete=models.CASCADE)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE) # TODO can be removed
     date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User)
 

@@ -1,3 +1,4 @@
+import json
 import random
 
 from django.http import Http404
@@ -275,23 +276,35 @@ def save_annotation(request):
 
     image_id = int(request.POST['image_id'])
     task_id = int(request.POST['task_id'])
+    new_key_frames = json.loads(request.POST['target_frames'])
     rejected = request.POST['rejected'] == 'true'
     comments = request.POST['comments']
 
-    # Delete old annotations if it exists
-    annotations = ProcessedImage.objects.filter(image_id=image_id, task_id=task_id)
-    annotations.delete()
+    # Delete old key frames if they exist, this will also delete old annotations
+    key_frames = KeyFrame.objects.filter(task_id=task_id, image_sequence_id=image_id)
+    key_frames.delete()
 
-    # Save to DB
-    annotation = ProcessedImage()
-    annotation.rejected = rejected
-    annotation.comments = comments
-    annotation.image_id = image_id
-    annotation.task_id = task_id
-    annotation.user = request.user
-    annotation.image_quality = request.POST['quality']
-    annotation.save()
+    annotations = []
+    for frame in new_key_frames:
+        keyframe = KeyFrame()
+        keyframe.frame_nr = int(frame)
+        keyframe.image_sequence_id = image_id
+        keyframe.task_id = task_id
+        keyframe.save()
 
-    return annotation
+        # Save to DB
+        annotation = Annotation()
+        annotation.rejected = rejected
+        annotation.comments = comments
+        annotation.image_id = image_id
+        annotation.keyframe = keyframe
+        annotation.task_id = task_id
+        annotation.user = request.user
+        annotation.image_quality = request.POST['quality']
+        annotation.save()
+
+        annotations.append(annotation)
+
+    return annotations
 
 

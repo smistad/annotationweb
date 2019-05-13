@@ -44,20 +44,22 @@ def save_segmentation(request):
         }
     else:
         try:
-            annotation = common.task.save_annotation(request)
+            annotations = common.task.save_annotation(request)
 
             # Save segmentation
             # Save control points
             for object in range(n_labels):
-                for point in range(len(control_points[object])):
-                    control_point = ControlPoint()
-                    control_point.image = annotation
-                    control_point.x = float(control_points[object][point]['x'])
-                    control_point.y = float(control_points[object][point]['y'])
-                    control_point.index = point
-                    control_point.label = Label.objects.get(id=int(control_points[object][point]['label_id']))
-                    control_point.uncertain = bool(control_points[object][point]['uncertain'])
-                    control_point.save()
+                for annotation in annotations:
+                    frame_nr = str(annotation.keyframe.frame_nr)
+                    for point in range(len(control_points[frame_nr][object])):
+                        control_point = ControlPoint()
+                        control_point.image = annotation
+                        control_point.x = float(control_points[frame_nr][object][point]['x'])
+                        control_point.y = float(control_points[frame_nr][object][point]['y'])
+                        control_point.index = point
+                        control_point.label = Label.objects.get(id=int(control_points[frame_nr][object][point]['label_id']))
+                        control_point.uncertain = bool(control_points[frame_nr][object][point]['uncertain'])
+                        control_point.save()
 
             response = {
                 'success': 'true',
@@ -68,6 +70,7 @@ def save_segmentation(request):
                 'success': 'false',
                 'message': str(e),
             }
+            raise e
 
     return JsonResponse(response)
 
