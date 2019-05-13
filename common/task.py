@@ -2,7 +2,7 @@ import random
 
 from django.http import Http404
 
-from annotationweb.models import Image, Task, ProcessedImage, Subject, Label
+from annotationweb.models import Task, Annotation, Subject, Label, ImageSequence, KeyFrame
 from annotationweb.forms import ImageListForm
 from django.db.models.aggregates import Count
 from common.search_filters import SearchFilter
@@ -14,13 +14,13 @@ def get_next_unprocessed_image(task):
     :param task:
     :return image:
     """
-    count = Image.objects.filter(subject__dataset__task=task).exclude(processedimage__task=task).aggregate(count=Count('id'))['count']
+    count = ImageSequence.objects.filter(subject__dataset__task=task).exclude(keyframe__annotation__task=task).aggregate(count=Count('id'))['count']
     if task.shuffle_videos:
         index = random.randint(0, count - 1)
     else:
         index = 0
 
-    return Image.objects.filter(subject__dataset__task=task).exclude(processedimage__task=task).order_by("subject", "filename")[index]
+    return ImageSequence.objects.filter(subject__dataset__task=task).exclude(keyframe__annotation__task=task).order_by("subject", "format")[index]
 
 
 # TODO cleanup these to functions, extract common functionality
@@ -229,7 +229,7 @@ def setup_task_context(request, task_id, type, image_id):
     if image_id is None:
         image = get_next_unprocessed_image(task)
     else:
-        image = Image.objects.get(pk=image_id)
+        image = ImageSequence.objects.get(pk=image_id)
 
         # Only show next and previous buttons if we processing specific images
         context['next_image_id'] = get_next_image(request, task, image)
@@ -244,19 +244,18 @@ def setup_task_context(request, task_id, type, image_id):
         del request.session['return_to_url']
 
     # Check if image belongs to an image sequence
-    if hasattr(image, 'keyframe'):
-        context['image_sequence'] = image.keyframe.image_sequence
-        context['frame_nr'] = image.keyframe.frame_nr
+    context['image_sequence'] = image
+    context['frames'] = KeyFrame.objects.filter(image_sequence=image)
 
     context['image'] = image
     context['task'] = task
-    context['number_of_labeled_images'] = ProcessedImage.objects.filter(task=task_id).count()
-    context['total_number_of_images'] = Image.objects.filter(subject__dataset__task=task_id).count()
+    context['number_of_labeled_images'] = Annotation.objects.filter(task=task_id).count()
+    context['total_number_of_images'] = ImageSequence.objects.filter(subject__dataset__task=task_id).count()
     context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
-    context['image_quality_choices'] = ProcessedImage.IMAGE_QUALITY_CHOICES
+    context['image_quality_choices'] = Annotation.IMAGE_QUALITY_CHOICES
 
     # Check if image has been annotated
-    processed = ProcessedImage.objects.filter(image=image, task=task)
+    processed = Annotation.objects.filter(keyframe__image_sequence=image, task=task)
     if processed.exists():
         context['chosen_quality'] = processed[0].image_quality
         context['comments'] = processed[0].comments

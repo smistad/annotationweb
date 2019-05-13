@@ -18,11 +18,11 @@ def segment_image(request, task_id, image_id):
 
         # Check if image is already segmented, if so get data and pass to template
         try:
-            annotation = ProcessedImage.objects.get(task_id=task_id, image_id=image_id)
+            annotation = Annotation.objects.get(task_id=task_id, keyframe__image_sequence_id=image_id)
             control_points = ControlPoint.objects.filter(image=annotation).order_by('index')
 
             context['control_points'] = control_points
-        except ProcessedImage.DoesNotExist:
+        except Annotation.DoesNotExist:
             pass
 
         return render(request, 'spline_segmentation/segment_image.html', context)

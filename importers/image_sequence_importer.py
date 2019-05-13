@@ -1,12 +1,13 @@
 from common.importer import Importer
 from django import forms
-from annotationweb.models import Image, ImageSequence, KeyFrame, Dataset, Subject, Metadata
+from annotationweb.models import ImageSequence, KeyFrame, Dataset, Subject, ImageMetadata
 import os
 from os.path import join, basename
 import glob
 
-class CardiacExaminationsImporterForm(forms.Form):
+class ImageSequenceImporterForm(forms.Form):
     path = forms.CharField(label='Data path', max_length=1000)
+    create_key_frame = forms.BooleanField(label='Create a key frame in middle of squence', required=False)
 
     # TODO validate path
 
@@ -14,13 +15,13 @@ class CardiacExaminationsImporterForm(forms.Form):
         super().__init__(data)
 
 
-class CardiacExaminationsImporter(Importer):
+class ImageSequenceImporter(Importer):
     """
     Data should be sorted in the following way in the root folder:
     Subject 1/
         Sequence 1/
-            US-2D_0.mhd or .png
-            US-2D_1.mhd or .png
+            <name>_0.mhd or .png
+            <name>_1.mhd or .png
             ...
         Sequence 2/
             ...
@@ -30,20 +31,20 @@ class CardiacExaminationsImporter(Importer):
     Assumes that a single sequence does not mix .mhd and .png
 
     This importer will create a subject for each subject folder and an image sequence for each subfolder.
-    A key frame in the middle of the sequence will be added for each sequence.
     """
 
-    name = 'Cardiac examinations importer'
+    name = 'Image sequence importer'
     dataset = None
 
     def get_form(self, data=None):
-        return CardiacExaminationsImporterForm(data)
+        return ImageSequenceImporterForm(data)
 
     def import_data(self, form):
         if self.dataset is None:
             raise Exception('Dataset must be given to importer')
 
         path = form.cleaned_data['path']
+        create_key_frame = form.cleaned_data['create_key_frame']
         # Go through each subfolder and create a subject for each
         for file in os.listdir(path):
             subject_dir = join(path, file)
@@ -68,27 +69,31 @@ class CardiacExaminationsImporter(Importer):
                 # Count nr of frames
                 # Handle only monotype sequence: .mhd or .png
                 frames = []
-                extension = '.mhd'
+                extension = None
+                name = ''
                 for file3 in os.listdir(image_sequence_dir):
                     if file3[-4:] == '.mhd':
                         image_filename = join(image_sequence_dir, file3)
                         frames.append(image_filename)
+                        name = file3[:file3.rfind('_')]
+                        if extension is None or extension == '.mhd':
+                            extension = '.mhd'
+                        else:
+                            raise Exception('Found both mhd and png images in the same folder.')
                     elif file3[-4:] == '.png':
                         image_filename = join(image_sequence_dir, file3)
                         frames.append(image_filename)
-                        extension = '.png'
+                        name = file3[:file3.rfind('_')]
+                        if extension is None or extension == '.png':
+                            extension = '.png'
+                        else:
+                            raise Exception('Found both mhd and png images in the same folder.')
 
                 if len(frames) == 0:
                     continue
 
-                filenames = [basename(file) for file in glob.glob(join(image_sequence_dir, '*'+extension))]
-
-                if filenames[0].startswith('MR'): # TODO: Need to solve this in a more elegant way.
-                    filename_format = join(image_sequence_dir, 'MR#')
-                    filename_format += extension
-                else:
-                    filename_format = join(image_sequence_dir, 'US-2D_#') # TODO How to determine this??
-                    filename_format += extension
+                filename_format = join(image_sequence_dir, name + '_#')
+                filename_format += extension
                 try:
                     # Check to see if sequence exist
                     image_sequence = ImageSequence.objects.get(format=filename_format, subject=subject)
@@ -114,17 +119,12 @@ class CardiacExaminationsImporter(Importer):
                     image_sequence.save()
 
                 # Create key frame
-                key_frame_nr = int(len(frames)/2)
-                image = Image()
-                image.filename = frames[key_frame_nr]
-                image.subject = subject
-                image.save()
-
-                key_frame = KeyFrame()
-                key_frame.image_sequence = image_sequence
-                key_frame.frame_nr = key_frame_nr
-                key_frame.image = image
-                key_frame.save()
+                if create_key_frame:
+                    key_frame_nr = int(len(frames)/2)
+                    key_frame = KeyFrame()
+                    key_frame.image_sequence = image_sequence
+                    key_frame.frame_nr = key_frame_nr
+                    key_frame.save()
 
                 # Check if metadata.txt exists, and if so parse it and add
                 metadata_filename = join(image_sequence_dir, 'metadata.txt')
@@ -136,8 +136,8 @@ class CardiacExaminationsImporter(Importer):
                                 raise Exception('Excepted 2 parts when spliting metadata in file ' + metadata_filename)
 
                             # Save to DB
-                            metadata = Metadata()
-                            metadata.image = image
+                            metadata = ImageMetadata()
+                            metadata.image = image_sequence
                             metadata.name = parts[0].strip()
                             metadata.value = parts[1].strip()
                             metadata.save()

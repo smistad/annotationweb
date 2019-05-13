@@ -5,7 +5,6 @@ from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
 from django.utils.safestring import mark_safe
-
 from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
@@ -24,16 +23,23 @@ from common.user import is_annotater
 
 def get_task_statistics(tasks, user):
     for task in tasks:
-        task.total_number_of_images = Image.objects.filter(subject__dataset__task=task.id).count()
-        task.number_of_annotated_images = ProcessedImage.objects.filter(task=task.id).count()
-        if task.total_number_of_images == 0:
-            task.percentage_finished = 0
+        if task.user_frame_selection:
+            pass
+            # User can select frames, have to count nr of videos
+
+            # task.total_number_of_images = Image.objects.filter(subject__dataset__task=task.id).count()
+            # task.number_of_annotated_images = Annotation.objects.filter(task=task.id).count()
+            # if task.total_number_of_images == 0:
+            #     task.percentage_finished = 0
+            # else:
+            #     task.percentage_finished = round(task.number_of_annotated_images*100 /
+            #                                      task.total_number_of_images, 1)
+            # # Check if user has processed any
+            # task.started = Annotation.objects.filter(task=task, user=user).count() > 0
+            # task.finished = task.number_of_annotated_images == task.total_number_of_images
         else:
-            task.percentage_finished = round(task.number_of_annotated_images*100 /
-                                             task.total_number_of_images, 1)
-        # Check if user has processed any
-        task.started = ProcessedImage.objects.filter(task=task, user=user).count() > 0
-        task.finished = task.number_of_annotated_images == task.total_number_of_images
+            pass
+
 
 
 def index(request):

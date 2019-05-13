@@ -9,8 +9,10 @@ loadSequence(
     {{ image_sequence.id }},
     {{ image_sequence.start_frame_nr }},
     {{ image_sequence.nr_of_frames }},
-    {{ frame_nr }},
     {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
+    {%  if task.user_frame_selection %}true{% else %}false{% endif %},
+    {%  if task.annotate_single_frame %}true{% else %}false{% endif %},
+    [ {% for frame_nr in frames %}{{ frame_nr }},{% endfor %}],
     {{ task.frames_before }},
     {{ task.frames_after }},
     {% if task.auto_play %}true{% else %}false{% endif %}
@@ -49,7 +51,10 @@ setReturnURL('{{ return_url|safe }}');
 <div id="slider"></div>
 <div class="actionButtons">
     <button id="playButton" type="button">Play</button>
-    <button id="goToTargetFrame">Go to target frame</button>
+{% if task.user_frame_selection %}
+    <button id="addFrameButton" type="button">Select frame for annotation</button>
+{% endif %}
+    <button id="nextFrameButton" type="button">Skip to next annotation frame</button>
 </div>
 {% endif %}
 <h2>Actions</h2>

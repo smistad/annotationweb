@@ -23,14 +23,6 @@ class Subject(models.Model):
         ordering = ['name']
 
 
-class Image(models.Model):
-    filename = models.CharField(max_length=255)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.filename
-
-
 class Label(models.Model):
     name = models.CharField(max_length=200)
 
@@ -70,6 +62,8 @@ class Task(models.Model):
     frames_after = models.PositiveIntegerField(help_text='How many frames to allow user to see after a key frame', default=0)
     auto_play = models.BooleanField(help_text='Auto play image sequences', default=True)
     shuffle_videos = models.BooleanField(help_text='Shuffle videos for annotation task', default=True)
+    user_frame_selection = models.BooleanField(help_text='Annotaters can select which frames to annotate in a video', default=False)
+    annotate_single_frame = models.BooleanField(help_text='Annotate a single frame at a time in videos', default=True)
     type = models.CharField(max_length=50, choices=TASK_TYPES)
     label = models.ManyToManyField(Label,
            help_text='<button onclick="'
@@ -100,15 +94,13 @@ class ImageSequence(models.Model):
 class KeyFrame(models.Model):
     frame_nr = models.PositiveIntegerField()
     image_sequence = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
-    image = models.OneToOneField(Image, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.frame_nr)
 
 
-# TODO: Rename this model to Annotation
-class ProcessedImage(models.Model):
-    image = models.ForeignKey(Image, on_delete=models.CASCADE)
+class Annotation(models.Model):
+    keyframe = models.ForeignKey(KeyFrame, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User)
@@ -127,11 +119,10 @@ class ProcessedImage(models.Model):
 
 
 # Used to attach metadata to images, such as acquisition parameters
-class Metadata(models.Model):
-    image = models.ForeignKey(Image, on_delete=models.CASCADE)
+class ImageMetadata(models.Model):
+    image = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=256)
 
     def __str__(self):
         return self.name + ': ' + self.value
-

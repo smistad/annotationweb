@@ -2,7 +2,7 @@
 
 {% block task_javascript %}
     {% if image_sequence %}
-        loadSegmentationTask({{ image_sequence.id }}, {{ frame_nr }});
+        loadSegmentationTask({{ image_sequence.id }});
     {% endif %}
 
     {% for control_point in control_points %}

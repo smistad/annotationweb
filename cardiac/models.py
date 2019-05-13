@@ -1,6 +1,6 @@
 from django.db import models
 
-from annotationweb.models import ProcessedImage
+from annotationweb.models import Annotation
 
 PHASES = (
     (0, 'End Diastole'),
@@ -15,7 +15,7 @@ OBJECTS = (
 
 
 class Segmentation(models.Model):
-    image = models.OneToOneField(ProcessedImage, on_delete=models.CASCADE)
+    image = models.OneToOneField(Annotation, on_delete=models.CASCADE)
     frame_ED = models.IntegerField()
     frame_ES = models.IntegerField()
     motion_mode_line = models.PositiveIntegerField()

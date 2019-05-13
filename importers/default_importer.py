@@ -1,6 +1,6 @@
 from common.importer import Importer
 from django import forms
-from annotationweb.models import Image
+from annotationweb.models import ImageSequence
 import os
 import fnmatch
 
@@ -29,8 +29,9 @@ class DefaultImporter(Importer):
         # Crawl recursively in path to find all images and add them to db
         for root, dirnames, filenames in os.walk(form.cleaned_data['path']):
             for filename in fnmatch.filter(filenames, '*.png'):
-                image = Image()
-                image.filename = os.path.join(root, filename)
+                image = ImageSequence()
+                image.format = os.path.join(root, filename)
+                image.nr_of_frames = 1
                 image.dataset = self.dataset
                 image.save()
                 print('Saved image ', image.filename)

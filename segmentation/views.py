@@ -10,7 +10,7 @@ import base64
 from annotationweb.settings import BASE_DIR
 from common.metaimage import *
 import numpy as np
-from annotationweb.models import Task, Image, ProcessedImage, Label
+from annotationweb.models import Task, Annotation, Label
 from common.utility import get_image_as_http_response
 import common.task
 

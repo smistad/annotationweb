@@ -3,7 +3,7 @@ var g_canvasWidth = 512;
 var g_canvasHeight = 512;
 var g_sequence = [];
 var g_labelButtons = [];
-var g_currentFrameNr;
+var g_currentFrameNr; // The frame nr currently displayed
 var g_startFrame;
 var g_progressbar;
 var g_framesLoaded;
@@ -18,6 +18,8 @@ var g_currentLabel = -1;
 var g_annotationHasChanged = false;
 var g_nextURL = '';
 var g_rejected = false;
+var g_targetFrames = []; // Frames to annotate
+var g_currentTargetFrameIndex = -1; // Index of current target frame (g_targetFrames), -1 if not on target frame
 
 function max(a, b) {
     return a > b ? a : b;
@@ -31,6 +33,12 @@ function incrementFrame() {
     if(!g_isPlaying) // If this is set to false, stop playing
         return;
     g_currentFrameNr = ((g_currentFrameNr-g_startFrame) + 1) % g_framesLoaded + g_startFrame;
+    var marker_index = g_targetFrames.findIndex(index => index === g_currentFrameNr);
+    if(marker_index) {
+        g_currentTargetFrameIndex = g_currentFrameNr;
+    } else {
+        g_currentTargetFrameIndex = -1;
+    }
     $('#slider').slider('value', g_currentFrameNr); // Update slider
     $('#currentFrame').text(g_currentFrameNr);
     redrawSequence();
@@ -50,16 +58,22 @@ function goToFrame(frameNr) {
     setPlayButton(false);
     g_currentFrameNr = frameNr;
     $('#slider').slider('value', frameNr); // Update slider
+    var marker_index = g_targetFrames.findIndex(index => index === frameNr);
+    if(marker_index) {
+        g_currentTargetFrameIndex = g_currentFrameNr;
+    } else {
+        g_currentTargetFrameIndex = -1;
+    }
     redrawSequence();
 }
 
 function save() {
-    var messageBox = document.getElementById("message")
+    var messageBox = document.getElementById("message");
     messageBox.innerHTML = '<span class="info">Please wait while saving..</span>';
     sendDataForSave().done(function(data) {
         console.log("Save done..");
         console.log(data);
-        var messageBox = document.getElementById("message")
+        var messageBox = document.getElementById("message");
         if(data.success == "true") {
             messageBox.innerHTML = '<span class="success">Image was saved</span>';
             if(g_returnURL != '') {
@@ -77,7 +91,7 @@ function save() {
         console.log(data.message);
     }).fail(function(data) {
         console.log("Ajax failed");
-        var messageBox = document.getElementById("message")
+        var messageBox = document.getElementById("message");
         messageBox.innerHTML = '<span class="error">Save failed!</span>';
     }).always(function(data) {
         console.log("Ajax complete");
@@ -136,7 +150,25 @@ function initializeAnnotation(taskID, imageID) {
         });
 }
 
-function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, show_entire_sequence, images_to_load_before, images_to_load_after, auto_play) {
+function setupSliderMark(frame, totalNrOfFrames){
+    var marker_index = g_targetFrames.findIndex(index => index === frame);
+
+    var slider = document.getElementById('slider')
+
+    var newMarker = document.createElement("sliderMarker" + marker_index)
+    $(newMarker).css('background-color', '#0077b3');
+    $(newMarker).css('width', $('.ui-slider-handle').css('width'));
+    $(newMarker).css('margin-left', $('.ui-slider-handle').css('margin-left'));
+    $(newMarker).css('height', '100%');
+    $(newMarker).css('z-index', '99');
+    $(newMarker).css('position', 'absolute');
+    $(newMarker).css('left', ''+(100.0*(frame-g_startFrame)/totalNrOfFrames)+'%');
+
+    slider.appendChild(newMarker)
+}
+
+function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_sequence, user_frame_selection, annotate_single_frame, frames_to_annotate, images_to_load_before, images_to_load_after, auto_play) {
+    g_targetFrames = frames_to_annotate;
     console.log('In load sequence');
     // Create play/pause button
     setPlayButton(auto_play);
@@ -156,18 +188,22 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
     }
     g_context = canvas.getContext("2d");
 
-    g_currentFrameNr = target_frame;
+    if(g_targetFrames.length > 0) {
+        g_currentFrameNr = g_targetFrames[0];
+    } else {
+        g_currentFrameNr = 0;
+    }
 
     var start;
     var end;
     var totalToLoad;
-    if(show_entire_sequence) {
+    if(show_entire_sequence || !annotate_single_frame) {
         start = start_frame;
         end = start_frame + nrOfFrames - 1;
         totalToLoad = nrOfFrames;
     } else {
-        start = max(start_frame, target_frame - images_to_load_before);
-        end = min(start_frame + nrOfFrames - 1, target_frame + images_to_load_after);
+        start = max(start_frame, g_currentFrameNr - images_to_load_before);
+        end = min(start_frame + nrOfFrames - 1, g_currentFrameNr + images_to_load_after);
         totalToLoad = end - start;
     }
     g_startFrame = start;
@@ -209,16 +245,30 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, target_frame, 
     });
 
     $("#addFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_currentFrameNr in g_targetFrames) // Already exists
+            return;
+        setupSliderMark(g_currentFrameNr, g_framesLoaded);
+        g_targetFrames.push(g_currentFrameNr);
+        g_currentTargetFrameIndex = g_targetFrames.length-1;
+        g_targetFrames = g_targetFrames.sort();
         $("#framesSelected").append('<li>' + g_currentFrameNr + '</li>');
         $("#framesForm").append('<input type="hidden" name="frames" value="' + g_currentFrameNr + '">');
     });
 
-    $("#goToTargetFrame").click(function() {
-        goToFrame(target_frame)
-        setPlayButton(false);
-        g_currentFrameNr = target_frame;
-        $('#slider').slider('value', target_frame); // Update slider
-        redrawSequence();
+    $("#nextFrameButton").click(function() {
+        // Find next frame
+        var i;
+        if(g_targetFrames[g_targetFrames.length-1] <= g_currentFrameNr) {
+            i = 0;
+        } else {
+            for (i = 0; i < g_targetFrames.length; i++) {
+                if(g_targetFrames[i] > g_currentFrameNr)
+                    break;
+            }
+        }
+        g_currentTargetFrameIndex = i;
+        goToFrame(g_targetFrames[i]);
     });
 
     $("#canvas").click(function() {
