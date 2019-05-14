@@ -153,11 +153,13 @@ def import_options(request, dataset_id, importer_index):
 
 def show_image(request, image_id):
     try:
-        image = Image.objects.get(pk=image_id)
-    except Image.DoesNotExist:
+        image = ImageSequence.objects.get(pk=image_id)
+        frame = int(image.nr_of_frames/2)
+        filename = image.format.replace('#', str(frame))
+    except ImageSequence.DoesNotExist:
         raise Http404('Image does not exist')
 
-    return get_image_as_http_response(image.filename)
+    return get_image_as_http_response(filename)
 
 
 @staff_member_required
@@ -485,7 +487,7 @@ def task(request, task_id):
     else:
         form = search_filters.create_form()
 
-    queryset = Image.objects.all()
+    queryset = ImageSequence.objects.all()
 
     # Get all processed images for given task
     sort_by = search_filters.get_value('sort_by')
@@ -522,28 +524,29 @@ def task(request, task_id):
         queryset = queryset.filter(
             subject__dataset__task=task,
             subject__in=subjects_selected
-        ).exclude(processedimage__task=task)
+        ).exclude(keyframe__annotation__task=task)
     else:
         if task.type == Task.CLASSIFICATION:
             labels_selected = search_filters.get_value('label')
             queryset = queryset.filter(
-                processedimage__image_quality__in=image_quality,
-                processedimage__task=task,
-                processedimage__imagelabel__label__in=labels_selected,
-                processedimage__user__in=users_selected,
+                keyframe__annotation__image_quality__in=image_quality,
+                keyframe__annotation__task=task,
+                keyframe__annotation__imagelabel__label__in=labels_selected,
+                keyframe__annotation__user__in=users_selected,
                 subject__in=subjects_selected,
             )
         else:
             queryset = queryset.filter(
-                processedimage__image_quality__in=image_quality,
-                processedimage__task=task,
-                processedimage__user__in=users_selected,
+                keyframe__annotation__image_quality__in=image_quality,
+                keyframe__annotation__task=task,
+                keyframe__annotation__user__in=users_selected,
                 subject__in=subjects_selected
             )
         if sort_by == ImageListForm.SORT_DATE_DESC:
-            queryset = queryset.order_by('-processedimage__date')
+            queryset = queryset.order_by('-keyframe__annotation__date')
         else:
-            queryset = queryset.order_by('processedimage__date')
+            queryset = queryset.order_by('keyframe__annotation__date')
+        queryset = queryset.distinct()
 
     paginator = Paginator(queryset, 12)
     page = request.GET.get('page')
@@ -558,11 +561,7 @@ def task(request, task_id):
 
     for image in images:
         # Check if image is annotated
-        try:
-            annotation = ProcessedImage.objects.get(image=image, task=task)
-            image.annotation = annotation
-        except:
-            pass
+        image.annotations = Annotation.objects.filter(keyframe__image_sequence=image, task=task)
 
     return_url = reverse('task', kwargs={'task_id': task_id})
     if page is not None:

@@ -27,8 +27,6 @@
 {% endif %}
 
 {% for image in images %}
-
-
     {# one row #}
     {% if forloop.counter0|divisibleby:"4" %}
     {% if not forloop.first %}
@@ -41,10 +39,10 @@
     <div style="float: left; width: 25%; box-sizing: border-box; padding: 10px;">
         <img src="{% url 'show_image' image.id %}" width="100%">
 
-        {% if image.annotation %}
-
-        Date: {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
-        User: {{ image.annotation.user.username }}<br>
+        {% if image.annotations %}
+        {% if task.annotate_single_frame %}
+        Date: {{ image.annotations.date|date:"d-m-Y H:i" }}<br>
+        User: {{ image.annotations.user.username }}<br>
         Image quality: {{ image.annotation.image_quality }}<br>
         {% if image.annotation.rejected %}
             <span style="color: darkred; font-weight: bold;">REJECTED</span><br>
@@ -60,6 +58,11 @@
         {% elif task.type == 'segmentation' %}
         {% elif task.type == 'landmark' %}
             Landmarks added {{ image.annotation.landmark_set.count }}<br>
+        {% endif %}
+        {% else %}
+            Target frames: {{ image.annotations|length }}<br>
+            User: {{ image.annotations.first.user.username }}<br>
+            Date: {{ image.annotations.first.date|date:"d-m-Y H:i" }}<br>
         {% endif %}
 
         <a href="{% url 'annotate' task.id image.id %}">Edit</a>

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
-from annotationweb.models import Task
+from annotationweb.models import Task, KeyFrame
 import common.task
 import json
 from .models import *
@@ -18,10 +18,10 @@ def segment_image(request, task_id, image_id):
 
         # Check if image is already segmented, if so get data and pass to template
         try:
-            annotation = Annotation.objects.get(task_id=task_id, keyframe__image_sequence_id=image_id)
-            control_points = ControlPoint.objects.filter(image=annotation).order_by('index')
-
+            annotations = Annotation.objects.filter(task_id=task_id, keyframe__image_sequence_id=image_id)
+            control_points = ControlPoint.objects.filter(image__in=annotations).order_by('index')
             context['control_points'] = control_points
+            context['target_frames'] = KeyFrame.objects.filter(image_sequence_id=image_id)
         except Annotation.DoesNotExist:
             pass
 

@@ -19,10 +19,10 @@ class SearchFilter:
 
         self.image_quality = [x for x, y in Annotation.IMAGE_QUALITY_CHOICES]
         self.subjects = Subject.objects.filter(dataset__task=task)
-        self.users = User.objects.filter(processedimage__task=task).distinct()
+        self.users = User.objects.filter(annotation__task=task).distinct()
 
         # Get metadata for task
-        self.metadata = Metadata.objects.values('value', 'name').filter(image__subject__dataset__task=task).distinct()
+        self.metadata = ImageMetadata.objects.values('value', 'name').filter(image__subject__dataset__task=task).distinct()
 
         if 'search_filters'+str(task.id) not in request.session:
             request.session['search_filters'+str(task.id)] = {}

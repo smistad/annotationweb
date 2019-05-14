@@ -44,7 +44,7 @@ function setupSegmentation() {
                 insertControlPoint(mouseX, mouseY, g_labelButtons[g_currentLabel].id, section);
             } else {
                 // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentTargetFrameIndex, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
+                addControlPoint(mouseX, mouseY, g_currentFrameNr, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
             }
         }
         redrawSequence();
@@ -169,19 +169,23 @@ function setupSegmentation() {
     });
 
     $('#addFrameButton').click(function() {
-        if(g_currentFrameNr in g_controlPoints) // Already exists
-            return;
-        // Add to g_controlPoints
-        g_controlPoints[g_currentFrameNr] = [];
-        for(var j = 0; j < g_labelButtons.length; j++) {
-            g_controlPoints[g_currentFrameNr].push([]);
-        }
+        addControlPointsForNewFrame(g_currentFrameNr);
     });
 
     // Set first label active
     changeLabel(g_labelButtons[0].id)
 
     redraw();
+}
+
+function addControlPointsForNewFrame(frameNr) {
+     if(frameNr in g_controlPoints) // Already exists
+        return;
+    // Add to g_controlPoints
+    g_controlPoints[frameNr] = [];
+    for(var j = 0; j < g_labelButtons.length; j++) {
+        g_controlPoints[frameNr].push([]);
+    }
 }
 
 function loadSegmentationTask(image_sequence_id) {
@@ -246,7 +250,7 @@ function insertControlPoint(x, y, label, index) {
 
 function addControlPoint(x, y, target_frame, label, uncertain) {
     var controlPoint = createControlPoint(x, y, label, uncertain);
-    g_controlPoints[g_currentFrameNr][controlPoint.label].push(controlPoint);
+    g_controlPoints[target_frame][controlPoint.label].push(controlPoint);
 }
 
 function getControlPoint(index, label) {

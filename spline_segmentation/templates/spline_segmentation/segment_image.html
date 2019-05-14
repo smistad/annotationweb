@@ -5,8 +5,13 @@
         loadSegmentationTask({{ image_sequence.id }});
     {% endif %}
 
+    {% for frame in target_frames %}
+        setupSliderMark({{ frame.frame_nr }}, {{ image_sequence.nr_of_frames }});
+        addControlPointsForNewFrame({{ frame.frame_nr }});
+    {% endfor %}
+
     {% for control_point in control_points %}
-        addControlPoint({{ control_point.x }}, {{ control_point.y }}, 0, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
+        addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.image.keyframe.frame_nr }}, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
     {% endfor %}
 
 {% endblock task_javascript %}
