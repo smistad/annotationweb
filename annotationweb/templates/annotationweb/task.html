@@ -38,6 +38,7 @@
 
     <div style="float: left; width: 25%; box-sizing: border-box; padding: 10px;">
         <img src="{% url 'show_image' image.id %}" width="100%">
+        {{ image.format }}<br>
 
         {% if image.annotations %}
         {% if task.annotate_single_frame %}

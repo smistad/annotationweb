@@ -42,7 +42,7 @@ setReturnURL('{{ return_url|safe }}');
 
 <h1>{{ task.name }}</h1>
 
-{{ number_of_labeled_images }} of {{ total_number_of_images}} videos/images have been labeled ({{ percentage_finished }}%).<br />
+{{ task.number_of_annotated_images }} of {{ task.total_number_of_images}} videos/images have been labeled ({{ task.percentage_finished }}%).<br />
 
 {% if image_sequence %}
 <h2>Sequence</h2>

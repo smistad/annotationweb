@@ -31,7 +31,7 @@ def get_task_statistics(tasks, user):
             # task.number_of_annotated_images = Annotation.objects.filter(task=task.id).count()
         else:
             task.total_number_of_images = ImageSequence.objects.filter(subject__dataset__task=task.id).count()
-            task.number_of_annotated_images = ImageSequence.objects.filter(keyframe__annotation__in=Annotation.objects.filter(task_id=task.id)).count()
+            task.number_of_annotated_images = ImageSequence.objects.filter(keyframe__annotation__in=Annotation.objects.filter(task_id=task.id)).distinct().count()
 
         if task.total_number_of_images == 0:
             task.percentage_finished = 0
@@ -511,8 +511,8 @@ def task(request, task_id):
 
         for name, values in metadata_dict.items():
             queryset = queryset.filter(
-                metadata__name=name,
-                metadata__value__in=values
+                imagemetadata__name=name,
+                imagemetadata__value__in=values
             )
 
     if sort_by == ImageListForm.SORT_IMAGE_ID:
@@ -541,12 +541,11 @@ def task(request, task_id):
                 keyframe__annotation__task=task,
                 keyframe__annotation__user__in=users_selected,
                 subject__in=subjects_selected
-            )
-        if sort_by == ImageListForm.SORT_DATE_DESC:
-            queryset = queryset.order_by('-keyframe__annotation__date')
-        else:
-            queryset = queryset.order_by('keyframe__annotation__date')
-        queryset = queryset.distinct()
+            ).only('id','format').distinct()
+        #if sort_by == ImageListForm.SORT_DATE_DESC:
+        #    queryset = queryset.order_by('-keyframe__annotation__date')
+        #else:
+        #    queryset = queryset.order_by('keyframe__annotation__date')
 
     paginator = Paginator(queryset, 12)
     page = request.GET.get('page')

@@ -250,9 +250,13 @@ def setup_task_context(request, task_id, type, image_id):
 
     context['image'] = image
     context['task'] = task
-    context['number_of_labeled_images'] = Annotation.objects.filter(task=task_id).count()
-    context['total_number_of_images'] = ImageSequence.objects.filter(subject__dataset__task=task_id).count()
-    context['percentage_finished'] = round(context['number_of_labeled_images']*100 / context['total_number_of_images'], 1)
+    task.total_number_of_images = ImageSequence.objects.filter(subject__dataset__task=task.id).count()
+    task.number_of_annotated_images = ImageSequence.objects.filter(keyframe__annotation__in=Annotation.objects.filter(task_id=task.id)).distinct().count()
+    if task.total_number_of_images == 0:
+        task.percentage_finished = 0
+    else:
+        task.percentage_finished = round(task.number_of_annotated_images*100 /
+                                         task.total_number_of_images, 1)
     context['image_quality_choices'] = Annotation.IMAGE_QUALITY_CHOICES
 
     # Check if image has been annotated
