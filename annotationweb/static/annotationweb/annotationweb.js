@@ -169,6 +169,8 @@ function setupSliderMark(frame, totalNrOfFrames){
 
 function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_sequence, user_frame_selection, annotate_single_frame, frames_to_annotate, images_to_load_before, images_to_load_after, auto_play) {
     g_targetFrames = frames_to_annotate;
+    g_targetFrames.sort(function(a, b){return a-b});
+
     console.log('In load sequence');
     // Create play/pause button
     setPlayButton(auto_play);
@@ -239,6 +241,9 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             progressLabel.text( "Finished loading!" );
             g_progressbar.hide();
             redrawSequence();
+            for(var i = 0; i < g_targetFrames.length; i++) {
+                setupSliderMark(g_targetFrames[i], nrOfFrames);
+            }
             if(g_isPlaying)
                 incrementFrame();
       }
@@ -251,7 +256,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         setupSliderMark(g_currentFrameNr, g_framesLoaded);
         g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
-        g_targetFrames = g_targetFrames.sort();
+        g_targetFrames.sort(function(a, b){return a-b});
         $("#framesSelected").append('<li>' + g_currentFrameNr + '</li>');
         $("#framesForm").append('<input type="hidden" name="frames" value="' + g_currentFrameNr + '">');
     });

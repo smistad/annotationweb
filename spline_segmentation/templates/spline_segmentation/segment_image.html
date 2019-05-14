@@ -6,7 +6,6 @@
     {% endif %}
 
     {% for frame in target_frames %}
-        setupSliderMark({{ frame.frame_nr }}, {{ image_sequence.nr_of_frames }});
         addControlPointsForNewFrame({{ frame.frame_nr }});
     {% endfor %}
 
