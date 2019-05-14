@@ -23,24 +23,24 @@ from common.user import is_annotater
 
 def get_task_statistics(tasks, user):
     for task in tasks:
-        if task.user_frame_selection:
+        if task.annotate_single_frame:
             pass
             # User can select frames, have to count nr of videos
 
             # task.total_number_of_images = Image.objects.filter(subject__dataset__task=task.id).count()
             # task.number_of_annotated_images = Annotation.objects.filter(task=task.id).count()
-            # if task.total_number_of_images == 0:
-            #     task.percentage_finished = 0
-            # else:
-            #     task.percentage_finished = round(task.number_of_annotated_images*100 /
-            #                                      task.total_number_of_images, 1)
-            # # Check if user has processed any
-            # task.started = Annotation.objects.filter(task=task, user=user).count() > 0
-            # task.finished = task.number_of_annotated_images == task.total_number_of_images
         else:
-            pass
+            task.total_number_of_images = ImageSequence.objects.filter(subject__dataset__task=task.id).count()
+            task.number_of_annotated_images = ImageSequence.objects.filter(keyframe__annotation__in=Annotation.objects.filter(task_id=task.id)).count()
 
-
+        if task.total_number_of_images == 0:
+            task.percentage_finished = 0
+        else:
+            task.percentage_finished = round(task.number_of_annotated_images*100 /
+                                             task.total_number_of_images, 1)
+        # Check if user has processed any
+        task.started = Annotation.objects.filter(task=task, user=user).count() > 0
+        task.finished = task.number_of_annotated_images == task.total_number_of_images
 
 def index(request):
     context = {}
