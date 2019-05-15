@@ -10,7 +10,14 @@
     {% endfor %}
 
     {% for control_point in control_points %}
-        addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.image.keyframe.frame_nr }}, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
+        addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.image.keyframe.frame_nr }}, {{ control_point.object }}, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
     {% endfor %}
 
 {% endblock task_javascript %}
+
+{% block task_instructions %}
+    Hold CTRL to create a new object of the selected type.<br>
+    Click on yellow control points to switch to that object.<br>
+    Double click on yellow control points to delete it.<br>
+    Hold mouse button on yellow control point to move it.<br>
+{% endblock task_instructions %}

@@ -48,17 +48,21 @@ def save_segmentation(request):
 
             # Save segmentation
             # Save control points
-            for object in range(n_labels):
-                for annotation in annotations:
-                    frame_nr = str(annotation.keyframe.frame_nr)
-                    for point in range(len(control_points[frame_nr][object])):
+            for annotation in annotations:
+                frame_nr = str(annotation.keyframe.frame_nr)
+                for object in control_points[frame_nr]:
+                    nr_of_control_points = len(control_points[frame_nr][object]['control_points'])
+                    if nr_of_control_points < 3:
+                        continue
+                    for point in range(nr_of_control_points):
                         control_point = ControlPoint()
                         control_point.image = annotation
-                        control_point.x = float(control_points[frame_nr][object][point]['x'])
-                        control_point.y = float(control_points[frame_nr][object][point]['y'])
+                        control_point.x = float(control_points[frame_nr][object]['control_points'][point]['x'])
+                        control_point.y = float(control_points[frame_nr][object]['control_points'][point]['y'])
                         control_point.index = point
-                        control_point.label = Label.objects.get(id=int(control_points[frame_nr][object][point]['label_id']))
-                        control_point.uncertain = bool(control_points[frame_nr][object][point]['uncertain'])
+                        control_point.object = int(object)
+                        control_point.label = Label.objects.get(id=int(control_points[frame_nr][object]['label']['id']))
+                        control_point.uncertain = bool(control_points[frame_nr][object]['control_points'][point]['uncertain'])
                         control_point.save()
 
             response = {

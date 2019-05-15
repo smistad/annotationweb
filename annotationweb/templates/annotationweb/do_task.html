@@ -84,6 +84,11 @@ setReturnURL('{{ return_url|safe }}');
 </form>
 </div>
 
+<div>
+{% block task_instructions %}
+{% endblock %}
+</div>
+
 <div id="labelButtons">
 {% block label_buttons %}
 <div class="flexButtons">

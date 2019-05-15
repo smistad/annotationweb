@@ -3,7 +3,8 @@ var g_imageData;
 var g_image;
 var g_backgroundImage;
 var g_currentColor = null;
-var g_controlPoints = {}; // control point dictionary [key_frame_nr][object_id][control point]
+var g_controlPoints = {}; // control point dictionary [key_frame_nr] contains a dictionary/map of objects with a dictionary with label: label data, control_points: list
+var g_currentObject = 0; // Which index in g_controlPoints[key_frame_nr] list we are in
 var g_move = false;
 var g_pointToMove = -1;
 var g_labelToMove = -1;
@@ -11,6 +12,16 @@ var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
 var g_shiftKeyPressed = false;
 var g_currentLabel = -1;
+
+function getMaxObjectID() {
+    var max = -1;
+    for(var key in g_controlPoints[g_currentFrameNr]) {
+        key = parseInt(key); // dictionary keys are strings
+        if(key > max)
+            max = key;
+    }
+    return max;
+}
 
 function setupSegmentation() {
 
@@ -27,12 +38,22 @@ function setupSegmentation() {
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
+        if(e.ctrlKey && g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length >= 3) { // Create new object if ctrl key is held down AND current object has more than 2 points
+            g_currentObject = getMaxObjectID()+1;
+            data = {label: g_labelButtons[g_currentLabel], control_points: []};
+            g_controlPoints[g_currentFrameNr][g_currentObject] = data;
+        }
 
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
         if(point !== false) {
+            // Activate object of this point
+            g_currentObject = point.object;
+            $('.labelButton').removeClass('activeLabel');
+            $('#labelButton' + point.label_idx).addClass('activeLabel');
+            g_currentLabel = getLabelIdxWithId(point.label_idx);
             // Move point
             g_move = true;
             g_pointToMove = point.index;
@@ -44,7 +65,7 @@ function setupSegmentation() {
                 insertControlPoint(mouseX, mouseY, g_labelButtons[g_currentLabel].id, section);
             } else {
                 // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentFrameNr, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
+                addControlPoint(mouseX, mouseY, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
             }
         }
         redrawSequence();
@@ -59,14 +80,18 @@ function setupSegmentation() {
 
         if(g_move) {
             cursor = 'move';
-            setControlPoint(g_pointToMove, g_labelToMove, mouseX, mouseY);
+            setControlPoint(g_pointToMove, g_currentObject, mouseX, mouseY);
             redrawSequence();
         } else {
-            if(g_controlPoints[g_currentFrameNr][g_currentLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
+            if(!e.ctrlKey &&
+                g_currentFrameNr in g_controlPoints &&
+                g_currentObject in g_controlPoints[g_currentFrameNr] &&
+                g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length > 0 &&
+                isPointOnSpline(mouseX, mouseY) < 0) {
                 // If mouse is not close to spline, draw dotted drawing line
                 var line = {
-                    x0: getControlPoint(-1, g_currentLabel).x,
-                    y0: getControlPoint(-1, g_currentLabel).y,
+                    x0: getControlPoint(-1, g_currentObject).x,
+                    y0: getControlPoint(-1, g_currentObject).y,
                     x1: mouseX,
                     y1: mouseY
                 };
@@ -132,18 +157,17 @@ function setupSegmentation() {
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
         if(point !== false) {
-            g_controlPoints[g_currentFrameNr][point.label_idx].splice(point.index, 1);
+            g_controlPoints[g_currentFrameNr][g_currentObject].control_points.splice(point.index, 1);
+            //if(g_controlPoints[g_currentFrameNr[g_currentObject]].control_points.length == 0) {
+            //    g_controlPoints[g_currentFrameNr].splice(g_currentObject, 1); // remove this object
+            //}
         }
         redrawSequence();
     });
 
 
     $("#clearButton").click(function() {
-        g_annotationHasChanged = true;
-        g_controlPoints = [];
-
-        setupControlPointArray()
-        redrawSequence();
+        // TODO fix
     });
 
     // TODO MOVE to annotation
@@ -168,6 +192,13 @@ function setupSegmentation() {
         g_shiftKeyPressed = event.shiftKey;
     });
 
+    $(document).keydown(function(event) {
+       if(event.ctrlKey)  {
+           g_drawLine = false;
+           redrawSequence();
+       }
+    });
+
     $('#addFrameButton').click(function() {
         addControlPointsForNewFrame(g_currentFrameNr);
     });
@@ -179,13 +210,9 @@ function setupSegmentation() {
 }
 
 function addControlPointsForNewFrame(frameNr) {
-     if(frameNr in g_controlPoints) // Already exists
+    if(frameNr in g_controlPoints) // Already exists
         return;
-    // Add to g_controlPoints
-    g_controlPoints[frameNr] = [];
-    for(var j = 0; j < g_labelButtons.length; j++) {
-        g_controlPoints[frameNr].push([]);
-    }
+    g_controlPoints[frameNr] = {};
 }
 
 function loadSegmentationTask(image_sequence_id) {
@@ -203,21 +230,23 @@ function getClosestPoint(x, y) {
     var minDistance = g_canvasWidth*g_canvasHeight;
     var minPoint = -1;
     var minLabel = -1;
+    var minObject = -1;
 
-    for(var label_idx = 0; label_idx < g_labelButtons.length; label_idx++) {
-        for(var i = 0; i < g_controlPoints[g_currentFrameNr][label_idx].length; i++) {
-            var point = getControlPoint(i, label_idx);
+    for(var j in g_controlPoints[g_currentFrameNr]) {
+        for(var i = 0; i < g_controlPoints[g_currentFrameNr][j].control_points.length; i++) {
+            var point = getControlPoint(i, j);
             var distance = Math.sqrt((point.x - x) * (point.x - x) + (point.y - y) * (point.y - y));
             if(distance < minDistance) {
                 minPoint = i;
                 minDistance = distance;
-                minLabel = label_idx;
+                minLabel = g_controlPoints[g_currentFrameNr][j].label.id;
+                minObject = j;
             }
         }
     }
 
     if(minDistance < g_moveDistanceThreshold) {
-        return {index: minPoint, label_idx: minLabel};
+        return {index: minPoint, label_idx: minLabel, object: minObject};
     } else {
         return false;
     }
@@ -245,33 +274,35 @@ function createControlPoint(x, y, label, uncertain) {
 
 function insertControlPoint(x, y, label, index) {
     var controlPoint = createControlPoint(x, y, label, g_shiftKeyPressed);
-    g_controlPoints[g_currentFrameNr][g_currentLabel].splice(index+1, 0, controlPoint);
+    g_controlPoints[g_currentFrameNr][g_currentObject].control_points.splice(index+1, 0, controlPoint);
 }
 
-function addControlPoint(x, y, target_frame, label, uncertain) {
+function addControlPoint(x, y, target_frame, object, label, uncertain) {
     var controlPoint = createControlPoint(x, y, label, uncertain);
-    g_controlPoints[target_frame][controlPoint.label].push(controlPoint);
+    if(!(object in g_controlPoints[target_frame])) // add object if it doesn't exist
+        g_controlPoints[target_frame][object] = {label: g_labelButtons[getLabelIdxWithId(label)], control_points: []};
+    g_controlPoints[target_frame][object].control_points.push(controlPoint);
 }
 
-function getControlPoint(index, label) {
+function getControlPoint(index, object) {
     if(index === -1) {
-        index = g_controlPoints[g_currentFrameNr][label].length-1;
+        index = g_controlPoints[g_currentFrameNr][object].control_points.length-1;
     }
-    return g_controlPoints[g_currentFrameNr][label][index];
+    return g_controlPoints[g_currentFrameNr][object].control_points[index];
 }
 
-function setControlPoint(index, label, x, y) {
-    g_controlPoints[g_currentFrameNr][label][index].x = x;
-    g_controlPoints[g_currentFrameNr][label][index].y = y;
+function setControlPoint(index, object, x, y) {
+    g_controlPoints[g_currentFrameNr][object].control_points[index].x = x;
+    g_controlPoints[g_currentFrameNr][object].control_points[index].y = y;
 }
 
 function isPointOnSpline(pointX, pointY) {
-    for(var label = 0; label < g_labelButtons.length; label++) {
-        for (var i = 0; i < g_controlPoints[g_currentFrameNr][label].length; ++i) {
-            var a = getControlPoint(max(0, i - 1), label);
-            var b = getControlPoint(i, label);
-            var c = getControlPoint(min(g_controlPoints[g_currentFrameNr][label].length - 1, i + 1), label);
-            var d = getControlPoint(min(g_controlPoints[g_currentFrameNr][label].length - 1, i + 2), label);
+    for(var object in g_controlPoints[g_currentFrameNr]) {
+        for (var i = 0; i < g_controlPoints[g_currentFrameNr][object].control_points.length; ++i) {
+            var a = getControlPoint(max(0, i - 1), object);
+            var b = getControlPoint(i, object);
+            var c = getControlPoint(min(g_controlPoints[g_currentFrameNr][object].control_points.length - 1, i + 1), object);
+            var d = getControlPoint(min(g_controlPoints[g_currentFrameNr][object].control_points.length - 1, i + 2), object);
 
             var step = 0.1;
             var tension = 0.5;
@@ -307,16 +338,15 @@ function redraw(){
     g_context.lineWidth = 2;
 
     // Draw controlPoint
-    for (var labelIndex = 0; labelIndex < g_labelButtons.length; labelIndex++) {
-        for (var i = 0; i < g_controlPoints[g_currentFrameNr][labelIndex].length; i++) {
-            var label = g_labelButtons[labelIndex];
-
+    for(var j in g_controlPoints[g_currentFrameNr]) {
+        var label = g_controlPoints[g_currentFrameNr][j].label;
+        for(var i = 0; i < g_controlPoints[g_currentFrameNr][j].control_points.length; i++) {
             g_context.beginPath();
             g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
 
             // Draw line as spline
 
-            var maxIndex = g_controlPoints[g_currentFrameNr][labelIndex].length;
+            var maxIndex = g_controlPoints[g_currentFrameNr][j].control_points.length;
             var first;
             if (i === 0) {
                 first = maxIndex - 1;
@@ -324,10 +354,10 @@ function redraw(){
                 first = i - 1;
             }
 
-            var a = getControlPoint(first, labelIndex);
-            var b = getControlPoint(i, labelIndex);
-            var c = getControlPoint((i + 1) % maxIndex, labelIndex);
-            var d = getControlPoint((i + 2) % maxIndex, labelIndex);
+            var a = getControlPoint(first, j);
+            var b = getControlPoint(i, j);
+            var c = getControlPoint((i + 1) % maxIndex, j);
+            var d = getControlPoint((i + 2) % maxIndex, j);
 
             var step = 0.1;
             var tension = 0.5;
@@ -381,7 +411,7 @@ function redrawSequence() {
 
 function getLabelIdxWithId(id) {
     for(var i = 0; i < g_labelButtons.length; i++) {
-        if (g_labelButtons[i].id == id) {
+        if(g_labelButtons[i].id == id) {
             return i;
         }
     }
@@ -393,6 +423,24 @@ function changeLabel(label_id) {
     $('.labelButton').removeClass('activeLabel');
     $('#labelButton' + label_id).addClass('activeLabel');
     g_currentLabel = getLabelIdxWithId(label_id);
+
+    // changeLabel is called when we press the label button (may or may not have an object),
+    // and when we press a control point (already have object)
+    if(g_currentFrameNr in g_controlPoints) {
+        var found = false;
+        for(var j in g_controlPoints[g_currentFrameNr]) {
+            if(g_controlPoints[g_currentFrameNr][j].label.id == label_id) {
+                g_currentObject = j;
+                found = true;
+                break;
+            }
+        }
+        if(!found) {
+            // Create new object id
+            g_currentObject = getMaxObjectID()+1;
+            g_controlPoints[target_frame][g_currentObject] = {label: g_labelButtons[getLabelIdxWithId(label)], control_points: []};
+        }
+    }
 }
 
 function drawSpline(pointList, step_size, tension){

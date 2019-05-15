@@ -8,4 +8,5 @@ class ControlPoint(models.Model):
     y = models.FloatField()
     index = models.PositiveIntegerField()
     label = models.ForeignKey(Label)
+    object = models.PositiveIntegerField()
     uncertain = models.BooleanField()
