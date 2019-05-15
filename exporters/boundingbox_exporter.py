@@ -1,7 +1,7 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
-from annotationweb.models import ProcessedImage, Dataset, Task, Label, Subject
+from annotationweb.models import ImageAnnotation, Dataset, Task, Label, Subject
 from boundingbox.models import BoundingBox
 from django import forms
 import os

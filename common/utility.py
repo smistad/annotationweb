@@ -61,13 +61,4 @@ def copy_image(filename, new_filename):
 
 
 def create_folder(path):
-    try:
-        os.mkdir(path)  # Make dataset path if doesn't exist
-    except:
-        pass
-
-    # Check that the path exists
-    try:
-        os.stat(path)
-    except:
-        return False, 'Failed to create directory at ' + path
+    os.makedirs(path, exist_ok=True)

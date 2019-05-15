@@ -1,7 +1,7 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder
-from annotationweb.models import ProcessedImage, Task, Subject
+from annotationweb.models import ImageAnnotation, Task, Subject
 from cardiac_landmark.models import CardiacLandmark, ControlPoint
 from django import forms
 import os

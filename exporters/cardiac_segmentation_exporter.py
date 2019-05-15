@@ -2,7 +2,7 @@ from math import sqrt, floor, ceil
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
-from annotationweb.models import ProcessedImage, Dataset, Task, Label, Subject, KeyFrame, Metadata
+from annotationweb.models import ImageAnnotation, Dataset, Task, Label, Subject, KeyFrameAnnotation, ImageMetadata
 from cardiac.models import Segmentation, ControlPoint, OBJECTS
 from django import forms
 import os

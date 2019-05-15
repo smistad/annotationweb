@@ -1,6 +1,6 @@
 from common.exporter import Exporter
 from common.utility import copy_image
-from annotationweb.models import ProcessedImage, Dataset, Task, Label, KeyFrame
+from annotationweb.models import ImageAnnotation, Dataset, Task, Label, KeyFrameAnnotation
 from django import forms
 import os
 from shutil import rmtree, copyfile
