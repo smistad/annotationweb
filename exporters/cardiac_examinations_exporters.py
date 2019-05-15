@@ -114,8 +114,8 @@ def to_categorical(y, nb_classes=None):
     return categorical
 
 
-class HorizontalRadioRenderer(forms.RadioSelect.renderer):
-    def render(self):
+class HorizontalRadioRenderer(forms.RadioSelect):
+    def render(self, name, value, attrs=None, renderer=None):
         return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 
@@ -125,7 +125,7 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
     image_dim_ordering = forms.ChoiceField(label='Image dimension ordering',
                                            choices=(('tf', 'Tensorflow'), ('theano', 'Theano/Caffe')),
                                            required=False,
-                                           widget=forms.RadioSelect(renderer=HorizontalRadioRenderer),
+                                           widget=HorizontalRadioRenderer,
                                            initial='tf'
                                            )
     sequence_wise = forms.BooleanField(label='Export by sequence', initial=False, required=False)
@@ -134,7 +134,7 @@ class CardiacHDFExaminationsExporterForm(forms.Form):
     colormode = forms.ChoiceField(label='Color model',
                                   choices=(('L', 'Grayscale'), ('RGB', 'RGB')),
                                   required=False,
-                                  widget=forms.RadioSelect(renderer=HorizontalRadioRenderer),
+                                  widget=HorizontalRadioRenderer,
                                   initial='L'
                                   )
     width = forms.IntegerField(max_value=512, label='Width', initial=128) # TODO: Fix layout...
