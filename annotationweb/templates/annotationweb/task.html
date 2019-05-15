@@ -41,13 +41,13 @@
         {{ image.format }}<br>
 
         {% if image.annotation %}
+        {% if image.annotation.rejected %}
+            <span style="color: darkred; font-weight: bold;">REJECTED</span><br>
+        {% endif %}
         {% if task.annotate_single_frame %}
         Date: {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
         User: {{ image.annotation.user.username }}<br>
         Image quality: {{ image.annotation.image_quality }}<br>
-        {% if image.annotation.rejected %}
-            <span style="color: darkred; font-weight: bold;">REJECTED</span><br>
-        {% endif %}
 
         {% if task.type == 'classification' %}
             {# Get all labels if task is classification task #}
