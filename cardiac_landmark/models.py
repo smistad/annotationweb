@@ -1,5 +1,5 @@
 from django.db import models
-from annotationweb.models import Annotation, Label
+from annotationweb.models import KeyFrameAnnotation, Label
 
 PHASES = (
     (0, 'End Diastole'),
@@ -13,7 +13,7 @@ OBJECTS = (
 )
 
 class CardiacLandmark(models.Model):
-    image = models.OneToOneField(Annotation, on_delete=models.CASCADE)
+    image = models.OneToOneField(KeyFrameAnnotation, on_delete=models.CASCADE)
     frame_ED = models.IntegerField()
     frame_ES = models.IntegerField()
 

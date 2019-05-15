@@ -91,18 +91,13 @@ class ImageSequence(models.Model):
         return self.format
 
 
-class KeyFrame(models.Model):
-    frame_nr = models.PositiveIntegerField()
-    image_sequence = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
+class ImageAnnotation(models.Model):
+    """
+    Represents an annotation of an entire image sequence
+    """
+
+    image = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.frame_nr)
-
-
-class Annotation(models.Model):
-    keyframe = models.ForeignKey(KeyFrame, on_delete=models.CASCADE)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE) # TODO can be removed
     date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User)
 
@@ -117,6 +112,18 @@ class Annotation(models.Model):
     image_quality = models.CharField(max_length=50, choices=IMAGE_QUALITY_CHOICES)
     comments = models.TextField()
     rejected = models.BooleanField()
+
+
+class KeyFrameAnnotation(models.Model):
+    """
+    Represents an annotation of a frame of an image_sequence
+    """
+
+    frame_nr = models.PositiveIntegerField()
+    image_annotation = models.ForeignKey(ImageAnnotation)
+
+    def __str__(self):
+        return str(self.frame_nr)
 
 
 # Used to attach metadata to images, such as acquisition parameters

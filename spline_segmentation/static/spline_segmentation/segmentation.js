@@ -438,7 +438,7 @@ function changeLabel(label_id) {
         if(!found) {
             // Create new object id
             g_currentObject = getMaxObjectID()+1;
-            g_controlPoints[target_frame][g_currentObject] = {label: g_labelButtons[getLabelIdxWithId(label)], control_points: []};
+            g_controlPoints[g_currentFrameNr][g_currentObject] = {label: g_labelButtons[getLabelIdxWithId(label)], control_points: []};
         }
     }
 }

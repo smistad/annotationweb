@@ -6,7 +6,7 @@ from django.http import Http404
 import common.task
 
 from .models import *
-from annotationweb.models import Task, Annotation
+from annotationweb.models import Task, ImageAnnotation
 
 
 def label_next_image(request, task_id):

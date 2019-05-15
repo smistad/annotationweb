@@ -1,13 +1,12 @@
 from common.importer import Importer
 from django import forms
-from annotationweb.models import ImageSequence, KeyFrame, Dataset, Subject, ImageMetadata
+from annotationweb.models import ImageSequence, Dataset, Subject, ImageMetadata
 import os
 from os.path import join, basename
 import glob
 
 class ImageSequenceImporterForm(forms.Form):
     path = forms.CharField(label='Data path', max_length=1000)
-    create_key_frame = forms.BooleanField(label='Create a key frame in middle of squence', required=False)
 
     # TODO validate path
 
@@ -44,7 +43,6 @@ class ImageSequenceImporter(Importer):
             raise Exception('Dataset must be given to importer')
 
         path = form.cleaned_data['path']
-        create_key_frame = form.cleaned_data['create_key_frame']
         # Go through each subfolder and create a subject for each
         for file in os.listdir(path):
             subject_dir = join(path, file)
@@ -117,14 +115,6 @@ class ImageSequenceImporter(Importer):
                     image_sequence.subject = subject
                     image_sequence.nr_of_frames = len(frames)
                     image_sequence.save()
-
-                # Create key frame
-                if create_key_frame:
-                    key_frame_nr = int(len(frames)/2)
-                    key_frame = KeyFrame()
-                    key_frame.image_sequence = image_sequence
-                    key_frame.frame_nr = key_frame_nr
-                    key_frame.save()
 
                 # Check if metadata.txt exists, and if so parse it and add
                 metadata_filename = join(image_sequence_dir, 'metadata.txt')

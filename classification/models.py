@@ -1,9 +1,9 @@
 from django.db import models
-from annotationweb.models import Annotation, Label
+from annotationweb.models import KeyFrameAnnotation, Label
 
 
 class ImageLabel(models.Model):
-    image = models.ForeignKey(Annotation, on_delete=models.CASCADE)
+    image = models.ForeignKey(KeyFrameAnnotation, on_delete=models.CASCADE)
     label = models.ForeignKey(Label, on_delete=models.CASCADE)
 
     def __str__(self):

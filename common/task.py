@@ -3,7 +3,7 @@ import random
 
 from django.http import Http404
 
-from annotationweb.models import Task, Annotation, Subject, Label, ImageSequence, KeyFrame
+from annotationweb.models import Task, ImageAnnotation, Subject, Label, ImageSequence, KeyFrameAnnotation
 from annotationweb.forms import ImageListForm
 from django.db.models.aggregates import Count
 from common.search_filters import SearchFilter
@@ -15,13 +15,13 @@ def get_next_unprocessed_image(task):
     :param task:
     :return image:
     """
-    count = ImageSequence.objects.filter(subject__dataset__task=task).exclude(keyframe__annotation__task=task).aggregate(count=Count('id'))['count']
+    count = ImageSequence.objects.filter(subject__dataset__task=task).exclude(imageannotation__task=task).aggregate(count=Count('id'))['count']
     if task.shuffle_videos:
         index = random.randint(0, count - 1)
     else:
         index = 0
 
-    return ImageSequence.objects.filter(subject__dataset__task=task).exclude(keyframe__annotation__task=task).order_by("subject", "format")[index]
+    return ImageSequence.objects.filter(subject__dataset__task=task).exclude(imageannotation__task=task).order_by("subject", "format")[index]
 
 
 # TODO cleanup these to functions, extract common functionality
@@ -246,21 +246,21 @@ def setup_task_context(request, task_id, type, image_id):
 
     # Check if image belongs to an image sequence
     context['image_sequence'] = image
-    context['frames'] = KeyFrame.objects.filter(image_sequence=image)
+    context['frames'] = KeyFrameAnnotation.objects.filter(image_annotation__image=image)
 
     context['image'] = image
     context['task'] = task
     task.total_number_of_images = ImageSequence.objects.filter(subject__dataset__task=task.id).count()
-    task.number_of_annotated_images = ImageSequence.objects.filter(keyframe__annotation__in=Annotation.objects.filter(task_id=task.id)).distinct().count()
+    task.number_of_annotated_images = ImageSequence.objects.filter(imageannotation__in=ImageAnnotation.objects.filter(task_id=task.id)).count()
     if task.total_number_of_images == 0:
         task.percentage_finished = 0
     else:
         task.percentage_finished = round(task.number_of_annotated_images*100 /
                                          task.total_number_of_images, 1)
-    context['image_quality_choices'] = Annotation.IMAGE_QUALITY_CHOICES
+    context['image_quality_choices'] = ImageAnnotation.IMAGE_QUALITY_CHOICES
 
     # Check if image has been annotated
-    processed = Annotation.objects.filter(keyframe__image_sequence=image, task=task)
+    processed = ImageAnnotation.objects.filter(image=image, task=task)
     if processed.exists():
         context['chosen_quality'] = processed[0].image_quality
         context['comments'] = processed[0].comments
@@ -285,29 +285,30 @@ def save_annotation(request):
     comments = request.POST['comments']
 
     # Delete old key frames if they exist, this will also delete old annotations
-    key_frames = KeyFrame.objects.filter(task_id=task_id, image_sequence_id=image_id)
+    key_frames = KeyFrameAnnotation.objects.filter(image_annotation__task_id=task_id, image_annotation__image_id=image_id)
     key_frames.delete()
+
+    # Save to DB
+    try:
+        annotation = ImageAnnotation.objects.get(task_id=task_id, image_id=image_id)
+    except ImageAnnotation.DoesNotExist:
+        annotation = ImageAnnotation()
+        annotation.image_id = image_id
+        annotation.task_id = task_id
+
+    annotation.rejected = rejected
+    annotation.comments = comments
+    annotation.user = request.user
+    annotation.image_quality = request.POST['quality']
+    annotation.save()
 
     annotations = []
     for frame in new_key_frames:
-        keyframe = KeyFrame()
+        keyframe = KeyFrameAnnotation()
         keyframe.frame_nr = int(frame)
-        keyframe.image_sequence_id = image_id
-        keyframe.task_id = task_id
+        keyframe.image_annotation = annotation
         keyframe.save()
-
-        # Save to DB
-        annotation = Annotation()
-        annotation.rejected = rejected
-        annotation.comments = comments
-        annotation.image_id = image_id
-        annotation.keyframe = keyframe
-        annotation.task_id = task_id
-        annotation.user = request.user
-        annotation.image_quality = request.POST['quality']
-        annotation.save()
-
-        annotations.append(annotation)
+        annotations.append(keyframe)
 
     return annotations
 

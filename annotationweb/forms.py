@@ -63,8 +63,8 @@ class ImageListForm(forms.Form):
     )
     image_quality = forms.MultipleChoiceField(
         label='Image quality',
-        choices=Annotation.IMAGE_QUALITY_CHOICES,
-        initial=[x for x, y in Annotation.IMAGE_QUALITY_CHOICES],
+        choices=ImageAnnotation.IMAGE_QUALITY_CHOICES,
+        initial=[x for x, y in ImageAnnotation.IMAGE_QUALITY_CHOICES],
         widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
     )
 

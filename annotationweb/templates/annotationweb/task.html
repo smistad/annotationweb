@@ -40,10 +40,10 @@
         <img src="{% url 'show_image' image.id %}" width="100%">
         {{ image.format }}<br>
 
-        {% if image.annotations %}
+        {% if image.annotation %}
         {% if task.annotate_single_frame %}
-        Date: {{ image.annotations.date|date:"d-m-Y H:i" }}<br>
-        User: {{ image.annotations.user.username }}<br>
+        Date: {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
+        User: {{ image.annotation.user.username }}<br>
         Image quality: {{ image.annotation.image_quality }}<br>
         {% if image.annotation.rejected %}
             <span style="color: darkred; font-weight: bold;">REJECTED</span><br>
@@ -61,9 +61,9 @@
             Landmarks added {{ image.annotation.landmark_set.count }}<br>
         {% endif %}
         {% else %}
-            Target frames: {{ image.annotations|length }}<br>
-            User: {{ image.annotations.first.user.username }}<br>
-            Date: {{ image.annotations.first.date|date:"d-m-Y H:i" }}<br>
+            Annotated frames: {{ image.annotation_frames|length }}<br>
+            User: {{ image.annotation.user.username }}<br>
+            Date: {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
         {% endif %}
 
         <a href="{% url 'annotate' task.id image.id %}">Edit</a>

@@ -1,4 +1,4 @@
-from annotationweb.models import Task, Label, Subject, Annotation, ImageMetadata
+from annotationweb.models import Task, Label, Subject, ImageAnnotation, ImageMetadata
 from annotationweb.forms import ImageListForm
 from django.contrib.auth.models import User
 from common.label import get_all_labels
@@ -17,9 +17,9 @@ class SearchFilter:
             self.labels = get_all_labels(task)
             labels_selected = [label['id'] for label in self.labels]
 
-        self.image_quality = [x for x, y in Annotation.IMAGE_QUALITY_CHOICES]
+        self.image_quality = [x for x, y in ImageAnnotation.IMAGE_QUALITY_CHOICES]
         self.subjects = Subject.objects.filter(dataset__task=task)
-        self.users = User.objects.filter(annotation__task=task).distinct()
+        self.users = User.objects.filter(imageannotation__task=task).distinct()
 
         # Get metadata for task
         self.metadata = ImageMetadata.objects.values('value', 'name').filter(image__subject__dataset__task=task).distinct()

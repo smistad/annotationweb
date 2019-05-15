@@ -1,7 +1,7 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from .models import *
-from annotationweb.models import Task, Annotation
+from annotationweb.models import Task, ImageAnnotation
 from .forms import *
 from django.contrib import messages
 from django.http import HttpResponse, Http404, JsonResponse

@@ -31,7 +31,7 @@ def get_task_statistics(tasks, user):
             # task.number_of_annotated_images = Annotation.objects.filter(task=task.id).count()
         else:
             task.total_number_of_images = ImageSequence.objects.filter(subject__dataset__task=task.id).count()
-            task.number_of_annotated_images = ImageSequence.objects.filter(keyframe__annotation__in=Annotation.objects.filter(task_id=task.id)).distinct().count()
+            task.number_of_annotated_images = ImageSequence.objects.filter(imageannotation__in=ImageAnnotation.objects.filter(task_id=task.id)).count()
 
         if task.total_number_of_images == 0:
             task.percentage_finished = 0
@@ -39,7 +39,7 @@ def get_task_statistics(tasks, user):
             task.percentage_finished = round(task.number_of_annotated_images*100 /
                                              task.total_number_of_images, 1)
         # Check if user has processed any
-        task.started = Annotation.objects.filter(task=task, user=user).count() > 0
+        task.started = ImageAnnotation.objects.filter(task=task, user=user).count() > 0
         task.finished = task.number_of_annotated_images == task.total_number_of_images
 
 def index(request):
@@ -524,28 +524,28 @@ def task(request, task_id):
         queryset = queryset.filter(
             subject__dataset__task=task,
             subject__in=subjects_selected
-        ).exclude(keyframe__annotation__task=task)
+        ).exclude(imageannotation__task=task)
     else:
         if task.type == Task.CLASSIFICATION:
             labels_selected = search_filters.get_value('label')
             queryset = queryset.filter(
-                keyframe__annotation__image_quality__in=image_quality,
-                keyframe__annotation__task=task,
-                keyframe__annotation__imagelabel__label__in=labels_selected,
-                keyframe__annotation__user__in=users_selected,
+                imageannotation__image_quality__in=image_quality,
+                imageannotation__task=task,
+                imageannotation__imagelabel__label__in=labels_selected,
+                imageannotation__user__in=users_selected,
                 subject__in=subjects_selected,
             )
         else:
             queryset = queryset.filter(
-                keyframe__annotation__image_quality__in=image_quality,
-                keyframe__annotation__task=task,
-                keyframe__annotation__user__in=users_selected,
+                imageannotation__image_quality__in=image_quality,
+                imageannotation__task=task,
+                imageannotation__user__in=users_selected,
                 subject__in=subjects_selected
-            ).only('id','format').distinct()
-        #if sort_by == ImageListForm.SORT_DATE_DESC:
-        #    queryset = queryset.order_by('-keyframe__annotation__date')
-        #else:
-        #    queryset = queryset.order_by('keyframe__annotation__date')
+            )
+        if sort_by == ImageListForm.SORT_DATE_DESC:
+            queryset = queryset.order_by('-imageannotation__date')
+        else:
+            queryset = queryset.order_by('imageannotation__date')
 
     paginator = Paginator(queryset, 12)
     page = request.GET.get('page')
@@ -559,8 +559,12 @@ def task(request, task_id):
         images = paginator.page(paginator.num_pages)
 
     for image in images:
-        # Check if image is annotated
-        image.annotations = Annotation.objects.filter(keyframe__image_sequence=image, task=task)
+        # Get annotation
+        try:
+            image.annotation = ImageAnnotation.objects.get(image=image, task=task)
+            image.annotation_frames = KeyFrameAnnotation.objects.filter(image_annotation=image.annotation)
+        except:
+            pass
 
     return_url = reverse('task', kwargs={'task_id': task_id})
     if page is not None:

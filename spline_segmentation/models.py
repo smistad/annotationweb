@@ -1,9 +1,9 @@
 from django.db import models
-from annotationweb.models import Annotation, Label
+from annotationweb.models import KeyFrameAnnotation, Label
 
 
 class ControlPoint(models.Model):
-    image = models.ForeignKey(Annotation, on_delete=models.CASCADE)
+    image = models.ForeignKey(KeyFrameAnnotation, on_delete=models.CASCADE)
     x = models.FloatField()
     y = models.FloatField()
     index = models.PositiveIntegerField()

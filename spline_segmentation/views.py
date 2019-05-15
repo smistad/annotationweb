@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
-from annotationweb.models import Task, KeyFrame
+from annotationweb.models import Task, KeyFrameAnnotation
 import common.task
 import json
 from .models import *
@@ -18,11 +18,11 @@ def segment_image(request, task_id, image_id):
 
         # Check if image is already segmented, if so get data and pass to template
         try:
-            annotations = Annotation.objects.filter(task_id=task_id, keyframe__image_sequence_id=image_id)
+            annotations = KeyFrameAnnotation.objects.filter(image_annotation__task_id=task_id, image_annotation__image_id=image_id)
             control_points = ControlPoint.objects.filter(image__in=annotations).order_by('index')
             context['control_points'] = control_points
-            context['target_frames'] = KeyFrame.objects.filter(image_sequence_id=image_id)
-        except Annotation.DoesNotExist:
+            context['target_frames'] = annotations
+        except KeyFrameAnnotation.DoesNotExist:
             pass
 
         return render(request, 'spline_segmentation/segment_image.html', context)
@@ -49,7 +49,7 @@ def save_segmentation(request):
             # Save segmentation
             # Save control points
             for annotation in annotations:
-                frame_nr = str(annotation.keyframe.frame_nr)
+                frame_nr = str(annotation.frame_nr)
                 for object in control_points[frame_nr]:
                     nr_of_control_points = len(control_points[frame_nr][object]['control_points'])
                     if nr_of_control_points < 3:
