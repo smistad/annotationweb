@@ -122,6 +122,10 @@ setReturnURL('{{ return_url|safe }}');
 {% block task_content %}
 {% endblock %}
 
+<h2>Image info</h2>
+<strong>Dataset:</strong> {{ image_sequence.subject.dataset.name }} <strong>Subject:</strong> {{ image_sequence.subject.name }}<br>
+<strong>Filename:</strong> {{ image_sequence.format }}<br>
+
 {% if image.metadata_set.count > 0 %}
 <h2>Image metadata</h2>
 {% for metadata in image.metadata_set.all %}
