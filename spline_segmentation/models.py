@@ -7,6 +7,6 @@ class ControlPoint(models.Model):
     x = models.FloatField()
     y = models.FloatField()
     index = models.PositiveIntegerField()
-    label = models.ForeignKey(Label)
+    label = models.ForeignKey(Label, on_delete=models.CASCADE)
     object = models.PositiveIntegerField()
     uncertain = models.BooleanField()

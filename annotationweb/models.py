@@ -31,7 +31,7 @@ class Label(models.Model):
     color_green = models.PositiveSmallIntegerField()
     color_blue = models.PositiveSmallIntegerField()
 
-    parent = models.ForeignKey('Label', blank=True, null=True)
+    parent = models.ForeignKey('Label', blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -99,7 +99,7 @@ class ImageAnnotation(models.Model):
     image = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     QUALITY_POOR = 'poor'
     QUALITY_OK = 'ok'
@@ -120,7 +120,7 @@ class KeyFrameAnnotation(models.Model):
     """
 
     frame_nr = models.PositiveIntegerField()
-    image_annotation = models.ForeignKey(ImageAnnotation)
+    image_annotation = models.ForeignKey(ImageAnnotation, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.frame_nr)

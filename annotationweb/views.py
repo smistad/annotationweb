@@ -10,7 +10,7 @@ from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
 from common.search_filters import SearchFilter
 from common.label import get_complete_label_name
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 import fnmatch

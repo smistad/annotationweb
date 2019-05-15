@@ -1,10 +1,10 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 app_name = 'landmark'
 urlpatterns = [
-    url(r'^process/(?P<task_id>[0-9]+)/$', views.process_next_image, name='process_image'),
-    url(r'^process/(?P<task_id>[0-9]+)/(?P<image_id>[0-9]+)/$', views.process_image, name='process_image'),
-    url(r'^save/$', views.save, name='save'),
+    path('process/<int:task_id>/', views.process_next_image, name='process_image'),
+    path('process/<int:task_id>/<int:image_id>/', views.process_image, name='process_image'),
+    path('save/', views.save, name='save'),
 ]

@@ -1,10 +1,10 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 app_name = 'classification'
 urlpatterns = [
-    url(r'^label-image/(?P<task_id>[0-9]+)/$', views.label_next_image, name='label_image'),
-    url(r'^label-image/(?P<task_id>[0-9]+)/(?P<image_id>[0-9]+)/$', views.label_image, name='label_image'),
-    url(r'^save/$', views.save_labels, name='save')
+    path('label-image/<int:task_id>/', views.label_next_image, name='label_image'),
+    path('label-image/<int:task_id>/<int:image_id>/', views.label_image, name='label_image'),
+    path('save/', views.save_labels, name='save')
 ]

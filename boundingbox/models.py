@@ -8,5 +8,5 @@ class BoundingBox(models.Model):
     y = models.PositiveIntegerField()
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
-    label = models.ForeignKey(Label)
+    label = models.ForeignKey(Label, on_delete=models.CASCADE)
 
