@@ -114,7 +114,9 @@ class SplineSegmentationExporter(Exporter):
                     c = control_points[(i+1) % max_index]
                     d = control_points[(i+2) % max_index]
                     length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
-                    step_size = min(0.01, 1.0 / (length*2))
+                    # Not a very elegant solution ... could try to estimate the spline length instead
+                    # or draw straight lines between consecutive points instead
+                    step_size = min(0.01, 1.0 / (length*10))
                     for t in np.arange(0, 1, step_size):
                         x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
                             (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
