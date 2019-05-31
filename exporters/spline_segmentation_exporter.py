@@ -99,11 +99,11 @@ class SplineSegmentationExporter(Exporter):
 
         labels = Label.objects.filter(task=frame.image_annotation.task).order_by('id')
         counter = 1
-        previous_x = None
-        previous_y = None
         for label in labels:
             objects = ControlPoint.objects.filter(label=label, image=frame).only('object').distinct()
             for object in objects:
+                previous_x = None
+                previous_y = None
                 control_points = ControlPoint.objects.filter(label=label, image=frame, object=object.object).order_by('index')
                 max_index = len(control_points)
                 for i in range(max_index):
@@ -143,8 +143,8 @@ class SplineSegmentationExporter(Exporter):
                             segment_length = np.linalg.norm(end_pos - start_pos)
                             direction = direction / segment_length # Normalize
                             for i in np.arange(0.0, np.ceil(segment_length), 0.5):
-                                current = start_pos + direction * (float(i)/segment_length)
-                                current = np.round(current)
+                                current = start_pos + direction * (float(i)/np.ceil(segment_length))
+                                current = np.round(current).astype(np.int32)
                                 current[0] = min(image_size[1]-1, max(0, current[0]))
                                 current[1] = min(image_size[0]-1, max(0, current[1]))
                                 segmentation[current[1], current[0]] = counter
