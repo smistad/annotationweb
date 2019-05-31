@@ -99,6 +99,8 @@ class SplineSegmentationExporter(Exporter):
 
         labels = Label.objects.filter(task=frame.image_annotation.task).order_by('id')
         counter = 1
+        previous_x = None
+        previous_y = None
         for label in labels:
             objects = ControlPoint.objects.filter(label=label, image=frame).only('object').distinct()
             for object in objects:
@@ -116,7 +118,7 @@ class SplineSegmentationExporter(Exporter):
                     length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
                     # Not a very elegant solution ... could try to estimate the spline length instead
                     # or draw straight lines between consecutive points instead
-                    step_size = min(0.01, 1.0 / (length*10))
+                    step_size = min(0.01, 1.0 / (length*2))
                     for t in np.arange(0, 1, step_size):
                         x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
                             (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
@@ -133,7 +135,24 @@ class SplineSegmentationExporter(Exporter):
                         y = int(round(y))
                         y = min(image_size[0]-1, max(0, y))
 
-                        segmentation[int(round(y)), int(round(x))] = counter
+                        if previous_x is not None and (abs(previous_x - x) > 1 or abs(previous_y - y) > 1):
+                            # Draw a straight line between the points
+                            end_pos = np.array([x,y])
+                            start_pos = np.array([previous_x,previous_y])
+                            direction = end_pos - start_pos
+                            segment_length = np.linalg.norm(end_pos - start_pos)
+                            direction = direction / segment_length # Normalize
+                            for i in np.arange(0.0, np.ceil(segment_length), 0.5):
+                                current = start_pos + direction * (float(i)/segment_length)
+                                current = np.round(current)
+                                current[0] = min(image_size[1]-1, max(0, current[0]))
+                                current[1] = min(image_size[0]-1, max(0, current[1]))
+                                segmentation[current[1], current[0]] = counter
+
+                        previous_x = x
+                        previous_y = y
+
+                        segmentation[y, x] = counter
 
             # Fill the hole
             segmentation[binary_fill_holes(segmentation == counter)] = counter
