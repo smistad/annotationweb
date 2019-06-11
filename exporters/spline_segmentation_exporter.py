@@ -59,7 +59,7 @@ class SplineSegmentationExporter(Exporter):
 
         # For each subject
         for subject in data:
-            subject_path = join(path, subject.name)
+            subject_path = join(path, subject.dataset.name, subject.name)
             frames = KeyFrameAnnotation.objects.filter(image_annotation__image__subject=subject)
             for frame in frames:
                 # Check if image was rejected
