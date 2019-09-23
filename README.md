@@ -4,7 +4,7 @@ Annotation web
 Requirements
 ------------------------------------
 * python 3
-* django 1.9
+* django 2.1
 * numpy
 * pillow (PIL)
 * +++ see requirements.txt
