@@ -1,7 +1,19 @@
 {% extends 'annotationweb/one_column_layout.html' %}
 
 {% block javascript %}
-loadSequence({{ image_sequence.id }}, {{ image_sequence.start_frame_nr }}, {{ image_sequence.nr_of_frames }}, {{ image_sequence.start_frame_nr }}, true, 0, 0);
+loadSequence(
+    {{ image_sequence.id }},
+    {{ image_sequence.start_frame_nr }},
+    {{ image_sequence.nr_of_frames }},
+    true,
+    false,
+    false,
+    [ {% for frame_nr in frames %}{{ frame_nr }},{% endfor %}],
+    0,
+    0,
+    false
+);
+
 {% endblock %}
 
 {% block content %}
