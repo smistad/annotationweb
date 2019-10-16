@@ -279,8 +279,8 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     $("#canvas").click(function() {
         // Stop playing if user clicks image
         setPlayButton(false);
-        g_currentFrameNr = target_frame;
-        $('#slider').slider('value', target_frame); // Update slider
+        //g_currentFrameNr = target_frame;
+        //$('#slider').slider('value', target_frame); // Update slider
         redrawSequence();
     });
 

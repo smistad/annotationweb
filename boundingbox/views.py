@@ -20,7 +20,13 @@ def process_image(request, task_id, image_id):
         context['javascript_files'] = ['boundingbox/boundingbox.js']
 
         # Load boxes if they exist
-        context['boxes'] = BoundingBox.objects.filter(image__image_id=image_id, image__task_id=task_id)
+        try:
+            annotations = KeyFrameAnnotation.objects.filter(image_annotation__task_id=task_id,
+                                                            image_annotation__image_id=image_id)
+            context['boxes'] = BoundingBox.objects.filter(image__in=annotations)
+            context['target_frames'] = annotations
+        except KeyFrameAnnotation.DoesNotExist:
+            pass
 
         return render(request, 'boundingbox/process_image.html', context)
     except ValueError:
@@ -30,19 +36,21 @@ def process_image(request, task_id, image_id):
 
 def save_boxes(request):
     try:
-        annotation = common.task.save_annotation(request)
+        annotations = common.task.save_annotation(request)
+        boxes = json.loads(request.POST['boxes'])
 
         # Store every box
-        boxes = json.loads(request.POST['boxes'])
-        for box in boxes:
-            bb = BoundingBox()
-            bb.x = int(box['x'])
-            bb.y = int(box['y'])
-            bb.width = int(box['width'])
-            bb.height = int(box['height'])
-            bb.image = annotation
-            bb.label_id = int(box['label_id'])
-            bb.save()
+        for annotation in annotations:
+            frame_nr = str(annotation.frame_nr)
+            for box in boxes[frame_nr]:
+                bb = BoundingBox()
+                bb.x = int(box['x'])
+                bb.y = int(box['y'])
+                bb.width = int(box['width'])
+                bb.height = int(box['height'])
+                bb.image = annotation
+                bb.label_id = int(box['label_id'])
+                bb.save()
 
         response = {
             'success': 'true',

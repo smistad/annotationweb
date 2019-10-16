@@ -4,11 +4,15 @@
 
 {# Add previously stored boxes if they exist #}
 {% for box in boxes %}
-addBox({{ box.x }}, {{ box.y }}, {{ box.x }} + {{ box.width }}, {{ box.y }} + {{ box.height }}, {{ box.label_id }});
+addBox({{ box.image.frame_nr }}, {{ box.x }}, {{ box.y }}, {{ box.x }} + {{ box.width }}, {{ box.y }} + {{ box.height }}, {{ box.label_id }});
 {% endfor %}
 
 {% if image_sequence %}
-loadBBTask({{ image_sequence.id }}, {{ frame_nr }});
+loadBBTask({{ image_sequence.id }});
 {% endif %}
 
 {% endblock task_javascript %}
+
+{% block task_instructions %}
+   TODO Put task instructions here..
+{% endblock task_instructions %}

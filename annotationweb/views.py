@@ -24,12 +24,6 @@ from common.user import is_annotater
 def get_task_statistics(tasks, user):
     for task in tasks:
         if task.annotate_single_frame:
-            pass
-            # User can select frames, have to count nr of videos
-
-            # task.total_number_of_images = Image.objects.filter(subject__dataset__task=task.id).count()
-            # task.number_of_annotated_images = Annotation.objects.filter(task=task.id).count()
-        else:
             task.total_number_of_images = ImageSequence.objects.filter(subject__dataset__task=task.id).count()
             task.number_of_annotated_images = ImageSequence.objects.filter(imageannotation__in=ImageAnnotation.objects.filter(task_id=task.id)).count()
 
@@ -290,8 +284,11 @@ def add_image_sequence(request, subject_id):
                 new_image_sequence.start_frame_nr = start_frame
                 new_image_sequence.subject = subject
 
-                if request.POST['frame_selection'] == 'manual':
-                    new_image_sequence.save()  # Save to db
+                new_image_sequence.save()  # Save to db
+                if request.POST['frame_selection'] == 'none':
+                    messages.success(request, 'Sequence successfully added')
+                    return redirect('datasets')
+                elif request.POST['frame_selection'] == 'manual':
                     return redirect('add_key_frames', new_image_sequence.id)
                 elif request.POST['frame_selection'] == 'every_n_frame':
                     try:
@@ -303,10 +300,9 @@ def add_image_sequence(request, subject_id):
                             or frame_start >= new_image_sequence.nr_of_frames:
                         messages.error(request, 'Incorrect frame step or start nr.')
                     else:
-                        new_image_sequence.save()  # Save to db
-
                         # Add every frame_step
                         for frame_nr in range(frame_start, new_image_sequence.nr_of_frames, frame_step):
+                            raise NotImplemented()
                             # Create image
                             image = Image()
                             image.filename = new_image_sequence.format.replace('#', str(frame_nr))
@@ -343,6 +339,7 @@ def add_key_frames(request, image_sequence_id):
         else:
             # Add frames to db
             for frame_nr in frame_list:
+                raise NotImplemented()
                 # Create image
                 image = Image()
                 image.filename = image_sequence.format.replace('#', str(frame_nr))

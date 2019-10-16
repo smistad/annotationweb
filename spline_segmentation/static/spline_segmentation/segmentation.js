@@ -1,6 +1,3 @@
-var g_backgroundImageData;
-var g_imageData;
-var g_image;
 var g_backgroundImage;
 var g_currentColor = null;
 var g_controlPoints = {}; // control point dictionary [key_frame_nr] contains a dictionary/map of objects with a dictionary with label: label data, control_points: list
@@ -24,14 +21,6 @@ function getMaxObjectID() {
 }
 
 function setupSegmentation() {
-
-    // Initialize canvas with background image
-    g_context.clearRect(0, 0, g_context.canvas.width, g_context.canvas.height); // Clears the canvas
-    g_context.drawImage(g_backgroundImage, 0, 0, g_canvasWidth, g_canvasHeight); // Draw background image
-    g_backgroundImageData = g_context.getImageData(0,0,g_canvasWidth, g_canvasHeight).data; // Get pixel data
-    // Create the image which will be put on canvas
-    g_image = g_context.getImageData(0, 0, g_canvasWidth, g_canvasHeight);
-    g_imageData = g_image.data;
 
     // Remove any previous event handlers
     $('#canvas').off();
@@ -64,6 +53,7 @@ function setupSegmentation() {
                 // Insert point
                 insertControlPoint(mouseX, mouseY, g_labelButtons[g_currentLabel].id, section);
             } else {
+                addControlPointsForNewFrame(g_currentFrameNr);
                 // Add point at end
                 addControlPoint(mouseX, mouseY, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
             }
@@ -327,7 +317,6 @@ function isPointOnSpline(pointX, pointY) {
 }
 
 function redraw(){
-    //g_context.putImageData(g_image, 0, 0);
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
 
