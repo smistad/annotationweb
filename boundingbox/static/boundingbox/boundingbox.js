@@ -16,29 +16,27 @@ function setupSegmentation() {
     $('#canvas').mousedown(function(e) {
 
         // TODO check if current frame is not the frame to segment
-
-        var scale =  g_canvasWidth / $('#canvas').width();
-        var mouseX = (e.pageX - this.offsetLeft)*scale;
-        var mouseY = (e.pageY - this.offsetTop)*scale;
-
-        g_BBx = mouseX;
-        g_BBy = mouseY;
+        var pos = mousePos(e, this);
+        if(isInsideBox(pos.x, pos.y).isInside)
+            return;
+        g_BBx = pos.x;
+        g_BBy = pos.y;
         g_paint = true;
         console.log('started BB on ' + g_BBx + ' ' + g_BBy);
     });
 
     $('#canvas').mousemove(function(e) {
         if(g_paint) {
-            var scale =  g_canvasWidth / $('#canvas').width();
-            var mouseX = (e.pageX - this.offsetLeft)*scale;
-            var mouseY = (e.pageY - this.offsetTop)*scale;
-            g_BBx2 = mouseX;
-            g_BBy2 = mouseY;
+            var pos = mousePos(e, this);
+            g_BBx2 = pos.x;
+            g_BBy2 = pos.y;
             redrawSequence();
         }
     });
 
     $('#canvas').mouseup(function(e){
+        if(!g_paint)
+            return;
         g_paint = false;
         g_annotationHasChanged = true;
         addBox(g_currentFrameNr, g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
@@ -54,6 +52,13 @@ function setupSegmentation() {
         }
     });
 
+    $('#canvas').dblclick(function(e){
+        var pos = mousePos(e, this);
+        insideBox = isInsideBox(pos.x, pos.y);
+        if(insideBox.isInside)
+            removeBox(insideBox.boxNr);
+    });
+
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
         g_boxes = {};
@@ -63,6 +68,44 @@ function setupSegmentation() {
 
     // Set first label active
     changeLabel(g_labelButtons[0].id);
+    redrawSequence();
+}
+
+function mousePos(e, canvas) {
+    var scale =  g_canvasWidth / $('#canvas').width();
+    var mouseX = (e.pageX - canvas.offsetLeft)*scale;
+    var mouseY = (e.pageY - canvas.offsetTop)*scale;
+    return {
+        x: mouseX,
+        y: mouseY,
+    }
+}
+
+function isInsideBox(x, y) {
+    var boxNr = 999;
+    var isInside = false;
+
+    if(g_currentFrameNr in g_boxes) {
+        for(var i = 0; i < g_boxes[g_currentFrameNr].length; ++i) {
+            var box = g_boxes[g_currentFrameNr][i];
+            if(((x >= box.x) && (x <= (box.x+box.width))) && ((y >= box.y) && (y <= (box.y+box.height))) ) {
+                boxNr = i;
+                isInside = true;
+            }
+        }
+    }
+//    console.log('isInside: ' + isInside + ' ' + boxNr)
+    return {
+        isInside: isInside,
+        boxNr: boxNr,
+    };
+}
+
+function removeBox(boxNr)
+{
+    console.log('removeBox: ' + boxNr);
+    var removedBox = g_boxes[g_currentFrameNr].splice(boxNr, 1);
+    g_annotationHasChanged = true;
     redrawSequence();
 }
 
