@@ -8,6 +8,11 @@ var g_BBx2;
 var g_BBy2;
 var g_boxes = {}; // Dictionary with keys frame_nr which each has a list of boxes
 var g_minimumSize = 10;
+var g_move = false;
+var g_resize = false;
+var g_invalidBoxNr = 999999;
+var g_currentBox = g_invalidBoxNr;
+var g_cornerSize = 20;
 
 function setupSegmentation() {
     console.log('setting up segmentation....');
@@ -17,24 +22,51 @@ function setupSegmentation() {
 
         // TODO check if current frame is not the frame to segment
         var pos = mousePos(e, this);
-        if(isInsideBox(pos.x, pos.y).isInside)
-            return;
         g_BBx = pos.x;
         g_BBy = pos.y;
+        var insideBox = isInsideBox(pos.x, pos.y);
+        if(insideBox.isInside) {
+            g_currentBox = insideBox.boxNr
+            if(insideBox.isInsideCorner)
+                g_move = true;
+            else
+                g_resize = true;
+            return;
+        }
         g_paint = true;
         console.log('started BB on ' + g_BBx + ' ' + g_BBy);
     });
 
     $('#canvas').mousemove(function(e) {
+        var pos = mousePos(e, this);
         if(g_paint) {
-            var pos = mousePos(e, this);
             g_BBx2 = pos.x;
             g_BBy2 = pos.y;
             redrawSequence();
+            return;
+        }
+
+        //Position diff since last mouse position
+        var xDiff = pos.x - g_BBx;
+        var yDiff = pos.y - g_BBy;
+
+        //Update initial position while moving or resizing.
+        g_BBx = pos.x;
+        g_BBy = pos.y;
+
+        if(g_move) {
+            moveBox(g_currentBox, xDiff, yDiff);
+            return;
+        }
+        if(g_resize) {
+            resizeBox(g_currentBox, xDiff, yDiff);
+            return;
         }
     });
 
     $('#canvas').mouseup(function(e){
+        g_move = false;
+        g_resize = false;
         if(!g_paint)
             return;
         g_paint = false;
@@ -82,15 +114,19 @@ function mousePos(e, canvas) {
 }
 
 function isInsideBox(x, y) {
-    var boxNr = 999;
+    var boxNr = g_invalidBoxNr;
     var isInside = false;
+    var isInsideCorner = false;
 
     if(g_currentFrameNr in g_boxes) {
         for(var i = 0; i < g_boxes[g_currentFrameNr].length; ++i) {
             var box = g_boxes[g_currentFrameNr][i];
             if(((x >= box.x) && (x <= (box.x+box.width))) && ((y >= box.y) && (y <= (box.y+box.height))) ) {
-                boxNr = i;
                 isInside = true;
+                if(!isInsideCorner)
+                    boxNr = i;//Don't change boxnr if we are inside the corner of another box
+                if((x <= (box.x+g_cornerSize)) && (y <= (box.y+g_cornerSize)))
+                    isInsideCorner = true;
             }
         }
     }
@@ -98,6 +134,7 @@ function isInsideBox(x, y) {
     return {
         isInside: isInside,
         boxNr: boxNr,
+        isInsideCorner: isInsideCorner,
     };
 }
 
@@ -106,6 +143,24 @@ function removeBox(boxNr)
     console.log('removeBox: ' + boxNr);
     var removedBox = g_boxes[g_currentFrameNr].splice(boxNr, 1);
     g_annotationHasChanged = true;
+    redrawSequence();
+}
+
+function moveBox(boxNr, xDiff, yDiff)
+{
+    box = g_boxes[g_currentFrameNr][boxNr];
+    box.x += xDiff;
+    box.y += yDiff;
+    redrawSequence();
+}
+
+function resizeBox(boxNr, xDiff, yDiff)
+{
+    box = g_boxes[g_currentFrameNr][boxNr];
+    if(box.width > (-xDiff + g_minimumSize))
+        box.width += xDiff;
+    if(box.height > (-yDiff + g_minimumSize))
+    box.height += yDiff;
     redrawSequence();
 }
 
@@ -194,7 +249,7 @@ function redraw(){
     if(!(g_currentFrameNr in g_boxes))
         return;
 
-    // Draw all stores boxes
+    // Draw all stored boxes
     for(var i = 0; i < g_boxes[g_currentFrameNr].length; ++i) {
         g_context.beginPath();
         g_context.lineWidth = 2;
@@ -202,6 +257,7 @@ function redraw(){
         label = g_labelButtons[box.label];
         g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         g_context.rect(box.x, box.y, box.width, box.height);
+        g_context.rect(box.x, box.y, g_cornerSize, g_cornerSize);
         g_context.stroke();
     }
 }
