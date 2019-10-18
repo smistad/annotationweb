@@ -78,7 +78,7 @@ function createBox(x, y, x2, y2, label) {
     // Find label index
     var labelIndex = 0;
     for(var i = 0; i < g_labelButtons.length; i++) {
-        if(g_labelButtons[i].id == label) {
+        if(g_labelButtons[i].id === label) {
             labelIndex = i;
         }
     }
@@ -135,24 +135,28 @@ function loadBBTask(image_sequence_id) {
 }
 
 function redraw(){
-    if(!(g_currentFrameNr in g_boxes))
-        return;
-    // Draw all stores boxes
-    for(var i = 0; i < g_boxes[g_currentFrameNr].length; ++i) {
-        g_context.beginPath();
-        g_context.lineWidth = 2;
-        var box = g_boxes[g_currentFrameNr][i];
-        var label = g_labelButtons[box.label];
-        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
-        g_context.rect(box.x, box.y, box.width, box.height);
-        g_context.stroke();
-    }
+    var box, label;
+
     // Draw current box
     if(g_paint) {
         g_context.beginPath();
         g_context.lineWidth = 2;
-        var box = createBox(g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
-        var label = g_labelButtons[box.label];
+        box = createBox(g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
+        label = g_labelButtons[box.label];
+        g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
+        g_context.rect(box.x, box.y, box.width, box.height);
+        g_context.stroke();
+    }
+
+    if(!(g_currentFrameNr in g_boxes))
+        return;
+
+    // Draw all stores boxes
+    for(var i = 0; i < g_boxes[g_currentFrameNr].length; ++i) {
+        g_context.beginPath();
+        g_context.lineWidth = 2;
+        box = g_boxes[g_currentFrameNr][i];
+        label = g_labelButtons[box.label];
         g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         g_context.rect(box.x, box.y, box.width, box.height);
         g_context.stroke();
