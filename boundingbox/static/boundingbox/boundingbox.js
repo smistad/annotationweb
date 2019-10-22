@@ -28,9 +28,9 @@ function setupSegmentation() {
         if(insideBox.isInside) {
             g_currentBox = insideBox.boxNr
             if(insideBox.isInsideCorner)
-                g_move = true;
-            else
                 g_resize = true;
+            else
+                g_move = true;
             return;
         }
         g_paint = true;
@@ -125,7 +125,7 @@ function isInsideBox(x, y) {
                 isInside = true;
                 if(!isInsideCorner)
                     boxNr = i;//Don't change boxnr if we are inside the corner of another box
-                if((x <= (box.x+g_cornerSize)) && (y <= (box.y+g_cornerSize)))
+                if((x >= (box.x+box.width-g_cornerSize)) && (y >= (box.y+box.height-g_cornerSize)))//Lower right
                     isInsideCorner = true;
             }
         }
@@ -257,7 +257,8 @@ function redraw(){
         label = g_labelButtons[box.label];
         g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
         g_context.rect(box.x, box.y, box.width, box.height);
-        g_context.rect(box.x, box.y, g_cornerSize, g_cornerSize);
+        g_context.moveTo(box.x+box.width-g_cornerSize, box.y+box.height);
+        g_context.lineTo(box.x+box.width, box.y+box.height-g_cornerSize);
         g_context.stroke();
     }
 }
