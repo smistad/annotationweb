@@ -27,9 +27,9 @@ class Label(models.Model):
     name = models.CharField(max_length=200)
 
     # Color stored as R G B with values from 0 to 255
-    color_red = models.PositiveSmallIntegerField()
-    color_green = models.PositiveSmallIntegerField()
-    color_blue = models.PositiveSmallIntegerField()
+    color_red = models.PositiveSmallIntegerField(default=255)
+    color_green = models.PositiveSmallIntegerField(default=0)
+    color_blue = models.PositiveSmallIntegerField(default=0)
 
     parent = models.ForeignKey('Label', blank=True, null=True, on_delete=models.CASCADE)
 
