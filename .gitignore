@@ -1,5 +1,6 @@
 /.idea
 /environment
+/venv
 /segmentations
 *.sqlite3
 *.log
