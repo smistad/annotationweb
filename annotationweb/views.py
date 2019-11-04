@@ -528,7 +528,6 @@ def task(request, task_id):
             queryset = queryset.filter(
                 imageannotation__image_quality__in=image_quality,
                 imageannotation__task=task,
-                imageannotation__imagelabel__label__in=labels_selected,
                 imageannotation__user__in=users_selected,
                 subject__in=subjects_selected,
             )

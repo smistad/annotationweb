@@ -3,11 +3,13 @@ import numpy as np
 import PIL, PIL.Image
 import os
 
+
 def tuple_to_string(tuple):
     string = ''
     for i in range(len(tuple)):
         string += str(tuple[i]) + ' '
     return string[:len(string)-1]
+
 
 class MetaImage:
     def __init__(self, filename=None, data=None, channels=False):
@@ -78,7 +80,6 @@ class MetaImage:
         elif len(dims) == 3:
             self.dim_size = (int(dims[0]), int(dims[1]), int(dims[2]))
 
-        print(self.data.shape)
         self.ndims = int(self.attributes['NDims'])
         if self.get_channels() == 1:
             self.data = self.data.reshape((self.dim_size[1], self.dim_size[0]))
