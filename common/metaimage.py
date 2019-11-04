@@ -10,14 +10,20 @@ def tuple_to_string(tuple):
     return string[:len(string)-1]
 
 class MetaImage:
-    def __init__(self, filename=None, data=None):
+    def __init__(self, filename=None, data=None, channels=False):
         self.attributes = {}
         self.attributes['ElementSpacing'] = [1, 1, 1]
         self.attributes['ElementNumberOfChannels'] = 1
         if filename is not None:
             self.read(filename)
         else:
-            self.ndims = len(data.shape)
+            if not channels:
+                self.ndims = len(data.shape)
+            else:
+                self.ndims = len(data.shape) - 1
+                # Assume last dim is channels
+                self.attributes['ElementNumberOfChannels'] = data.shape[-1]
+
             self.data = data
 
             # Switch so that we get width first
