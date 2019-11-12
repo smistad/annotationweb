@@ -524,7 +524,6 @@ def task(request, task_id):
         ).exclude(imageannotation__task=task)
     else:
         if task.type == Task.CLASSIFICATION:
-            labels_selected = search_filters.get_value('label')
             queryset = queryset.filter(
                 imageannotation__image_quality__in=image_quality,
                 imageannotation__task=task,
