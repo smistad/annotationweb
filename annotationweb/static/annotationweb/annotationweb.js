@@ -20,6 +20,7 @@ var g_nextURL = '';
 var g_rejected = false;
 var g_targetFrames = []; // Frames to annotate
 var g_currentTargetFrameIndex = -1; // Index of current target frame (g_targetFrames), -1 if not on target frame
+var g_annotateIndividualFrames = true;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -150,13 +151,12 @@ function initializeAnnotation(taskID, imageID) {
         });
 }
 
-function setupSliderMark(frame, totalNrOfFrames){
+function setupSliderMark(frame, totalNrOfFrames, bg_color='#0077b3'){
     var marker_index = g_targetFrames.findIndex(index => index === frame);
-
     var slider = document.getElementById('slider')
-
     var newMarker = document.createElement("sliderMarker" + marker_index)
-    $(newMarker).css('background-color', '#0077b3');
+
+    $(newMarker).css('background-color', bg_color);
     $(newMarker).css('width', $('.ui-slider-handle').css('width'));
     $(newMarker).css('margin-left', $('.ui-slider-handle').css('margin-left'));
     $(newMarker).css('height', '100%');
@@ -210,6 +210,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     }
     g_startFrame = start;
     g_sequenceLength = end-start;
+    g_annotateIndividualFrames = annotate_single_frame;
 
     // Create slider
     $("#slider").slider(
