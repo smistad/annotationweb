@@ -4,7 +4,12 @@
 
 loadClassificationTask();
 
-{% if chosen_label %}
-changeLabel({{ chosen_label }});
+{% if chosen_label and not task.annotate_single_frame %}
+    changeLabel({{ chosen_label }});
 {% endif %}
+
+{% for label in target_labels %}
+    loadLabels({{ label.image.frame_nr }}, {{ label.label_id }});
+{% endfor %}
+
 {% endblock task_javascript %}
