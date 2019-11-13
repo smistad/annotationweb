@@ -30,6 +30,17 @@ function loadClassificationTask() {
         changeLabel(-1);
     });
 
+    $('#removeFrameButton').click(function() {
+        var frame = parseInt(g_currentFrameNr);
+        delete g_targetLabels[frame];
+
+        g_targetFrames = g_targetFrames.filter(function (value, index, arr) {return value!=frame});
+
+        removeSliderMarks();
+        for(label in g_targetLabels)
+            updateSliderMark(label, g_targetLabels[label]);
+    });
+
     // Add click listener for label buttons to trigger save if annotating whole sequence with one label
     if(!g_annotateIndividualFrames){
         for(var i = 0; i < g_labelButtons.length; ++i) {
@@ -61,6 +72,7 @@ function loadClassificationTask() {
             g_progressbar.hide();
             redrawSequence();
 
+            removeSliderMarks();
             for(label in g_targetLabels)
                 updateSliderMark(label, g_targetLabels[label]);
 
@@ -76,10 +88,19 @@ function addLabelsForNewFrame(frameNr) {
     g_targetLabels[frameNr] = {};
 }
 
+function removeSliderMarks(){
+    var slider = document.getElementById('slider')
+    for (var i = slider.childNodes.length-1; i >= 0; i--) {
+        if(slider.childNodes[i].nodeName.includes("SLIDERMARKER"))
+            slider.removeChild(slider.childNodes[i]);
+    }
+}
+
 // Overload of annotationweb.js implementation of setupSlideMark
 function updateSliderMark(frame, label){
     var frame = parseInt(frame);
 
+    var slider = document.getElementById('slider')
     var marker_index = g_targetFrames.findIndex(index => index === frame);
     var label = label.label
     var newMarker = document.createElement("sliderMarker" + marker_index)
