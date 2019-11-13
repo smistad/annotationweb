@@ -79,24 +79,35 @@ class ClassificationExporter(Exporter):
 
         # Create file_list.txt file
         file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets, rejected=False)
+        labeled_images = ImageAnnotation.objects.filter(task=self.task, rejected=False)
+
         for labeled_image in labeled_images:
-            name = labeled_image.image.filename
-            dataset_path = os.path.join(path, labeled_image.image.dataset.name)
-            try:
-                os.mkdir(dataset_path) # Make dataset path if doesn't exist
-            except:
-                pass
+            image_sequence = ImageSequence.objects.get(id=labeled_image.image_id)
+            keyframes = KeyFrameAnnotation.objects.filter(image_annotation_id=labeled_image.id)
+            subject_path = join(path, image_sequence.subject.name)
 
-            image_id = labeled_image.image.id
-            new_extension = form.cleaned_data['output_image_format']
-            new_filename = os.path.join(dataset_path, str(image_id) + '.' + new_extension)
-            copy_image(name, new_filename)
+            for frame in keyframes:
+                if frame.image_annotation.rejected:
+                    continue
 
-            # Get image label
-            label = ImageLabel.objects.get(image=labeled_image)
+                # Get image sequence
+                image_sequence = frame.image_annotation.image
 
-            file_list.write(new_filename + ' ' + str(labelDict[label.label.name]) + '\n')
+                # Copy image frames
+                sequence_id = os.path.basename(os.path.dirname(image_sequence.format))
+                subject_subfolder = join(subject_path, str(sequence_id))
+                create_folder(subject_subfolder)
+
+                target_name = os.path.basename(image_sequence.format).replace('#', str(frame.frame_nr))
+                target_gt_name = os.path.splitext(target_name)[0] + "_gt.mhd"
+
+                filename = image_sequence.format.replace('#', str(frame.frame_nr))
+                new_filename = join(subject_subfolder, target_name)
+                copy_image(filename, new_filename)
+
+                # Get image label
+                label = ImageLabel.objects.get(image_id=frame.id)
+                file_list.write(new_filename + ' ' + str(labelDict[label.label.name]) + '\n')
 
         file_list.close()
 
