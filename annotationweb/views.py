@@ -12,10 +12,8 @@ from common.search_filters import SearchFilter
 from common.label import get_complete_label_name
 from django.urls import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-
 import fnmatch
 import os
-
 from .forms import *
 from .models import *
 from common.user import is_annotater
@@ -145,15 +143,18 @@ def import_options(request, dataset_id, importer_index):
     return render(request, 'annotationweb/import_options.html', {'form': form, 'importer_index': importer_index, 'dataset': dataset})
 
 
-def show_image(request, image_id):
+def show_image(request, image_id, task_id):
     try:
+        task = Task.objects.get(pk=task_id)
         image = ImageSequence.objects.get(pk=image_id)
         frame = int(image.nr_of_frames/2)
         filename = image.format.replace('#', str(frame))
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
     except ImageSequence.DoesNotExist:
         raise Http404('Image does not exist')
 
-    return get_image_as_http_response(filename)
+    return get_image_as_http_response(filename, task.post_processing_method)
 
 
 @staff_member_required
