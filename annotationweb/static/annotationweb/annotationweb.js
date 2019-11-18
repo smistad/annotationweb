@@ -290,7 +290,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     //console.log('target_frame: ' + target_frame)
     for(var i = start; i <= end; i++) {
         var image = new Image();
-        image.src = '/show_frame/' + image_sequence_id + '/' + i + '/';
+        image.src = '/show_frame/' + image_sequence_id + '/' + i + '/' + g_taskID + '/';
         image.onload = function() {
             g_canvasWidth = this.width;
             g_canvasHeight = this.height;

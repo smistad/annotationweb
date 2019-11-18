@@ -360,16 +360,19 @@ def add_key_frames(request, image_sequence_id):
     return render(request, 'annotationweb/add_key_frames.html', {'image_sequence': image_sequence})
 
 
-def show_frame(request, image_sequence_id, frame_nr):
+def show_frame(request, image_sequence_id, frame_nr, task_id):
     # Get image sequence the key frame belongs to
     try:
+        task = Task.objects.get(pk=task_id)
         image_sequence = ImageSequence.objects.get(pk=image_sequence_id)
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
     except ImageSequence.DoesNotExist:
         raise Http404('Image sequence does not exist')
 
     filename = image_sequence.format.replace('#', str(frame_nr))
 
-    return get_image_as_http_response(filename)
+    return get_image_as_http_response(filename, task.post_processing_method)
 
 
 @staff_member_required()

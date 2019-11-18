@@ -93,7 +93,7 @@ function loadLandmarkTask(image_sequence_id, frame_nr) {
 
     g_backgroundImage = new Image();
     g_frameNr = frame_nr;
-    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/';
+    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/' + g_taskID + '/';
     g_backgroundImage.onload = function() {
         g_canvasWidth = this.width;
         g_canvasHeight = this.height;

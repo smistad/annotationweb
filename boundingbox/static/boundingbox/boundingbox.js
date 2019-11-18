@@ -223,7 +223,7 @@ function loadBBTask(image_sequence_id) {
     console.log('In bb task load')
 
     g_backgroundImage = new Image();
-    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + 0 + '/';
+    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + 0 + '/' + g_taskID + '/';
     g_backgroundImage.onload = function() {
         g_canvasWidth = this.width;
         g_canvasHeight = this.height;
