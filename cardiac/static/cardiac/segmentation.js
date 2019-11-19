@@ -4,16 +4,14 @@ var g_image;
 var g_backgroundImage;
 var g_frameNr;
 var g_currentColor = null;
-var g_controlPoints = [];
+var g_controlPoints = {}; // control point dictionary [key_frame_nr] contains a dictionary/map of objects with a dictionary with label: label data, control_points: list
+var g_currentObject = 0; // Which index in g_controlPoints[key_frame_nr] list we are in
 var g_move = false;
 var g_pointToMove = -1;
 var g_labelToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
 var g_currentSegmentationLabel = 0;
-var g_frameED = -1;
-var g_frameES = -1;
-var g_currentPhase = -1; // -1 == None, 0 == ED, 1 == ES
 var g_motionModeData;
 var g_motionModeImage;
 var g_motionModeContext;
@@ -21,7 +19,27 @@ var g_createMotionModeImage = 0;
 var g_motionModeLine = -1;
 var g_moveMotionModeLIne = false;
 var g_shiftKeyPressed = false;
+var g_targetFrameTypes = {};
+var g_currentLabel = -1;
 
+function getLabelIdxWithId(id) {
+    for(var i = 0; i < g_labelButtons.length; i++) {
+        if(g_labelButtons[i].id == id) {
+            return i;
+        }
+    }
+}
+
+
+function getMaxObjectID() {
+    var max = -1;
+    for(var key in g_controlPoints[g_currentFrameNr]) {
+        key = parseInt(key); // dictionary keys are strings
+        if(key > max)
+            max = key;
+    }
+    return max;
+}
 
 function setupSegmentation() {
 
@@ -39,26 +57,37 @@ function setupSegmentation() {
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
+        if(e.ctrlKey && g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length >= 3) { // Create new object if ctrl key is held down AND current object has more than 2 points
+            g_currentObject = getMaxObjectID()+1;
+            data = {label: g_labelButtons[g_currentLabel], control_points: []};
+            g_controlPoints[g_currentFrameNr][g_currentObject] = data;
+        }
 
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
         if(point !== false) {
+            // Activate object of this point
+            g_currentObject = point.object;
+            $('.labelButton').removeClass('activeLabel');
+            $('#labelButton' + point.label_idx).addClass('activeLabel');
+            g_currentLabel = getLabelIdxWithId(point.label_idx);
             // Move point
             g_move = true;
             g_pointToMove = point.index;
-            g_labelToMove = point.label;
+            g_labelToMove = point.label_idx;
         } else if(Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight/10) {
             g_moveMotionModeLIne = true;
-        } else if(g_currentPhase >= 0) {
+        } else {
             var section = isPointOnSpline(mouseX, mouseY);
             if(section >= 0) {
                 // Insert point
-                insertControlPoint(mouseX, mouseY, g_currentSegmentationLabel, section);
+                insertControlPoint(mouseX, mouseY, g_labelButtons[g_currentLabel].id, section);
             } else {
+                addControlPointsForNewFrame(g_currentFrameNr);
                 // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentSegmentationLabel, g_currentPhase, g_shiftKeyPressed);
+                addControlPoint(mouseX, mouseY, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
             }
         }
         redrawSequence();
@@ -69,33 +98,29 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var cursor = 'default';
-        if(g_move && g_currentPhase >= 0) {
+              if(g_move) {
             cursor = 'move';
-            setControlPoint(g_pointToMove, g_labelToMove, mouseX, mouseY);
-            redrawSequence();
-        } else if(g_moveMotionModeLIne) {
-            cursor = 'move';
-            g_motionModeLine = mouseX;
+            setControlPoint(g_pointToMove, g_currentObject, mouseX, mouseY);
             redrawSequence();
         } else {
-            if(g_currentPhase >= 0) {
-                if(g_controlPoints[g_currentPhase][g_currentSegmentationLabel].length > 0 && isPointOnSpline(mouseX, mouseY) < 0) {
-                    // If mouse is not close to spline, draw dotted drawing line
-                    var line = {
-                        x0: getControlPoint(-1, g_currentSegmentationLabel).x,
-                        y0: getControlPoint(-1, g_currentSegmentationLabel).y,
-                        x1: mouseX,
-                        y1: mouseY
-                    };
-                    g_drawLine = line;
-                } else if (Math.abs(mouseX - g_motionModeLine) < g_moveDistanceThreshold && mouseY < g_canvasHeight / 10) {
-                    cursor = 'pointer';
-                } else {
-                    cursor = 'pointer';
-                    g_drawLine = false;
-                }
-                redrawSequence();
+            if(!e.ctrlKey &&
+                g_currentFrameNr in g_controlPoints &&
+                g_currentObject in g_controlPoints[g_currentFrameNr] &&
+                g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length > 0 &&
+                isPointOnSpline(mouseX, mouseY) < 0) {
+                // If mouse is not close to spline, draw dotted drawing line
+                var line = {
+                    x0: getControlPoint(-1, g_currentObject).x,
+                    y0: getControlPoint(-1, g_currentObject).y,
+                    x1: mouseX,
+                    y1: mouseY
+                };
+                g_drawLine = line;
+            } else {
+                cursor = 'pointer';
+                g_drawLine = false;
             }
+            redrawSequence();
         }
         $('#canvas').css({'cursor' : cursor});
         e.preventDefault();
@@ -116,14 +141,14 @@ function setupSegmentation() {
     });
 
     $('#canvas').dblclick(function(e) {
-        if(g_move || g_currentPhase == -1)
+        if(g_move)
             return;
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var point = getClosestPoint(mouseX, mouseY);
         if(point !== false) {
-            g_controlPoints[g_currentPhase][point.label].splice(point.index, 1);
+            g_controlPoints[g_currentFrameNr][g_currentObject].control_points.splice(point.index, 1);
         }
         redrawSequence();
     });
@@ -131,11 +156,7 @@ function setupSegmentation() {
 
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
-        if(g_currentPhase >= 0) {
-            g_controlPoints[g_currentPhase][0] = [];
-            g_controlPoints[g_currentPhase][1] = [];
-            g_controlPoints[g_currentPhase][2] = [];
-        }
+        // TODO fix
         redrawSequence();
     });
 
@@ -145,6 +166,7 @@ function setupSegmentation() {
         if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
             return;
         setupSliderMark(g_currentFrameNr, g_framesLoaded, '#555555');
+        g_targetFrameTypes[g_currentFrameNr] = 'Normal';
         g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
         g_targetFrames.sort(function(a, b){return a-b});
@@ -156,6 +178,7 @@ function setupSegmentation() {
         if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
             return;
         setupSliderMark(g_currentFrameNr, g_framesLoaded, '#CC3434');
+        g_targetFrameTypes[g_currentFrameNr] = 'ED';
         g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
         g_targetFrames.sort(function(a, b){return a-b});
@@ -167,29 +190,10 @@ function setupSegmentation() {
         if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
             return;
         setupSliderMark(g_currentFrameNr, g_framesLoaded, '#0077b3');
+        g_targetFrameTypes[g_currentFrameNr] = 'ES';
         g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
         g_targetFrames.sort(function(a, b){return a-b});
-    });
-
-    $('#markAsED').click(function() {
-        markED(g_currentFrameNr, g_framesLoaded);
-        redrawSequence();
-    });
-
-    $('#markAsES').click(function() {
-        markES(g_currentFrameNr, g_framesLoaded);
-        redrawSequence();
-    });
-
-    $('#segmentED').click(function() {
-        changeLabel(0);
-        goToFrame(g_frameED);
-    });
-
-    $('#segmentES').click(function() {
-        changeLabel(0);
-        goToFrame(g_frameES);
     });
 
     $(document).on('keyup keydown', function(event) {
@@ -198,47 +202,10 @@ function setupSegmentation() {
 
     // Set first label active
     changeLabel(0);
-    if(g_frameED >= 0)
-        goToFrame(g_frameED);
     redraw();
 }
 
-function markED(frame, totalNrOfFrames) {
-    g_frameED = frame;
-    $('#sliderEDmark').css('background-color', '#CC3434');
-    $('#sliderEDmark').css('width', $('.ui-slider-handle').css('width'));
-    $('#sliderEDmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
-    $('#sliderEDmark').css('height', '100%');
-    $('#sliderEDmark').css('z-index', '99');
-    $('#sliderEDmark').css('left', ''+(100.0*(frame+1)/totalNrOfFrames)+'%');
-    $('#sliderEDmark').css('position', 'absolute');
-    $('#EDFrame').text(g_frameED);
-    console.log('Frame ED set to ' + g_frameED);
-}
-
-function markES(frame, totalNrOfFrames) {
-    g_frameES = frame;
-    $('#sliderESmark').css('background-color', '#0077b3');
-    $('#sliderESmark').css('width', $('.ui-slider-handle').css('width'));
-    $('#sliderESmark').css('margin-left', $('.ui-slider-handle').css('margin-left'));
-    $('#sliderESmark').css('height', '100%');
-    $('#sliderESmark').css('z-index', '99');
-    $('#sliderESmark').css('left', ''+(100.0*(frame+1)/totalNrOfFrames)+'%');
-    $('#sliderESmark').css('position', 'absolute');
-    $('#ESFrame').text(g_frameES);
-    console.log('Frame ES set to ' + g_frameES);
-}
-
 function loadSegmentationTask(image_sequence_id) {
-    g_controlPoints.push([]); // ED
-    g_controlPoints.push([]); // ES
-    g_controlPoints[0].push([]); // Endo
-    g_controlPoints[0].push([]); // Epi
-    g_controlPoints[0].push([]); // Atrium
-    g_controlPoints[1].push([]); // Endo
-    g_controlPoints[1].push([]); // Epi
-    g_controlPoints[1].push([]); // Atrium
-
     g_backgroundImage = new Image();
     g_frameNr = 0;
     g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + 0 + '/' + g_taskID + '/';
@@ -307,27 +274,34 @@ function createMotionModeCanvas() {
     $('#m-mode-canvas').css('height', '200px');
 }
 
+
+function addControlPointsForNewFrame(frameNr) {
+    if(frameNr in g_controlPoints) // Already exists
+        return;
+    g_controlPoints[frameNr] = {};
+}
+
 function getClosestPoint(x, y) {
-    if(g_currentPhase == -1)
-        return false;
     var minDistance = g_canvasWidth*g_canvasHeight;
     var minPoint = -1;
     var minLabel = -1;
+    var minObject = -1;
 
-    for(var label = 0; label < 3; label++) {
-        for(var i = 0; i < g_controlPoints[g_currentPhase][label].length; i++) {
-            var point = getControlPoint(i, label);
+    for(var j in g_controlPoints[g_currentFrameNr]) {
+        for(var i = 0; i < g_controlPoints[g_currentFrameNr][j].control_points.length; i++) {
+            var point = getControlPoint(i, j);
             var distance = Math.sqrt((point.x - x) * (point.x - x) + (point.y - y) * (point.y - y));
             if(distance < minDistance) {
                 minPoint = i;
                 minDistance = distance;
-                minLabel = label;
+                minLabel = g_controlPoints[g_currentFrameNr][j].label.id;
+                minObject = j;
             }
         }
     }
 
     if(minDistance < g_moveDistanceThreshold) {
-        return {index: minPoint, label: minLabel};
+        return {index: minPoint, label_idx: minLabel, object: minObject};
     } else {
         return false;
     }
@@ -355,7 +329,7 @@ function createControlPoint(x, y, label, uncertain) {
 
 function insertControlPoint(x, y, label, index) {
     var controlPoint = createControlPoint(x, y, label, g_shiftKeyPressed);
-    g_controlPoints[g_currentPhase][g_currentSegmentationLabel].splice(index+1, 0, controlPoint);
+    g_controlPoints[g_currentFrameNr][g_currentObject].control_points.splice(index+1, 0, controlPoint);
 }
 
 function snapToAVLine(x, y) {
@@ -379,31 +353,33 @@ function snapToAVLine(x, y) {
     };
 }
 
-function addControlPoint(x, y, label, phase, uncertain) {
+function addControlPoint(x, y, target_frame, object, label, uncertain) {
+    console.log('Adding control point for ' + target_frame + ' object ' + object)
     var controlPoint = createControlPoint(x, y, label, uncertain);
-    g_controlPoints[phase][label].push(controlPoint);
+    if(!(object in g_controlPoints[target_frame])) // add object if it doesn't exist
+        g_controlPoints[target_frame][object] = {label: g_labelButtons[getLabelIdxWithId(label)], control_points: []};
+    g_controlPoints[target_frame][object].control_points.push(controlPoint);
 }
 
-function getControlPoint(index, label) {
+function getControlPoint(index, object) {
     if(index === -1) {
-        index = g_controlPoints[g_currentPhase][label].length-1;
+        index = g_controlPoints[g_currentFrameNr][object].control_points.length-1;
     }
-    return g_controlPoints[g_currentPhase][label][index];
+    return g_controlPoints[g_currentFrameNr][object].control_points[index];
 }
 
-function setControlPoint(index, label, x, y) {
-    g_controlPoints[g_currentPhase][label][index].x = x;
-    g_controlPoints[g_currentPhase][label][index].y = y;
-
+function setControlPoint(index, object, x, y) {
+    g_controlPoints[g_currentFrameNr][object].control_points[index].x = x;
+    g_controlPoints[g_currentFrameNr][object].control_points[index].y = y;
 }
 
 function isPointOnSpline(pointX, pointY) {
-    for(var label = 0; label < 3; label++) {
-        for (var i = 0; i < g_controlPoints[g_currentPhase][label].length; ++i) {
-            var a = getControlPoint(max(0, i - 1), label);
-            var b = getControlPoint(i, label);
-            var c = getControlPoint(min(g_controlPoints[g_currentPhase][label].length - 1, i + 1), label);
-            var d = getControlPoint(min(g_controlPoints[g_currentPhase][label].length - 1, i + 2), label);
+    for(var object in g_controlPoints[g_currentFrameNr]) {
+        for (var i = 0; i < g_controlPoints[g_currentFrameNr][object].control_points.length; ++i) {
+            var a = getControlPoint(max(0, i - 1), object);
+            var b = getControlPoint(i, object);
+            var c = getControlPoint(min(g_controlPoints[g_currentFrameNr][object].control_points.length - 1, i + 1), object);
+            var d = getControlPoint(min(g_controlPoints[g_currentFrameNr][object].control_points.length - 1, i + 2), object);
 
             var step = 0.1;
             var tension = 0.5;
@@ -429,38 +405,45 @@ function isPointOnSpline(pointX, pointY) {
 
 
 function redraw(){
-    if(g_currentPhase == -1)
-        return;
-    //g_context.putImageData(g_image, 0, 0);
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
+
+    if(!(g_currentFrameNr in g_controlPoints))
+        return;
+
     var controlPointSize = 6;
     g_context.lineWidth = 2;
 
     // For left atrium, insert endo endpoints
-    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][2].length > 0) {
-        g_controlPoints[g_currentPhase][2].splice(0, 0, getControlPoint(-1, 0));
-        g_controlPoints[g_currentPhase][2].push(getControlPoint(0, 0));
+    if(0 in g_controlPoints[g_currentFrameNr] && 2 in g_controlPoints[g_currentFrameNr]) {
+        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][2].control_points.length > 0) {
+            g_controlPoints[g_currentFrameNr][2].control_points.splice(0, 0, getControlPoint(-1, 0));
+            g_controlPoints[g_currentFrameNr][2].control_points.push(getControlPoint(0, 0));
+        }
     }
 
-    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][1].length > 0) {
-        var startPoint = getControlPoint(0, 1);
-        var endPoint = getControlPoint(-1, 1);
-        var snap1 = snapToAVLine(startPoint.x, startPoint.y);
-        var snap2 = snapToAVLine(endPoint.x, endPoint.y);
-        g_controlPoints[g_currentPhase][1].splice(0, 0, createControlPoint(snap1.x, snap1.y, 1, false));
-        if(g_controlPoints[g_currentPhase][1].length > 5)
-            g_controlPoints[g_currentPhase][1].push(createControlPoint(snap2.x, snap2.y, 1, false));
+    if(0 in g_controlPoints[g_currentFrameNr] && 1 in g_controlPoints[g_currentFrameNr]) {
+        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][1].control_points.length > 0) {
+            var startPoint = getControlPoint(0, 1);
+            var endPoint = getControlPoint(-1, 1);
+            var snap1 = snapToAVLine(startPoint.x, startPoint.y);
+            var snap2 = snapToAVLine(endPoint.x, endPoint.y);
+            g_controlPoints[g_currentFrameNr][1].control_points.splice(0, 0, createControlPoint(snap1.x, snap1.y, 1, false));
+            if (g_controlPoints[g_currentFrameNr][1].control_points.length > 5)
+                g_controlPoints[g_currentFrameNr][1].control_points.push(createControlPoint(snap2.x, snap2.y, 1, false));
+        }
     }
 
     // Draw controlPoint
     for(var labelIndex = 0; labelIndex < 3; labelIndex++) {
-        for (var i = 0; i < g_controlPoints[g_currentPhase][labelIndex].length; ++i) {
+        if(!(labelIndex in g_controlPoints[g_currentFrameNr]))
+            continue;
+        for(var i = 0; i < g_controlPoints[g_currentFrameNr][labelIndex].control_points.length; ++i) {
             g_context.beginPath();
             var a = getControlPoint(max(0, i - 1), labelIndex);
             var b = getControlPoint(i, labelIndex);
-            var c = getControlPoint(min(g_controlPoints[g_currentPhase][labelIndex].length - 1, i + 1), labelIndex);
-            var d = getControlPoint(min(g_controlPoints[g_currentPhase][labelIndex].length - 1, i + 2), labelIndex);
+            var c = getControlPoint(min(g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1, i + 1), labelIndex);
+            var d = getControlPoint(min(g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1, i + 2), labelIndex);
 
             var label = getLabelWithId(labelIndex);
 
@@ -506,18 +489,22 @@ function redraw(){
     }
 
     // Remove inserted LA endpoints
-    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][2].length > 0) {
-        g_controlPoints[g_currentPhase][2].splice(0, 1);
-        g_controlPoints[g_currentPhase][2].splice(g_controlPoints[g_currentPhase][2].length - 1, 1);
+    if(0 in g_controlPoints[g_currentFrameNr] && 2 in g_controlPoints[g_currentFrameNr]) {
+        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][2].control_points.length > 0) {
+            g_controlPoints[g_currentFrameNr][2].control_points.splice(0, 1);
+            g_controlPoints[g_currentFrameNr][2].control_points.splice(g_controlPoints[g_currentFrameNr][2].control_points.length - 1, 1);
+        }
     }
-    if(g_controlPoints[g_currentPhase][0].length > 1 && g_controlPoints[g_currentPhase][1].length > 0) {
-        g_controlPoints[g_currentPhase][1].splice(0, 1);
-        if(g_controlPoints[g_currentPhase][1].length > 5)
-            g_controlPoints[g_currentPhase][1].splice(g_controlPoints[g_currentPhase][1].length - 1, 1);
+    if(0 in g_controlPoints[g_currentFrameNr] && 1 in g_controlPoints[g_currentFrameNr]) {
+        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][1].control_points.length > 0) {
+            g_controlPoints[g_currentFrameNr][1].control_points.splice(0, 1);
+            if (g_controlPoints[g_currentFrameNr][1].control_points.length > 5)
+                g_controlPoints[g_currentFrameNr][1].control_points.splice(g_controlPoints[g_currentFrameNr][1].control_points.length - 1, 1);
+        }
     }
 
     // Draw AV plane line
-    if(g_controlPoints[g_currentPhase][0].length > 4) {
+    if(0 in g_controlPoints[g_currentFrameNr] && g_controlPoints[g_currentFrameNr][0].control_points.length > 4) {
         var y0 = getControlPoint(0, 0).y;
         var y1 = getControlPoint(-1, 0).y;
         var x0 = getControlPoint(0, 0).x;
@@ -551,15 +538,8 @@ function redraw(){
 // Override redraw sequence in sequence.js
 function redrawSequence() {
     createMotionModeCanvas();
-    if(g_currentFrameNr == g_frameED) {
-        g_currentPhase = 0;
-    } else if(g_currentFrameNr == g_frameES) {
-        g_currentPhase = 1;
-    } else {
-        g_currentPhase = -1;
-        var index = g_currentFrameNr - g_startFrame;
-        g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
-    }
+    var index = g_currentFrameNr - g_startFrame;
+    g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     redraw();
 
     // Draw motion mode line
@@ -582,10 +562,29 @@ function redrawSequence() {
 
 // Override of annotationweb.js
 function changeLabel(label_id) {
-    console.log('changing label to: ', label_id)
     g_currentSegmentationLabel = label_id;
+    console.log('changing label to: ', label_id)
     $('.labelButton').removeClass('activeLabel');
     $('#labelButton' + label_id).addClass('activeLabel');
+    g_currentLabel = getLabelIdxWithId(label_id);
+
+    // changeLabel is called when we press the label button (may or may not have an object),
+    // and when we press a control point (already have object)
+    if(g_currentFrameNr in g_controlPoints) {
+        var found = false;
+        for(var j in g_controlPoints[g_currentFrameNr]) {
+            if(g_controlPoints[g_currentFrameNr][j].label.id == label_id) {
+                g_currentObject = j;
+                found = true;
+                break;
+            }
+        }
+        if(!found) {
+            // Create new object id
+            g_currentObject = getMaxObjectID()+1;
+            g_controlPoints[g_currentFrameNr][g_currentObject] = {label: g_labelButtons[getLabelIdxWithId(label_id)], control_points: []};
+        }
+    }
 }
 
 function sendDataForSave() {
