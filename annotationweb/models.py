@@ -122,6 +122,7 @@ class KeyFrameAnnotation(models.Model):
 
     frame_nr = models.PositiveIntegerField()
     image_annotation = models.ForeignKey(ImageAnnotation, on_delete=models.CASCADE)
+    frame_metadata = models.CharField(default='', max_length=512, help_text='A text field for storing arbitrary metadata on the current frame')
 
     def __str__(self):
         return str(self.frame_nr)

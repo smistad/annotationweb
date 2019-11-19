@@ -13,7 +13,8 @@ import numpy as np
 from annotationweb.models import Task, ImageAnnotation, Label
 from common.utility import get_image_as_http_response
 import common.task
-from .models import *
+from annotationweb.models import KeyFrameAnnotation
+from spline_segmentation.models import ControlPoint
 
 
 def segment_next_image(request, task_id):
@@ -27,13 +28,13 @@ def segment_image(request, task_id, image_id):
 
         # Check if image is already segmented, if so get data and pass to template
         try:
-            annotation = ProcessedImage.objects.get(task_id=task_id, image_id=image_id)
-            segmentation = Segmentation.objects.get(image=annotation)
-            control_points = ControlPoint.objects.filter(segmentation=segmentation).order_by('index')
 
-            context['segmentation'] = segmentation
+            annotations = KeyFrameAnnotation.objects.filter(image_annotation__task_id=task_id,
+                                                            image_annotation__image_id=image_id)
+            control_points = ControlPoint.objects.filter(image__in=annotations).order_by('index')
             context['control_points'] = control_points
-        except ProcessedImage.DoesNotExist:
+            context['target_frames'] = annotations
+        except KeyFrameAnnotation.DoesNotExist:
             pass
 
         return render(request, 'cardiac/segment_image.html', context)
