@@ -140,6 +140,38 @@ function setupSegmentation() {
     });
 
 
+    $("#addNormalFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
+            return;
+        setupSliderMark(g_currentFrameNr, g_framesLoaded, '#555555');
+        g_targetFrames.push(g_currentFrameNr);
+        g_currentTargetFrameIndex = g_targetFrames.length-1;
+        g_targetFrames.sort(function(a, b){return a-b});
+    });
+
+
+    $("#addEDFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
+            return;
+        setupSliderMark(g_currentFrameNr, g_framesLoaded, '#CC3434');
+        g_targetFrames.push(g_currentFrameNr);
+        g_currentTargetFrameIndex = g_targetFrames.length-1;
+        g_targetFrames.sort(function(a, b){return a-b});
+    });
+
+
+    $("#addESFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
+            return;
+        setupSliderMark(g_currentFrameNr, g_framesLoaded, '#0077b3');
+        g_targetFrames.push(g_currentFrameNr);
+        g_currentTargetFrameIndex = g_targetFrames.length-1;
+        g_targetFrames.sort(function(a, b){return a-b});
+    });
+
     $('#markAsED').click(function() {
         markED(g_currentFrameNr, g_framesLoaded);
         redrawSequence();
@@ -197,7 +229,7 @@ function markES(frame, totalNrOfFrames) {
     console.log('Frame ES set to ' + g_frameES);
 }
 
-function loadSegmentationTask(image_sequence_id, frame_nr) {
+function loadSegmentationTask(image_sequence_id) {
     g_controlPoints.push([]); // ED
     g_controlPoints.push([]); // ES
     g_controlPoints[0].push([]); // Endo
@@ -208,8 +240,8 @@ function loadSegmentationTask(image_sequence_id, frame_nr) {
     g_controlPoints[1].push([]); // Atrium
 
     g_backgroundImage = new Image();
-    g_frameNr = frame_nr;
-    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + frame_nr + '/' + g_taskID + '/';
+    g_frameNr = 0;
+    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + 0 + '/' + g_taskID + '/';
     g_backgroundImage.onload = function() {
         g_canvasWidth = this.width;
         g_canvasHeight = this.height;

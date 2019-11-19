@@ -18,7 +18,7 @@
         {% if task.auto_play %}true{% else %}false{% endif %}
         );
     {% endif %}
-    loadSegmentationTask({{ image_sequence.id }}, {{ frame_nr }});
+    loadSegmentationTask({{ image_sequence.id }});
 
     addLabelButton(0, 0, 255, 0, 0);
     addLabelButton(1, 0, 0, 255, 0);
@@ -60,28 +60,19 @@
         <div id="progressbar"><div class="progress-label">Loading...</div></div>
         <canvas id="m-mode-canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
         <div id="slider">
-            <div id="sliderEDmark"></div>
-            <div id="sliderESmark"></div>
         </div>
-        <!--<p>
-            Current frame: <span id="currentFrame"></span>
-            ED frame: <span id="EDFrame">Not selected</span>
-            ES frame: <span id="ESFrame">Not selected</span>
-        </p>-->
         <div class="actionButtons">
-            <div class="flexButtons">
-                <button id="markAsED" style="background-color: #CC3434">Mark as End Diastole</button>
-                <button id="markAsES" style="background-color: #0077b3">Mark as End Systole</button>
-            </div>
-            <div class="flexButtons">
-                <button id="segmentED" style="background-color: #CC3434">Go to End Diastole</button>
-                <button id="segmentES" style="background-color: #0077b3">Go to End Systole</button>
-            </div>
+            <button id="playButton" type="button">Play</button>
+            {% if task.user_frame_selection %}
+                <button id="addEDFrameButton" type="button" style="background-color: #CC3434">Add as ED frame</button>
+                <button id="addESFrameButton" type="button" style="background-color: #0077b3">Add as ES frame</button>
+                <button id="addNormalFrameButton" type="button">Add frame</button>
+            {% endif %}
+            <button id="nextFrameButton" type="button">Skip to next annotation frame</button>
         </div>
     {% endif %}
     <h2>Actions</h2>
     <div class="actionButtons">
-        <button id="playButton" type="button">Play</button>
         {% if previous_image_id %}
             <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?{{ request.GET.urlencode }}');">Previous</button>
         {% endif %}

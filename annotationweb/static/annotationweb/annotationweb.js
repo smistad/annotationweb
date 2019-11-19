@@ -150,13 +150,14 @@ function initializeAnnotation(taskID, imageID) {
         });
 }
 
-function setupSliderMark(frame, totalNrOfFrames){
+function setupSliderMark(frame, totalNrOfFrames, color) {
+    color = typeof color !== 'undefined' ? color : '#0077b3';
     var marker_index = g_targetFrames.findIndex(index => index === frame);
 
     var slider = document.getElementById('slider')
 
     var newMarker = document.createElement("sliderMarker" + marker_index)
-    $(newMarker).css('background-color', '#0077b3');
+    $(newMarker).css('background-color', color);
     $(newMarker).css('width', $('.ui-slider-handle').css('width'));
     $(newMarker).css('margin-left', $('.ui-slider-handle').css('margin-left'));
     $(newMarker).css('height', '100%');
