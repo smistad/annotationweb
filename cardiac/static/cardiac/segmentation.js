@@ -195,7 +195,7 @@ function setupSegmentation() {
     });
 
     // Set first label active
-    changeLabel(0);
+    changeLabel(g_labelButtons[0].id);
     redraw();
 }
 
@@ -408,30 +408,33 @@ function redraw(){
     var controlPointSize = 6;
     g_context.lineWidth = 2;
 
-    // For left atrium, insert endo endpoints
-    if(0 in g_controlPoints[g_currentFrameNr] && 2 in g_controlPoints[g_currentFrameNr]) {
-        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][2].control_points.length > 0) {
-            g_controlPoints[g_currentFrameNr][2].control_points.splice(0, 0, getControlPoint(-1, 0));
-            g_controlPoints[g_currentFrameNr][2].control_points.push(getControlPoint(0, 0));
+    for(var i = 0; i < 3; ++i) {
+        if(!(i in g_controlPoints[g_currentFrameNr])) {
+            g_controlPoints[g_currentFrameNr][i] = {label: g_labelButtons[i], control_points: []};
         }
     }
 
-    if(0 in g_controlPoints[g_currentFrameNr] && 1 in g_controlPoints[g_currentFrameNr]) {
-        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][1].control_points.length > 0) {
-            var startPoint = getControlPoint(0, 1);
-            var endPoint = getControlPoint(-1, 1);
-            var snap1 = snapToAVLine(startPoint.x, startPoint.y);
-            var snap2 = snapToAVLine(endPoint.x, endPoint.y);
-            g_controlPoints[g_currentFrameNr][1].control_points.splice(0, 0, createControlPoint(snap1.x, snap1.y, 1, false));
-            if (g_controlPoints[g_currentFrameNr][1].control_points.length > 5)
-                g_controlPoints[g_currentFrameNr][1].control_points.push(createControlPoint(snap2.x, snap2.y, 1, false));
-        }
+    // For left atrium, insert endo endpoints
+    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][2].control_points.length > 0) {
+        g_controlPoints[g_currentFrameNr][2].control_points.splice(0, 0, getControlPoint(-1, 0));
+        g_controlPoints[g_currentFrameNr][2].control_points.push(getControlPoint(0, 0));
+    }
+
+    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][1].control_points.length > 0) {
+        var startPoint = getControlPoint(0, 1);
+        var endPoint = getControlPoint(-1, 1);
+        var snap1 = snapToAVLine(startPoint.x, startPoint.y);
+        var snap2 = snapToAVLine(endPoint.x, endPoint.y);
+        g_controlPoints[g_currentFrameNr][1].control_points.splice(0, 0, createControlPoint(snap1.x, snap1.y, 1, false));
+        if (g_controlPoints[g_currentFrameNr][1].control_points.length > 5)
+            g_controlPoints[g_currentFrameNr][1].control_points.push(createControlPoint(snap2.x, snap2.y, 1, false));
     }
 
     // Draw controlPoint
     for(var labelIndex = 0; labelIndex < 3; labelIndex++) {
         if(!(labelIndex in g_controlPoints[g_currentFrameNr]))
             continue;
+        var label = g_controlPoints[g_currentFrameNr][labelIndex].label;
         for(var i = 0; i < g_controlPoints[g_currentFrameNr][labelIndex].control_points.length; ++i) {
             g_context.beginPath();
             var a = getControlPoint(max(0, i - 1), labelIndex);
@@ -439,7 +442,6 @@ function redraw(){
             var c = getControlPoint(min(g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1, i + 1), labelIndex);
             var d = getControlPoint(min(g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1, i + 2), labelIndex);
 
-            var label = getLabelWithId(labelIndex);
 
             // Draw line as spline
             g_context.strokeStyle = colorToHexString(label.red, label.green, label.blue);
@@ -483,18 +485,14 @@ function redraw(){
     }
 
     // Remove inserted LA endpoints
-    if(0 in g_controlPoints[g_currentFrameNr] && 2 in g_controlPoints[g_currentFrameNr]) {
-        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][2].control_points.length > 0) {
-            g_controlPoints[g_currentFrameNr][2].control_points.splice(0, 1);
-            g_controlPoints[g_currentFrameNr][2].control_points.splice(g_controlPoints[g_currentFrameNr][2].control_points.length - 1, 1);
-        }
+    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][2].control_points.length > 0) {
+        g_controlPoints[g_currentFrameNr][2].control_points.splice(0, 1);
+        g_controlPoints[g_currentFrameNr][2].control_points.splice(g_controlPoints[g_currentFrameNr][2].control_points.length - 1, 1);
     }
-    if(0 in g_controlPoints[g_currentFrameNr] && 1 in g_controlPoints[g_currentFrameNr]) {
-        if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][1].control_points.length > 0) {
-            g_controlPoints[g_currentFrameNr][1].control_points.splice(0, 1);
-            if (g_controlPoints[g_currentFrameNr][1].control_points.length > 5)
-                g_controlPoints[g_currentFrameNr][1].control_points.splice(g_controlPoints[g_currentFrameNr][1].control_points.length - 1, 1);
-        }
+    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][1].control_points.length > 0) {
+        g_controlPoints[g_currentFrameNr][1].control_points.splice(0, 1);
+        if (g_controlPoints[g_currentFrameNr][1].control_points.length > 5)
+            g_controlPoints[g_currentFrameNr][1].control_points.splice(g_controlPoints[g_currentFrameNr][1].control_points.length - 1, 1);
     }
 
     // Draw AV plane line
@@ -561,7 +559,7 @@ function changeLabel(label_id) {
     $('.labelButton').removeClass('activeLabel');
     $('#labelButton' + label_id).addClass('activeLabel');
     g_currentLabel = getLabelIdxWithId(label_id);
-    g_currentObject = label_id;
+    g_currentObject = g_currentLabel;
 }
 
 function sendDataForSave() {
@@ -570,8 +568,7 @@ function sendDataForSave() {
         url: "/cardiac/segmentation/save/",
         data: {
             control_points: JSON.stringify(g_controlPoints),
-            frame_ed: g_frameED,
-            frame_es: g_frameES,
+            target_frames: JSON.stringify(g_targetFrames),
             motion_mode_line: g_motionModeLine,
             width: g_canvasWidth,
             height: g_canvasHeight,

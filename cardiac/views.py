@@ -20,8 +20,35 @@ from spline_segmentation.models import ControlPoint
 def segment_next_image(request, task_id):
     return segment_image(request, task_id, None)
 
+def add_default_labels(task_id):
+    # Check if task has proper labels set up.
+    # If not add them to the database,
+    task = Task.objects.get(pk=task_id)
+    labels = (('Endocardium', (0, 255, 0)), ('Epicardium', (0, 0, 255)), ('Left atrium', (255, 0, 0)))
+    if len(task.label.all()) != 3:
+        # Remove old ones
+        for label in task.label.all():
+            task.label.remove(label)
+        print('Adding labels to task')
+        for label in labels:
+            try:
+                # Check if already exist
+                label_obj = Label.objects.get(name=label[0])
+            except Label.DoesNotExist:
+                label_obj = Label()
+                label_obj.name = label[0]
+                label_obj.color_red = label[1][0]
+                label_obj.color_green = label[1][1]
+                label_obj.color_blue = label[1][2]
+                label_obj.save()
+            task.label.add(label_obj)
+        task.save()
+
 
 def segment_image(request, task_id, image_id):
+
+    add_default_labels(task_id)
+
     try:
         context = common.task.setup_task_context(request, task_id, Task.CARDIAC_SEGMENTATION, image_id)
         context['javascript_files'] = ['cardiac/segmentation.js']
@@ -45,8 +72,7 @@ def segment_image(request, task_id, image_id):
 
 def save_segmentation(request):
     error_messages = ''
-    frame_ED = int(request.POST['frame_ed'])
-    frame_ES = int(request.POST['frame_es'])
+
     motion_mode_line = int(round(float(request.POST['motion_mode_line'])))
     control_points = json.loads(request.POST['control_points'])
     print(control_points)
@@ -55,22 +81,11 @@ def save_segmentation(request):
     rejected = request.POST['rejected'] == 'true'
 
     if not rejected:
-        if frame_ED == -1:
-            error_messages += 'End Diastole frame not annotated<br>'
-        else:
-            # Check if all control points for ED is present
+        for frame_nr in control_points.keys():
             for i in range(len(objects)):
-                if len(control_points[0][i]) < 1:
-                    error_messages += objects[i] + ' annotation missing in End Diastole<br>'
-
-        if frame_ES == -1:
-            error_messages += 'End Systole frame not annotated<br>'
-        else:
-            # Check if all control points for ES is present
-            # Check if all control points for ED is present
-            for i in range(len(objects)):
-                if len(control_points[1][i]) < 1:
-                    error_messages += objects[i] + ' annotation missing in End Systole<br>'
+                if str(i) in control_points[frame_nr] and \
+                        len(control_points[frame_nr][str(i)]['control_points']) < 1:
+                    error_messages += objects[i] + ' annotation missing in frame ' + str(frame_nr) + '<br>'
 
     if len(error_messages):
         response = {
@@ -79,28 +94,27 @@ def save_segmentation(request):
         }
     else:
         try:
-            annotation = common.task.save_annotation(request)
+            annotations = common.task.save_annotation(request)
 
-            # Save segmentation (frame_ED and frame_ES)
-            segmentation = Segmentation()
-            segmentation.image = annotation
-            segmentation.frame_ED = frame_ED
-            segmentation.frame_ES = frame_ES
-            segmentation.motion_mode_line = motion_mode_line
-            segmentation.save()
-
+            # Save segmentation
             # Save control points
-            for phase in range(len(PHASES)):
-                for object in range(len(OBJECTS)):
-                    for point in range(len(control_points[phase][object])):
+            for annotation in annotations:
+                frame_nr = str(annotation.frame_nr)
+                for object in control_points[frame_nr]:
+                    nr_of_control_points = len(control_points[frame_nr][object]['control_points'])
+                    if nr_of_control_points < 3:
+                        continue
+                    for point in range(nr_of_control_points):
                         control_point = ControlPoint()
-                        control_point.segmentation = segmentation
-                        control_point.x = float(control_points[phase][object][point]['x'])
-                        control_point.y = float(control_points[phase][object][point]['y'])
+                        control_point.image = annotation
+                        control_point.x = float(control_points[frame_nr][object]['control_points'][point]['x'])
+                        control_point.y = float(control_points[frame_nr][object]['control_points'][point]['y'])
                         control_point.index = point
-                        control_point.phase = phase
-                        control_point.object = object
-                        control_point.uncertain = bool(control_points[phase][object][point]['uncertain'])
+                        control_point.object = int(object)
+                        # TODO modify this line to have proper label:
+                        control_point.label = Label.objects.get(id=int(control_points[frame_nr][object]['label']['id']))
+                        control_point.uncertain = bool(
+                            control_points[frame_nr][object]['control_points'][point]['uncertain'])
                         control_point.save()
 
             response = {
