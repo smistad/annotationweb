@@ -57,11 +57,6 @@ function setupSegmentation() {
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
-        if(e.ctrlKey && g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length >= 3) { // Create new object if ctrl key is held down AND current object has more than 2 points
-            g_currentObject = getMaxObjectID()+1;
-            data = {label: g_labelButtons[g_currentLabel], control_points: []};
-            g_controlPoints[g_currentFrameNr][g_currentObject] = data;
-        }
 
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
@@ -69,7 +64,6 @@ function setupSegmentation() {
         var point = getClosestPoint(mouseX, mouseY);
         if(point !== false) {
             // Activate object of this point
-            g_currentObject = point.object;
             $('.labelButton').removeClass('activeLabel');
             $('#labelButton' + point.label_idx).addClass('activeLabel');
             g_currentLabel = getLabelIdxWithId(point.label_idx);
@@ -563,28 +557,11 @@ function redrawSequence() {
 // Override of annotationweb.js
 function changeLabel(label_id) {
     g_currentSegmentationLabel = label_id;
-    console.log('changing label to: ', label_id)
+    console.log('changing label to: ', label_id);
     $('.labelButton').removeClass('activeLabel');
     $('#labelButton' + label_id).addClass('activeLabel');
     g_currentLabel = getLabelIdxWithId(label_id);
-
-    // changeLabel is called when we press the label button (may or may not have an object),
-    // and when we press a control point (already have object)
-    if(g_currentFrameNr in g_controlPoints) {
-        var found = false;
-        for(var j in g_controlPoints[g_currentFrameNr]) {
-            if(g_controlPoints[g_currentFrameNr][j].label.id == label_id) {
-                g_currentObject = j;
-                found = true;
-                break;
-            }
-        }
-        if(!found) {
-            // Create new object id
-            g_currentObject = getMaxObjectID()+1;
-            g_controlPoints[g_currentFrameNr][g_currentObject] = {label: g_labelButtons[getLabelIdxWithId(label_id)], control_points: []};
-        }
-    }
+    g_currentObject = label_id;
 }
 
 function sendDataForSave() {
