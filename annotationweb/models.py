@@ -72,6 +72,7 @@ class Task(models.Model):
     user = models.ManyToManyField(User)
     description = models.TextField(default='', blank=True)
     large_image_layout = models.BooleanField(default=False, help_text='Use a large image layout for annotation')
+    post_processing_method = models.CharField(default='', help_text='Name of post processing method to use', max_length=255)
 
     def __str__(self):
         return self.name
@@ -121,6 +122,7 @@ class KeyFrameAnnotation(models.Model):
 
     frame_nr = models.PositiveIntegerField()
     image_annotation = models.ForeignKey(ImageAnnotation, on_delete=models.CASCADE)
+    frame_metadata = models.CharField(default='', max_length=512, help_text='A text field for storing arbitrary metadata on the current frame')
 
     def __str__(self):
         return str(self.frame_nr)

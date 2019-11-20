@@ -4,39 +4,39 @@
 
     initializeAnnotation({{ task.id }}, {{ image.id }});
 
-    loadSequence(
+    {% if image_sequence %}
+        loadSequence(
         {{ image_sequence.id }},
         {{ image_sequence.start_frame_nr }},
         {{ image_sequence.nr_of_frames }},
-        {{ frame_nr }},
         {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
+        {%  if task.user_frame_selection %}true{% else %}false{% endif %},
+        {%  if task.annotate_single_frame %}true{% else %}false{% endif %},
+        [ {% for frame_nr in frames %}{{ frame_nr }},{% endfor %}],
         {{ task.frames_before }},
         {{ task.frames_after }},
         {% if task.auto_play %}true{% else %}false{% endif %}
-    );
-    loadSegmentationTask({{ image_sequence.id }}, {{ frame_nr }});
+        );
+    {% endif %}
+    loadSegmentationTask({{ image_sequence.id }});
 
-    addLabelButton(0, 0, 255, 0, 0);
-    addLabelButton(1, 0, 0, 255, 0);
-    addLabelButton(2, 255, 0, 0, 0);
+
+    {# Add label buttons #}
+    {% for label in labels %}
+        addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }}, {% if label.parent %}{{ label.parent.id }}{% else  %}0{% endif %});
+    {% endfor %}
+
+
+    {% for frame in target_frames %}
+        addControlPointsForNewFrame({{ frame.frame_nr }});
+    {% endfor %}
+
+    {% for control_point in control_points %}
+        addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.image.frame_nr }}, {{ control_point.object }}, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
+    {% endfor %}
 
     {% if return_url %}
         setReturnURL('{{ return_url|safe }}');
-    {% endif %}
-
-    {% if segmentation %}
-        g_motionModeLine = {{ segmentation.motion_mode_line }};
-        {% if segmentation.frame_ED >= 0 %}
-            markED({{ segmentation.frame_ED }}, {{ image_sequence.nr_of_frames }});
-        {% endif %}
-        {% if segmentation.frame_ES >= 0 %}
-            markES({{ segmentation.frame_ES }}, {{ image_sequence.nr_of_frames }});
-        {% endif %}
-
-        {% for control_point in control_points %}
-            addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.object }}, {{ control_point.phase }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
-        {% endfor %}
-
     {% endif %}
 
 {% endblock javascript %}
@@ -56,28 +56,19 @@
         <div id="progressbar"><div class="progress-label">Loading...</div></div>
         <canvas id="m-mode-canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
         <div id="slider">
-            <div id="sliderEDmark"></div>
-            <div id="sliderESmark"></div>
         </div>
-        <!--<p>
-            Current frame: <span id="currentFrame"></span>
-            ED frame: <span id="EDFrame">Not selected</span>
-            ES frame: <span id="ESFrame">Not selected</span>
-        </p>-->
         <div class="actionButtons">
-            <div class="flexButtons">
-                <button id="markAsED" style="background-color: #CC3434">Mark as End Diastole</button>
-                <button id="markAsES" style="background-color: #0077b3">Mark as End Systole</button>
-            </div>
-            <div class="flexButtons">
-                <button id="segmentED" style="background-color: #CC3434">Go to End Diastole</button>
-                <button id="segmentES" style="background-color: #0077b3">Go to End Systole</button>
-            </div>
+            <button id="playButton" type="button">Play</button>
+            {% if task.user_frame_selection %}
+                <button id="addEDFrameButton" type="button" style="background-color: #CC3434">Add as ED frame</button>
+                <button id="addESFrameButton" type="button" style="background-color: #0077b3">Add as ES frame</button>
+                <button id="addNormalFrameButton" type="button">Add frame</button>
+            {% endif %}
+            <button id="nextFrameButton" type="button">Skip to next annotation frame</button>
         </div>
     {% endif %}
     <h2>Actions</h2>
     <div class="actionButtons">
-        <button id="playButton" type="button">Play</button>
         {% if previous_image_id %}
             <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?{{ request.GET.urlencode }}');">Previous</button>
         {% endif %}
@@ -103,14 +94,16 @@
         </form>
     </div>
 
-    <div id="labelButtons">
-        <div class="flexButtons">
-            <button onclick="changeLabel(0)" class="labelButton" id="labelButton0">Endocardium</button>
-            <button onclick="changeLabel(1)" class="labelButton" id="labelButton1">Epicardium</button>
-            <button onclick="changeLabel(2)" class="labelButton" id="labelButton2">Left atrium</button>
-        </div>
-    </div>
 
+    <div id="labelButtons">
+        {% block label_buttons %}
+            <div class="flexButtons">
+                {% for label in toplabels %}
+                    <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
+                {% endfor %}
+            </div>
+        {% endblock label_buttons %}
+    </div>
     <div>
     <h2>Comments</h2>
     <textarea id="comments" style="width: 100%; height: 100px">{{ comments }}</textarea>
