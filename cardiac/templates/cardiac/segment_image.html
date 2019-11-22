@@ -30,6 +30,19 @@
     {% for frame in target_frames %}
         addControlPointsForNewFrame({{ frame.frame_nr }});
         g_targetFrameTypes['{{ frame.frame_nr }}'] = '{{ frame.frame_metadata }}';
+        // A hack for updating markers
+        g_progressbar.on('markercomplete', function() {
+            var marker_index = g_targetFrames.findIndex(index => index === {{ frame.frame_nr }});
+            var type = g_targetFrameTypes['{{ frame.frame_nr }}'];
+            var color = '#555555';
+            if(type == 'ED') {
+                color = '#CC3434';
+            } else if(type == 'ES') {
+                color = '#0077b3';
+            }
+            console.log('Updating marker ' + marker_index + ' with ' + color);
+            $('#sliderMarker' + marker_index).css('background-color', color);
+        });
     {% endfor %}
 
     {% for control_point in control_points %}
