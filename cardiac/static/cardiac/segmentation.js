@@ -67,6 +67,7 @@ function setupSegmentation() {
             $('.labelButton').removeClass('activeLabel');
             $('#labelButton' + point.label_idx).addClass('activeLabel');
             g_currentLabel = getLabelIdxWithId(point.label_idx);
+            g_currentObject = g_currentLabel;
             // Move point
             g_move = true;
             g_pointToMove = point.index;
