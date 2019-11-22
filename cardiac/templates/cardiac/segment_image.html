@@ -29,6 +29,7 @@
 
     {% for frame in target_frames %}
         addControlPointsForNewFrame({{ frame.frame_nr }});
+        g_targetFrameTypes['{{ frame.frame_nr }}'] = '{{ frame.frame_metadata }}';
     {% endfor %}
 
     {% for control_point in control_points %}
