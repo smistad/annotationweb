@@ -79,19 +79,29 @@ class CardiacSegmentationExporter(Exporter):
                 copy_image(filename, new_filename)
 
                 # Get control points to create segmentation
+                x_scaling = 1
                 if new_filename.endswith('.mhd'):
                     image_mhd = MetaImage(filename=new_filename)
                     image_size = image_mhd.get_size()
                     spacing = image_mhd.get_spacing()
+
+                    if spacing[0] != spacing[1]:
+                        # In this case we have to compensate for a change in with
+                        real_aspect = image_size[0] * spacing[0] / (image_size[1] * spacing[1])
+                        current_aspect = float(image_size[0]) / image_size[1]
+                        new_width = int(image_size[0] * (real_aspect / current_aspect))
+                        new_height = image_size[1]
+                        x_scaling = float(image_size[0]) / new_width
+                        print(image_size[0], new_width, image_size[1], new_height)
                 else:
                     image_pil = PIL.Image.open(new_filename)
                     image_size = image_pil.size
                     spacing = [1, 1]
-                self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing)
+                self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing, x_scaling)
 
         return True, path
 
-    def get_object_segmentation(self, image_size, control_points):
+    def get_object_segmentation(self, image_size, control_points, x_scaling):
         segmentation = np.zeros(image_size, dtype=np.uint8)
         tension = 0.5
 
@@ -100,6 +110,10 @@ class CardiacSegmentationExporter(Exporter):
             b = control_points[i]
             c = control_points[min(len(control_points)-1, i+1)]
             d = control_points[min(len(control_points)-1, i+2)]
+            #a.x *= x_scaling
+            #b.x *= x_scaling
+            #c.x *= x_scaling
+            #d.x *= x_scaling
             print('Control points', image_size, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
             length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
             step_size = min(0.01, 1.0 / (length*2))
@@ -119,11 +133,7 @@ class CardiacSegmentationExporter(Exporter):
                 y = int(round(y))
                 y = min(image_size[0]-1, max(0, y))
 
-                print(x, y)
-                try:
-                    segmentation[int(round(y)), int(round(x))] = 1
-                except IndexError:
-                    continue
+                segmentation[int(round(y)), int(round(x))] = 1
 
         # Draw AV plane line over endpoints
         a = np.array([control_points[0].x, control_points[0].y])
@@ -132,10 +142,7 @@ class CardiacSegmentationExporter(Exporter):
         direction = (b - a) / length
         for t in np.arange(0, ceil(length), 0.1):
             position = a + t*direction
-            try:
-                segmentation[int(round(position[1])), int(round(position[0]))] = 1
-            except IndexError:
-                continue
+            segmentation[int(round(position[1])), int(round(position[0]))] = 1
 
         segmentation = binary_fill_holes(segmentation).astype(np.uint8)
 
@@ -163,12 +170,20 @@ class CardiacSegmentationExporter(Exporter):
 
         return point
 
-    def save_segmentation(self, frame, image_size, filename, spacing):
+    def save_segmentation(self, frame, image_size, filename, spacing, x_scaling):
+        print('X scaling is', x_scaling)
         image_size = [image_size[1], image_size[0]]
         # Get control points for all objects
         control_points0 = list(ControlPoint.objects.filter(image=frame, object=0).order_by('index'))
         control_points1 = list(ControlPoint.objects.filter(image=frame, object=1).order_by('index'))
         control_points2 = list(ControlPoint.objects.filter(image=frame, object=2).order_by('index'))
+        if x_scaling != 1:
+            for point in control_points0:
+                point.x *= x_scaling
+            for point in control_points1:
+                point.x *= x_scaling
+            for point in control_points2:
+                point.x *= x_scaling
 
         # Endpoints of object 2 are the same as object 1
         control_points2.insert(0, control_points0[-1])
@@ -181,12 +196,14 @@ class CardiacSegmentationExporter(Exporter):
         control_points1.append(point)
 
         # Create compounded segmentation object
+        #image_size[1] = int(round(image_size[1]/x_scaling))
+        #spacing[1] = spacing[0]
         segmentation = np.zeros(image_size, dtype=np.uint8)
-        object_segmentation = self.get_object_segmentation(image_size, control_points1)
+        object_segmentation = self.get_object_segmentation(image_size, control_points1, x_scaling)
         segmentation[object_segmentation == 1] = 2  # Draw epi before endo
-        object_segmentation = self.get_object_segmentation(image_size, control_points2)
+        object_segmentation = self.get_object_segmentation(image_size, control_points2, x_scaling)
         segmentation[object_segmentation == 1] = 3
-        object_segmentation = self.get_object_segmentation(image_size, control_points0)
+        object_segmentation = self.get_object_segmentation(image_size, control_points0, x_scaling)
         segmentation[object_segmentation == 1] = 1
 
         segmentation_mhd = MetaImage(data=segmentation)
