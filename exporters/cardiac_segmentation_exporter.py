@@ -3,14 +3,14 @@ from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
 from annotationweb.models import ImageAnnotation, Dataset, Task, Label, Subject, KeyFrameAnnotation, ImageMetadata
-from cardiac.models import Segmentation, ControlPoint, OBJECTS
+from spline_segmentation.models import ControlPoint
 from django import forms
 import os
 from os.path import join
 from shutil import rmtree, copyfile
 import numpy as np
 from scipy.ndimage.morphology import binary_fill_holes
-
+import PIL
 
 class CardiacSegmentationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
@@ -57,41 +57,37 @@ class CardiacSegmentationExporter(Exporter):
 
         # For each subject
         for subject in data:
-            subject_path = join(path, subject.name)
-            create_folder(subject_path)
-            images = ProcessedImage.objects.filter(task=self.task, image__subject=subject, rejected=False)
-            for image in images:
+            subject_path = join(path, subject.dataset.name, subject.name)
+            frames = KeyFrameAnnotation.objects.filter(image_annotation__image__subject=subject)
+            for frame in frames:
                 # Check if image was rejected
-                if image.rejected:
+                if frame.image_annotation.rejected:
                     continue
                 # Get image sequence
-                key_frame = KeyFrame.objects.get(image=image.image)
-                image_sequence = key_frame.image_sequence
-
-                # Get segmentation
-                segmentation = Segmentation.objects.get(image=image)
+                image_sequence = frame.image_annotation.image
 
                 # Copy image frames
-                image_id = image.image.pk
-                create_folder(join(subject_path, str(image_id)))
+                sequence_id = os.path.basename(os.path.dirname(image_sequence.format))
+                subject_subfolder = join(subject_path, str(sequence_id))
+                create_folder(subject_subfolder)
 
-                filename = image_sequence.format.replace('#', str(segmentation.frame_ED))
-                new_filename_ED = join(subject_path, str(image_id), 'ED.mhd')
-                copy_image(filename, new_filename_ED)
+                target_name = os.path.basename(image_sequence.format).replace('#',str(frame.frame_nr))
+                target_gt_name = os.path.splitext(target_name)[0]+"_gt.mhd"
 
-                filename = image_sequence.format.replace('#', str(segmentation.frame_ES))
-                new_filename_ES = join(subject_path, str(image_id), 'ES.mhd')
-                copy_image(filename, new_filename_ES)
+                filename = image_sequence.format.replace('#', str(frame.frame_nr))
+                new_filename = join(subject_subfolder, target_name)
+                copy_image(filename, new_filename)
 
                 # Get control points to create segmentation
-                image_mhd = MetaImage(filename=new_filename_ED)
-                control_points = ControlPoint.objects.filter(segmentation=segmentation, phase=0).order_by('index')
-                self.save_segmentation(image, image_mhd.get_size(), control_points, join(subject_path, str(image_id), 'ED_segmentation.mhd'))
-
-                image_mhd = MetaImage(filename=new_filename_ES)
-                control_points = ControlPoint.objects.filter(segmentation=segmentation, phase=1).order_by('index')
-                self.save_segmentation(image, image_mhd.get_size(), control_points, join(subject_path, str(image_id), 'ES_segmentation.mhd'))
-                
+                if new_filename.endswith('.mhd'):
+                    image_mhd = MetaImage(filename=new_filename)
+                    image_size = image_mhd.get_size()
+                    spacing = image_mhd.get_spacing()
+                else:
+                    image_pil = PIL.Image.open(new_filename)
+                    image_size = image_pil.size
+                    spacing = [1, 1]
+                self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing)
 
         return True, path
 
@@ -104,6 +100,7 @@ class CardiacSegmentationExporter(Exporter):
             b = control_points[i]
             c = control_points[min(len(control_points)-1, i+1)]
             d = control_points[min(len(control_points)-1, i+2)]
+            print('Control points', image_size, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
             length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
             step_size = min(0.01, 1.0 / (length*2))
             for t in np.arange(0, 1, step_size):
@@ -122,7 +119,11 @@ class CardiacSegmentationExporter(Exporter):
                 y = int(round(y))
                 y = min(image_size[0]-1, max(0, y))
 
-                segmentation[int(round(y)), int(round(x))] = 1
+                print(x, y)
+                try:
+                    segmentation[int(round(y)), int(round(x))] = 1
+                except IndexError:
+                    continue
 
         # Draw AV plane line over endpoints
         a = np.array([control_points[0].x, control_points[0].y])
@@ -131,7 +132,10 @@ class CardiacSegmentationExporter(Exporter):
         direction = (b - a) / length
         for t in np.arange(0, ceil(length), 0.1):
             position = a + t*direction
-            segmentation[int(round(position[1])), int(round(position[0]))] = 1
+            try:
+                segmentation[int(round(position[1])), int(round(position[0]))] = 1
+            except IndexError:
+                continue
 
         segmentation = binary_fill_holes(segmentation).astype(np.uint8)
 
@@ -159,12 +163,12 @@ class CardiacSegmentationExporter(Exporter):
 
         return point
 
-    def save_segmentation(self, annotation, image_size, control_points, filename):
+    def save_segmentation(self, frame, image_size, filename, spacing):
         image_size = [image_size[1], image_size[0]]
         # Get control points for all objects
-        control_points0 = list(control_points.filter(object=0))
-        control_points1 = list(control_points.filter(object=1))
-        control_points2 = list(control_points.filter(object=2))
+        control_points0 = list(ControlPoint.objects.filter(image=frame, object=0).order_by('index'))
+        control_points1 = list(ControlPoint.objects.filter(image=frame, object=1).order_by('index'))
+        control_points2 = list(ControlPoint.objects.filter(image=frame, object=2).order_by('index'))
 
         # Endpoints of object 2 are the same as object 1
         control_points2.insert(0, control_points0[-1])
@@ -186,9 +190,10 @@ class CardiacSegmentationExporter(Exporter):
         segmentation[object_segmentation == 1] = 1
 
         segmentation_mhd = MetaImage(data=segmentation)
-        segmentation_mhd.set_attribute('ImageQuality', annotation.image_quality)
-        segmentation_mhd.set_attribute('OriginalFilename', annotation.image.filename)
-        metadata = Metadata.objects.filter(image=annotation.image)
+        segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
+        segmentation_mhd.set_attribute('FrameType', frame.frame_metadata)
+        segmentation_mhd.set_spacing(spacing)
+        metadata = ImageMetadata.objects.filter(image=frame.image_annotation.image)
         for item in metadata:
             segmentation_mhd.set_attribute(item.name, item.value)
         segmentation_mhd.write(filename)
