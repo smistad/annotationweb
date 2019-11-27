@@ -67,6 +67,7 @@ function setupSegmentation() {
             $('.labelButton').removeClass('activeLabel');
             $('#labelButton' + point.label_idx).addClass('activeLabel');
             g_currentLabel = getLabelIdxWithId(point.label_idx);
+            g_currentObject = g_currentLabel;
             // Move point
             g_move = true;
             g_pointToMove = point.index;
@@ -188,6 +189,22 @@ function setupSegmentation() {
         g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
         g_targetFrames.sort(function(a, b){return a-b});
+    });
+
+    $('#copyAnnotation').click(function() {
+        // Verify that we are on a target frame;
+        if(g_targetFrames.indexOf(g_currentFrameNr) < 0 || g_targetFrames.length === 1)
+            return;
+
+        // Find previous frame
+        var frame_index = g_targetFrames.findIndex(index => index === g_currentFrameNr);
+        var copy_index = frame_index - 1;
+        if(copy_index < 0)
+            return;
+
+        // Copy and potentially replace previous segmentation
+        g_controlPoints[g_currentFrameNr] = JSON.parse(JSON.stringify(g_controlPoints[g_targetFrames[copy_index]])); // Hack for doing deep copy
+        redrawSequence();
     });
 
     $(document).on('keyup keydown', function(event) {
@@ -569,6 +586,7 @@ function sendDataForSave() {
         data: {
             control_points: JSON.stringify(g_controlPoints),
             target_frames: JSON.stringify(g_targetFrames),
+            target_frame_types: JSON.stringify(g_targetFrameTypes),
             motion_mode_line: g_motionModeLine,
             width: g_canvasWidth,
             height: g_canvasHeight,

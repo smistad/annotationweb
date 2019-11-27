@@ -157,7 +157,8 @@ function setupSliderMark(frame, totalNrOfFrames, color) {
     var marker_index = g_targetFrames.findIndex(index => index === frame);
     var slider = document.getElementById('slider')
 
-    var newMarker = document.createElement("sliderMarker" + marker_index)
+    var newMarker = document.createElement('span');
+    newMarker.setAttribute('id', 'sliderMarker' + marker_index);
     $(newMarker).css('background-color', color);
     $(newMarker).css('width', $('.ui-slider-handle').css('width'));
     $(newMarker).css('margin-left', $('.ui-slider-handle').css('margin-left'));
@@ -167,6 +168,7 @@ function setupSliderMark(frame, totalNrOfFrames, color) {
     $(newMarker).css('left', ''+(100.0*(frame-g_startFrame)/totalNrOfFrames)+'%');
 
     slider.appendChild(newMarker)
+    console.log('Made marker');
 }
 
 function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_sequence, user_frame_selection, annotate_single_frame, frames_to_annotate, images_to_load_before, images_to_load_after, auto_play) {
@@ -247,6 +249,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             for(var i = 0; i < g_targetFrames.length; i++) {
                 setupSliderMark(g_targetFrames[i], nrOfFrames);
             }
+            g_progressbar.trigger('markercomplete');
             if(g_isPlaying)
                 incrementFrame();
       }
