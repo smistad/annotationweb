@@ -290,6 +290,13 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         redrawSequence();
     });
 
+    $('#removeFrameButton').click(function() {
+        var frame = parseInt(g_currentFrameNr);
+        // Remove current target frame
+        g_targetFrames = g_targetFrames.filter(function (value, index, arr) {return value!=frame});
+        updateSliderMarks();
+    });
+
     // Load images
     g_framesLoaded = 0;
     //console.log('start: ' + start + ' end: ' + end)
@@ -418,6 +425,22 @@ function decorateLabelButtons(list) {
     // Then add it the ones which have been selected
     for(var i = 0; i < list.length; i++) {
         $('#labelButton' + list[i].id).addClass('activeLabel');
+    }
+}
+
+function updateSliderMarks(){
+    removeAllSliderMarks();
+
+    for(var frame in g_targetFrames){
+        setupSliderMark(frame, g_framesLoaded);
+    }
+}
+
+function removeAllSliderMarks(){
+    var slider = document.getElementById('slider')
+    for (var i = slider.childNodes.length-1; i >= 0; i--) {
+        if(slider.childNodes[i].nodeName.includes("SLIDERMARKER"))
+            slider.removeChild(slider.childNodes[i]);
     }
 }
 
