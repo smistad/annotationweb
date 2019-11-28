@@ -33,13 +33,9 @@ function loadClassificationTask() {
     $('#removeFrameButton').click(function() {
         var frame = parseInt(g_currentFrameNr);
         delete g_targetLabels[frame];
-
         g_targetFrames = g_targetFrames.filter(function (value, index, arr) {return value!=frame});
-
-        removeSliderMarks();
-        for(label in g_targetLabels)
-            updateSliderMark(label, g_targetLabels[label]);
-    });
+        updateSliderMarks();
+        });
 
     // Add click listener for label buttons to trigger save if annotating whole sequence with one label
     if(!g_annotateIndividualFrames){
@@ -72,9 +68,7 @@ function loadClassificationTask() {
             g_progressbar.hide();
             redrawSequence();
 
-            removeSliderMarks();
-            for(label in g_targetLabels)
-                updateSliderMark(label, g_targetLabels[label]);
+            updateSliderMarks();
 
             if(g_isPlaying)
                 incrementFrame();
@@ -88,31 +82,17 @@ function addLabelsForNewFrame(frameNr) {
     g_targetLabels[frameNr] = {};
 }
 
-function removeSliderMarks(){
-    var slider = document.getElementById('slider')
-    for (var i = slider.childNodes.length-1; i >= 0; i--) {
-        if(slider.childNodes[i].nodeName.includes("SLIDERMARKER"))
-            slider.removeChild(slider.childNodes[i]);
+
+
+// Overload of annotationweb.js implementation of updateSlideMarks
+function updateSliderMarks(){
+    removeAllSliderMarks();
+
+    for(var label_nr in g_targetLabels){
+        var label = g_targetLabels[label_nr]
+        var color = colorToHexString(label.label.red, label.label.green, label.label.blue)
+        setupSliderMark(label_nr, g_framesLoaded, color);
     }
-}
-
-// Overload of annotationweb.js implementation of setupSlideMark
-function updateSliderMark(frame, label){
-    var frame = parseInt(frame);
-
-    var slider = document.getElementById('slider')
-    var marker_index = g_targetFrames.findIndex(index => index === frame);
-    var label = label.label
-    var newMarker = document.createElement("sliderMarker" + marker_index)
-
-    $(newMarker).css('background-color', colorToHexString(label.red, label.green, label.blue));
-    $(newMarker).css('width', $('.ui-slider-handle').css('width'));
-    $(newMarker).css('margin-left', $('.ui-slider-handle').css('margin-left'));
-    $(newMarker).css('height', '100%');
-    $(newMarker).css('z-index', '99');
-    $(newMarker).css('position', 'absolute');
-    $(newMarker).css('left', ''+(100.0*(frame-g_startFrame)/g_framesLoaded)+'%');
-    slider.appendChild(newMarker)
 }
 
 function loadLabels(target_frame, label_id) {
@@ -149,6 +129,5 @@ function changeLabel(label_id) {
         }
     }
 
-    for(label in g_targetLabels)
-        updateSliderMark(label, g_targetLabels[label]);
+    updateSliderMarks();
 }
