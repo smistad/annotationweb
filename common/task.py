@@ -246,7 +246,7 @@ def setup_task_context(request, task_id, type, image_id):
 
     # Check if image belongs to an image sequence
     context['image_sequence'] = image
-    context['frames'] = KeyFrameAnnotation.objects.filter(image_annotation__image=image)
+    context['frames'] = KeyFrameAnnotation.objects.filter(image_annotation__task_id=task_id, image_annotation__image=image)
 
     context['image'] = image
     context['task'] = task
