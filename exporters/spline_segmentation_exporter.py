@@ -1,22 +1,26 @@
-from math import sqrt, floor, ceil
+from math import sqrt
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
-from annotationweb.models import ImageAnnotation, Dataset, Task, Label, Subject, KeyFrameAnnotation, ImageMetadata
+from annotationweb.models import Task, Label, Subject, KeyFrameAnnotation, ImageMetadata
 from spline_segmentation.models import ControlPoint
 from django import forms
 import os
 from os.path import join
-from shutil import rmtree, copyfile
+from shutil import rmtree
 import numpy as np
-import json
 from scipy.ndimage.morphology import binary_fill_holes
 import PIL
 
 
 class SplineSegmentationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
-    delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=False, required=False)
+    delete_existing_data = forms.BooleanField(label="Delete any existing data at storage path",
+                                              initial=False,
+                                              required=False)
+    dump_one_hot = forms.BooleanField(label="Encode labels along channels (One-hot encoding)",
+                                      initial=False,
+                                      required=False)
 
     def __init__(self, task, data=None):
         super().__init__(data)
@@ -26,7 +30,7 @@ class SplineSegmentationExporterForm(forms.Form):
 
 class SplineSegmentationExporter(Exporter):
     """
-    asdads
+    Exporter for spline segmentation
     """
 
     task_type = Task.SPLINE_SEGMENTATION
@@ -37,6 +41,7 @@ class SplineSegmentationExporter(Exporter):
 
     def export(self, form):
         delete_existing_data = form.cleaned_data['delete_existing_data']
+        self.dump_one_hot = form.cleaned_data['dump_one_hot']
         # Create dir, delete old if it exists
         path = form.cleaned_data['path']
         if delete_existing_data:
@@ -74,7 +79,7 @@ class SplineSegmentationExporter(Exporter):
                 subject_subfolder = join(subject_path, str(sequence_id))
                 create_folder(subject_subfolder)
 
-                target_name = os.path.basename(image_sequence.format).replace('#',str(frame.frame_nr))
+                target_name = os.path.basename(image_sequence.format).replace('#', str(frame.frame_nr))
                 target_gt_name = os.path.splitext(target_name)[0]+"_gt.mhd"
 
                 filename = image_sequence.format.replace('#', str(frame.frame_nr))
@@ -95,17 +100,25 @@ class SplineSegmentationExporter(Exporter):
         return True, path
 
     def get_object_segmentation(self, image_size, frame):
-        segmentation = np.zeros(image_size, dtype=np.uint8)
         tension = 0.5
 
         labels = Label.objects.filter(task=frame.image_annotation.task).order_by('id')
         counter = 1
+
+        if self.dump_one_hot:
+            segmentation = np.zeros((*image_size, len(labels)+1), dtype=np.uint8)
+        else:
+            segmentation = np.zeros(image_size, dtype=np.uint8)
+
         for label in labels:
             objects = ControlPoint.objects.filter(label=label, image=frame).only('object').distinct()
             for object in objects:
                 previous_x = None
                 previous_y = None
-                control_points = ControlPoint.objects.filter(label=label, image=frame, object=object.object).order_by('index')
+                control_points = ControlPoint.objects.filter(label=label,
+                                                             image=frame,
+                                                             object=object.object).order_by('index')
+
                 max_index = len(control_points)
                 for i in range(max_index):
                     if i == 0:
@@ -138,27 +151,40 @@ class SplineSegmentationExporter(Exporter):
 
                         if previous_x is not None and (abs(previous_x - x) > 1 or abs(previous_y - y) > 1):
                             # Draw a straight line between the points
-                            end_pos = np.array([x,y])
-                            start_pos = np.array([previous_x,previous_y])
+                            end_pos = np.array([x, y])
+                            start_pos = np.array([previous_x, previous_y])
                             direction = end_pos - start_pos
                             segment_length = np.linalg.norm(end_pos - start_pos)
-                            direction = direction / segment_length # Normalize
+                            direction = direction / segment_length  # Normalize
                             for i in np.arange(0.0, np.ceil(segment_length), 0.5):
                                 current = start_pos + direction * (float(i)/np.ceil(segment_length))
                                 current = np.round(current).astype(np.int32)
                                 current[0] = min(image_size[1]-1, max(0, current[0]))
                                 current[1] = min(image_size[0]-1, max(0, current[1]))
-                                segmentation[current[1], current[0]] = counter
+
+                                if self.dump_one_hot:
+                                    segmentation[current[1], current[0], counter] = 1
+                                else:
+                                    segmentation[y, x] = counter
 
                         previous_x = x
                         previous_y = y
 
-                        segmentation[y, x] = counter
+                        if self.dump_one_hot:
+                            segmentation[y, x, counter] = 1
+                        else:
+                            segmentation[y, x] = counter
 
             # Fill the hole
-            segmentation[binary_fill_holes(segmentation == counter)] = counter
+            if self.dump_one_hot:
+                segmentation[binary_fill_holes(segmentation[..., counter] == 1), counter] = 1
+            else:
+                segmentation[binary_fill_holes(segmentation == counter)] = counter
 
             counter += 1
+
+        if self.dump_one_hot:
+            segmentation[..., 0] = (np.sum(segmentation, axis=2) == 0).astype(np.uint8)
 
         return segmentation
 
