@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'cardiac',
     'cardiac_landmark',
     'spline_segmentation',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +56,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'annotationweb.login.LoginRequiredMiddleware',
@@ -143,3 +146,5 @@ LOGIN_EXEMPT_URLS = (
 )
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+OTP_TOTP_ISSUER = 'Annotationweb'
