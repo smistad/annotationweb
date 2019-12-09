@@ -130,10 +130,13 @@ class MetaImage:
         else:
             raise ValueError('Unknown numpy type')
 
-    def write(self, filename):
+    def write(self, filename, compress=False, compression_level=-1):
         base_path = os.path.dirname(filename) + '/'
         filename = os.path.basename(filename)
-        raw_filename = filename[:filename.rfind('.')] + '.raw'
+        raw_filename = filename[:filename.rfind('.')]
+        raw_filename += '.zraw' if compress else '.raw'
+
+        raw_data = np.vstack(self.data).tobytes()
         # Write meta image file
         with open(base_path + filename, 'w') as f:
             f.write('NDims = ' + str(self.ndims) + '\n')
@@ -141,13 +144,18 @@ class MetaImage:
             f.write('ElementType = ' + self.get_metaimage_type() + '\n')
             f.write('ElementSpacing = ' + tuple_to_string(self.attributes['ElementSpacing']) + '\n')
             f.write('ElementNumberOfChannels = ' + str(self.attributes['ElementNumberOfChannels']) + '\n')
+            if compress:
+                compressed_raw_data = zlib.compress(raw_data, compression_level)
+                f.write('CompressedData = True\n')
+                f.write('CompressedDataSize = ' + str(len(compressed_raw_data)) + '\n')
             for key, value in self.attributes.items():
                 if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize', 'ElementSpacing', 'ElementNumberOfChannels']:
                     f.write(key + ' = ' + value + '\n')
             f.write('ElementDataFile = ' + raw_filename + '\n')
 
-        # TODO compressed storage
-
         # Write raw file
         with open(base_path + raw_filename, 'wb') as f:
-            f.write(np.vstack(self.data).tobytes())
+            if compress:
+                f.write(compressed_raw_data)
+            else:
+                f.write(raw_data)
