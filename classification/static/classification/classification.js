@@ -10,6 +10,7 @@ function sendDataForSave() {
             quality: $('input[name=quality]:checked').val(),
             rejected: g_rejected ? 'true':'false',
             comments: $('#comments').val(),
+            target_frames: JSON.stringify(g_targetFrames),
         },
         dataType: "json" // Need this do get result back as JSON
     });

@@ -23,9 +23,10 @@ def label_image(request, task_id, image_id):
 
         # Get label, if image has been already labeled
         try:
-            processed = ImageLabel.objects.get(image__image_id=image_id, image__task_id=task_id)
+            processed = ImageLabel.objects.get(image__image_annotation__image_id=image_id, image__image_annotation__task_id=task_id)
             context['chosen_label'] = processed.label.id
         except:
+            print('Not found..')
             pass
 
         return render(request, 'classification/label_image.html', context)
@@ -38,7 +39,7 @@ def save_labels(request):
     try:
         rejected = request.POST['rejected'] == 'true'
         if rejected:
-            annotation = common.task.save_annotation(request)
+            annotations = common.task.save_annotation(request)
         else:
             try:
                 label_id = int(request.POST['label_id'])
@@ -46,13 +47,13 @@ def save_labels(request):
             except:
                 raise Exception('You must select a classification label.')
 
-            annotation = common.task.save_annotation(request)
-            labeled_image = ImageLabel()
-            labeled_image.image = annotation
-            labeled_image.label = label
-            labeled_image.task = annotation.task
-
-            labeled_image.save()
+            annotations = common.task.save_annotation(request)
+            for annotation in annotations:
+                labeled_image = ImageLabel()
+                labeled_image.image = annotation
+                labeled_image.label = label
+                labeled_image.task = annotation.image_annotation.task
+                labeled_image.save()
 
         response = {
             'success': 'true',
