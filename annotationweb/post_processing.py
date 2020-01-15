@@ -5,7 +5,7 @@ Base class for post processing routines
 """
 class PostProcessingMethod(ABC):
     @abstractmethod
-    def post_process(self, input_image):
+    def post_process(self, input_image, source, filename: str):
         pass
 
 
