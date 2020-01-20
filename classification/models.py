@@ -3,11 +3,11 @@ from annotationweb.models import KeyFrameAnnotation, Label
 
 
 class ImageLabel(models.Model):
-    image = models.ForeignKey(KeyFrameAnnotation, on_delete=models.CASCADE)
+    image = models.OneToOneField(KeyFrameAnnotation, on_delete=models.CASCADE)
     label = models.ForeignKey(Label, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.image.image.filename + ' with label ' + self.label.name + ' created on ' + self.image.date.strftime('%Y-%m-%d %H:%M')
+        return str(self.image.image_annotation.image) + ' with label ' + self.label.name + ' created on ' + self.image.image_annotation.date.strftime('%Y-%m-%d %H:%M')
 
 
 

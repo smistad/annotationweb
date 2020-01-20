@@ -8,6 +8,7 @@ import numpy as np
 from annotationweb.post_processing import post_processing_register
 import time
 
+
 def get_image_as_http_response(filename, post_processing_method=''):
     _, extension = os.path.splitext(filename)
     buffer = BytesIO()
@@ -39,9 +40,9 @@ def get_image_as_http_response(filename, post_processing_method=''):
         else:
             pil_image = PIL.Image.fromarray(new_image, 'L')
 
-    print('Image loading time', time.time() - start, 'seconds')
+    #print('Image loading time', time.time() - start, 'seconds')
     pil_image.save(buffer, "PNG", compress_level=1)  # TODO This function is very slow due to PNG compression
-    print('Image loading time with save to buffer', time.time() - start, 'seconds')
+    #print('Image loading time with save to buffer', time.time() - start, 'seconds')
 
     return HttpResponse(buffer.getvalue(), content_type="image/png")
 
