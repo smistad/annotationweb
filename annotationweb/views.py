@@ -461,6 +461,11 @@ def complete_label(label):
     return get_complete_label_name(label)
 
 
+@register.filter(name='times')
+def times(number):
+    return range(number)
+
+
 def reset_filters(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
