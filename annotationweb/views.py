@@ -4,7 +4,6 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
-from django.utils.safestring import mark_safe
 from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
@@ -12,7 +11,6 @@ from common.search_filters import SearchFilter
 from common.label import get_complete_label_name
 from django.urls import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-import fnmatch
 import os
 from .forms import *
 from .models import *
