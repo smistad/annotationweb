@@ -172,6 +172,12 @@ function setupSliderMark(frame, totalNrOfFrames, color) {
 }
 
 function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_sequence, user_frame_selection, annotate_single_frame, frames_to_annotate, images_to_load_before, images_to_load_after, auto_play) {
+    // If user cannot select frame, and there are no target frames, select last frame as target frame
+    if(!user_frame_selection && annotate_single_frame && frames_to_annotate.length === 0) {
+        // Select last frame as target frame
+        frames_to_annotate.push(nrOfFrames-1);
+    }
+
     g_targetFrames = frames_to_annotate;
     g_targetFrames.sort(function(a, b){return a-b});
 
@@ -247,7 +253,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             g_progressbar.hide();
             redrawSequence();
             for(var i = 0; i < g_targetFrames.length; i++) {
-                setupSliderMark(g_targetFrames[i], nrOfFrames);
+                setupSliderMark(g_targetFrames[i], nrOfFrames - g_startFrame - 1);
             }
             g_progressbar.trigger('markercomplete');
             if(g_isPlaying)

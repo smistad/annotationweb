@@ -4,7 +4,6 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
-from django.utils.safestring import mark_safe
 from common.exporter import find_all_exporters
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
@@ -12,7 +11,6 @@ from common.search_filters import SearchFilter
 from common.label import get_complete_label_name
 from django.urls import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-import fnmatch
 import os
 from .forms import *
 from .models import *
@@ -463,6 +461,11 @@ def complete_label(label):
     return get_complete_label_name(label)
 
 
+@register.filter(name='times')
+def times(number):
+    return range(number)
+
+
 def reset_filters(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
@@ -532,6 +535,7 @@ def task(request, task_id):
                 imageannotation__image_quality__in=image_quality,
                 imageannotation__task=task,
                 imageannotation__user__in=users_selected,
+                imageannotation__keyframeannotation__imagelabel__in=labels_selected,
                 subject__in=subjects_selected,
             )
         else:

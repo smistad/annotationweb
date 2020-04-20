@@ -8,12 +8,14 @@ import numpy as np
 from annotationweb.post_processing import post_processing_register
 import time
 
+
 def get_image_as_http_response(filename, post_processing_method=''):
     _, extension = os.path.splitext(filename)
     buffer = BytesIO()
     start = time.time()
     if extension.lower() == '.mhd':
         reader = MetaImage(filename=filename)
+        source = reader
         # Convert raw data to image, and then to a http response
         pil_image = reader.get_image()
         spacing = reader.get_spacing()
@@ -26,20 +28,21 @@ def get_image_as_http_response(filename, post_processing_method=''):
             pil_image = pil_image.resize((new_width, new_height))
     elif extension.lower() == '.png':
         pil_image = PIL.Image.open(filename)
+        source = pil_image
     else:
         raise Exception('Unknown output image extension ' + extension)
 
     if post_processing_method is not '':
         post_processing = post_processing_register.get(post_processing_method)
-        new_image = post_processing.post_process(np.asarray(pil_image))
+        new_image = post_processing.post_process(np.asarray(pil_image), source, filename)
         if len(new_image.shape) > 2 and new_image.shape[2] == 3:
             pil_image = PIL.Image.fromarray(new_image, 'RGB')
         else:
             pil_image = PIL.Image.fromarray(new_image, 'L')
 
-    print('Image loading time', time.time() - start, 'seconds')
+    #print('Image loading time', time.time() - start, 'seconds')
     pil_image.save(buffer, "PNG", compress_level=1)  # TODO This function is very slow due to PNG compression
-    print('Image loading time with save to buffer', time.time() - start, 'seconds')
+    #print('Image loading time with save to buffer', time.time() - start, 'seconds')
 
     return HttpResponse(buffer.getvalue(), content_type="image/png")
 
