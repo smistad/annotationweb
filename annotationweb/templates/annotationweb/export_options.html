@@ -3,11 +3,48 @@
 {% block content %}
     <h2>Export options</h2>
 
-    <form action="{% url 'export_options' task.id exporter_index%}" method="post">
+    <form action="{% url 'export_options' task.id exporter_index%}" method="post" onsubmit="submit_handler();">
         {% csrf_token %}
         <table>
             {{ form.as_table }}
         </table>
-        <input type="submit" value="Submit" />
+        <br>
+        <input type="submit" value="Export"/>
     </form>
+    <br>
+    <div id="progressbar"><div class="progress-label"></div></div>
+
+<script>
+var progressbar = $( "#progressbar" );
+var progressLabel = $(".progress-label");
+progressbar.progressbar({
+      value: false,
+      change: function() {
+        progressLabel.text("Please wait while exporting. " + progressbar.progressbar( "value" ).toFixed(1) + "%" );
+      },
+      complete: function() {
+          progressLabel.text("Finished exporting. " + progressbar.progressbar( "value" ).toFixed(1) + "%" );
+      }
+});
+
+progressbar.hide();
+function submit_handler() {
+    progressbar.show();
+}
+
+progressbar.show();
+
+
+const progressSocket = new WebSocket(
+    'ws://' + window.location.host + '/ws/export_progress/'
+);
+
+progressSocket.onmessage = function(event){
+    console.log(event)
+    var data = JSON.parse(event.data)
+    progressbar.progressbar("value", data.value)
+};
+
+</script>
+
 {% endblock %}
