@@ -71,3 +71,7 @@ git pull
 ```
 
 Open browser at http://localhost:8000
+
+Channels
+--------
+Need to install redis > 5.0

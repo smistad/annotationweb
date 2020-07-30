@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'spline_segmentation',
     'django_otp',
     'django_otp.plugins.otp_totp',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -81,6 +82,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'annotationweb.wsgi.application'
+
+# Channels settings
+ASGI_APPLICATION = "annotationweb.routing.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [("localhost", 6379)],
+            "symmetric_encryption_keys": [SECRET_KEY],
+        },
+    },
+}
 
 
 # Database
