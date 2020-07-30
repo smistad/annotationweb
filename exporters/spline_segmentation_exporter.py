@@ -5,12 +5,14 @@ from common.utility import create_folder, copy_image
 from annotationweb.models import Task, Label, Subject, KeyFrameAnnotation, ImageMetadata
 from spline_segmentation.models import ControlPoint
 from django import forms
+import channels.layers
 import os
 from os.path import join
 from shutil import rmtree
 import numpy as np
 from scipy.ndimage.morphology import binary_fill_holes
 import PIL
+from asgiref.sync import async_to_sync
 
 
 class SplineSegmentationExporterForm(forms.Form):
@@ -61,9 +63,13 @@ class SplineSegmentationExporter(Exporter):
         return True, path
 
     def add_subjects_to_path(self, path, data):
+        channel_layer = channels.layers.get_channel_layer()
 
         # For each subject
-        for subject in data:
+        for idx, subject in enumerate(data):
+            async_to_sync(channel_layer.group_send)('export_progress_group', {'type': "value_update",
+                                                                              "value": 100*(idx+1)/len(data)})
+
             subject_path = join(path, subject.dataset.name, subject.name)
             frames = KeyFrameAnnotation.objects.filter(image_annotation__image__subject=subject,
                                                        image_annotation__task_id=self.task.id)
@@ -96,8 +102,6 @@ class SplineSegmentationExporter(Exporter):
                     image_size = image_pil.size
                     spacing = [1, 1]
                 self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing)
-
-        return True, path
 
     def get_object_segmentation(self, image_size, frame):
         tension = 0.5
