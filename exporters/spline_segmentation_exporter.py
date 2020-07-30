@@ -134,6 +134,10 @@ class SplineSegmentationExporter(Exporter):
                     c = control_points[(i+1) % max_index]
                     d = control_points[(i+2) % max_index]
                     length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
+
+                    if length == 0:
+                        continue  # skip if point is at same location
+
                     # Not a very elegant solution ... could try to estimate the spline length instead
                     # or draw straight lines between consecutive points instead
                     step_size = min(0.01, 1.0 / (length*2))
