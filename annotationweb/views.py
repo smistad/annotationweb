@@ -1,7 +1,6 @@
 from django.contrib import messages
-from django.http import QueryDict
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import Http404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
 from common.exporter import find_all_exporters
@@ -12,6 +11,8 @@ from common.label import get_complete_label_name
 from django.urls import reverse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import os
+import threading
+
 from .forms import *
 from .models import *
 from common.user import is_annotater
@@ -31,6 +32,7 @@ def get_task_statistics(tasks, user):
         # Check if user has processed any
         task.started = ImageAnnotation.objects.filter(task=task, user=user).count() > 0
         task.finished = task.number_of_annotated_images == task.total_number_of_images
+
 
 def index(request):
     context = {}
@@ -84,18 +86,14 @@ def export_options(request, task_id, exporter_index):
     if request.method == 'POST':
         form = exporter.get_form(data=request.POST)
         if form.is_valid():
-            success, message = exporter.export(form)
-            if success:
-                messages.success(request, 'Export finished: ' + message)
-            else:
-                messages.error(request, 'Export failed: ' + message)
-
-            return redirect('index')
+            t = threading.Thread(target=exporter.export, args=(form,))
+            t.start()
     else:
         # Get unbound form
         form = exporter.get_form()
 
-    return render(request, 'annotationweb/export_options.html', {'form': form, 'exporter_index': exporter_index, 'task': task})
+    return render(request, 'annotationweb/export_options.html', {'form': form, 'exporter_index': exporter_index,
+                                                                 'task': task})
 
 
 @staff_member_required
