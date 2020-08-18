@@ -87,7 +87,7 @@ class CardiacExaminationsExporter(Exporter):
 
         # Create file_list.txt file and copy images
         file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject__in=data)
+        labeled_images = ImageAnnotation.objects.filter(task=self.task, rejected=False)
         for labeled_image in labeled_images:
             label = ImageLabel.objects.get(image=labeled_image)
             name = labeled_image.image.filename
@@ -115,8 +115,8 @@ def to_categorical(y, nb_classes=None):
 
 
 class HorizontalRadioRenderer(forms.RadioSelect):
-    def render(self, name, value, attrs=None, renderer=None):
-        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
+    template_name = 'annotationweb/horizontal_radios.html'
+    option_template_name = 'annotationweb/horizontal_option.html'
 
 
 class CardiacHDFExaminationsExporterForm(forms.Form):
@@ -229,7 +229,7 @@ class CardiacHDFExaminationsExporter(Exporter):
         subjects = Subject.objects.filter(dataset__task=self.task)
         for subject in subjects:
             # Get labeled images
-            labeled_images = ProcessedImage.objects.filter(task=self.task, image__subject=subject, rejected=False)
+            labeled_images = ImageAnnotation.objects.filter(task=self.task, rejected=False, image__subject=subject)
             if labeled_images.count() == 0:
                 continue
 
@@ -240,12 +240,12 @@ class CardiacHDFExaminationsExporter(Exporter):
             labels = []
 
             for labeled_image in labeled_images:
-                label = ImageLabel.objects.get(image=labeled_image)
+                label = ImageLabel.objects.get(image__image_annotation=labeled_image)
 
                 if get_complete_label_name(label.label) in label_dict.keys():
                     # Get sequence
-                    key_frame = KeyFrame.objects.get(image=labeled_image.image)
-                    image_sequence = key_frame.image_sequence
+                    key_frame = KeyFrameAnnotation.objects.get(image_annotation=labeled_image)
+                    image_sequence = labeled_image.image
                     nr_of_frames = image_sequence.nr_of_frames
 
                     start_frame = 0
@@ -287,7 +287,7 @@ class CardiacHDFExaminationsExporter(Exporter):
                         sequence_label_file.write(join(subject.name, os.path.basename(os.path.dirname(image_sequence.format))) + '\t' + str(output[0]) + '\n')
 
                         if form.cleaned_data['image_dim_ordering'] == 'theano':
-                            input = np.transpose(input, [0,3,1,2])
+                            input = np.transpose(input, [0, 3, 1, 2])
 
                         if form.cleaned_data['categorical']:
                             output = to_categorical(output, nb_classes=nb_parent_classes)
