@@ -150,24 +150,33 @@ function initializeAnnotation(taskID, imageID) {
         });
 }
 
-function setupSliderMark(frame, totalNrOfFrames, color) {
+function setupSliderMark(frame, color) {
     color = typeof color !== 'undefined' ? color : '#0077b3';
-    var marker_index = g_targetFrames.findIndex(index => index === frame);
 
     var slider = document.getElementById('slider')
 
     var newMarker = document.createElement('span');
-    newMarker.setAttribute('id', 'sliderMarker' + marker_index);
+    newMarker.setAttribute('id', 'sliderMarker' + frame);
     $(newMarker).css('background-color', color);
     $(newMarker).css('width', $('.ui-slider-handle').css('width'));
     $(newMarker).css('margin-left', $('.ui-slider-handle').css('margin-left'));
     $(newMarker).css('height', '100%');
     $(newMarker).css('z-index', '99');
     $(newMarker).css('position', 'absolute');
-    $(newMarker).css('left', ''+(100.0*(frame-g_startFrame)/totalNrOfFrames)+'%');
+    $(newMarker).css('left', ''+(100.0*(frame-g_startFrame)/g_sequenceLength)+'%');
 
     slider.appendChild(newMarker)
     console.log('Made marker');
+}
+
+function addKeyFrame(frame_nr) {
+    if(g_targetFrames.includes(frame_nr)) // Already exists
+        return;
+    setupSliderMark(frame_nr);
+    g_targetFrames.push(frame_nr);
+    g_targetFrames.sort(function(a, b){return a-b});
+    $("#framesSelected").append('<li id="selectedFrames' + frame_nr + '">' + frame_nr + '</li>');
+    $("#framesForm").append('<input id="selectedFramesForm' + frame_nr + '" type="hidden" name="frames" value="' + frame_nr + '">');
 }
 
 function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_sequence, user_frame_selection, annotate_single_frame, frames_to_annotate, images_to_load_before, images_to_load_after, auto_play) {
@@ -177,8 +186,6 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         frames_to_annotate.push(nrOfFrames-1);
     }
 
-    g_targetFrames = frames_to_annotate;
-    g_targetFrames.sort(function(a, b){return a-b});
 
     console.log('In load sequence');
     // Create play/pause button
@@ -250,28 +257,36 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             progressLabel.text( "Finished loading!" );
             g_progressbar.hide();
             redrawSequence();
-            for(var i = 0; i < g_targetFrames.length; i++) {
-                setupSliderMark(g_targetFrames[i], nrOfFrames - g_startFrame - 1);
-            }
             g_progressbar.trigger('markercomplete');
             if(g_isPlaying)
                 incrementFrame();
       }
     });
 
+    for(var i = 0; i < frames_to_annotate.length; ++i) {
+        addKeyFrame(frames_to_annotate[i]);
+    }
+
     $("#addFrameButton").click(function() {
         setPlayButton(false);
-        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
-            return;
-        setupSliderMark(g_currentFrameNr, g_framesLoaded);
-        g_targetFrames.push(g_currentFrameNr);
+        addKeyFrame(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
-        g_targetFrames.sort(function(a, b){return a-b});
-        $("#framesSelected").append('<li>' + g_currentFrameNr + '</li>');
-        $("#framesForm").append('<input type="hidden" name="frames" value="' + g_currentFrameNr + '">');
+    });
+
+    $("#removeFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_targetFrames.includes(g_currentFrameNr)) {
+            g_targetFrames.splice(g_targetFrames.indexOf(g_currentFrameNr), 1);
+            g_currentTargetFrameIndex = -1;
+            $('#sliderMarker' + g_currentFrameNr).remove();
+            $('#selectedFrames' + g_currentFrameNr).remove();
+            $('#selectedFramesForm' + g_currentFrameNr).remove();
+        }
     });
 
     $("#nextFrameButton").click(function() {
+        if(g_targetFrames.length === 0)
+            return;
         // Find next frame
         var i;
         if(g_targetFrames[g_targetFrames.length-1] <= g_currentFrameNr) {

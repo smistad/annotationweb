@@ -325,37 +325,55 @@ def add_image_sequence(request, subject_id):
 
 
 @staff_member_required
-def add_key_frames(request, image_sequence_id):
+def select_key_frames(request, task_id, image_id):
     try:
-        image_sequence = ImageSequence.objects.get(pk=image_sequence_id)
+        image_sequence = ImageSequence.objects.get(pk=image_id)
+        task = Task.objects.get(pk=task_id)
     except ImageSequence.DoesNotExist:
         raise Http404('Image sequence does not exist')
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
 
     if request.method == 'POST':
         frame_list = request.POST.getlist('frames')
         if len(frame_list) == 0:
             messages.error(request, 'You must select at least 1 frame')
         else:
+            # Add annotation object if not exists
+            try:
+                annotation = ImageAnnotation.objects.get(image_id=image_id, task_id=task_id)
+            except ImageAnnotation.DoesNotExist:
+                annotation = ImageAnnotation()
+                annotation.image_id = image_id
+                annotation.task_id = task_id
+                annotation.rejected = False
+                annotation.user = request.user
+                annotation.finished = False
+                annotation.save()
             # Add frames to db
             for frame_nr in frame_list:
-                raise NotImplemented()
-                # Create image
-                image = Image()
-                image.filename = image_sequence.format.replace('#', str(frame_nr))
-                image.subject = image_sequence.subject
-                image.save()
+                # Add new key frames if not exists
+                print(frame_nr)
+                try:
+                    key_frame = KeyFrameAnnotation.objects.get(image_annotation=annotation, frame_nr=frame_nr)
+                    # Already exists, do nothing
+                except KeyFrameAnnotation.DoesNotExist:
+                    # Does not exist, add it
+                    key_frame = KeyFrameAnnotation()
+                    key_frame.image_annotation = annotation
+                    key_frame.frame_nr = frame_nr
+                    key_frame.save()
 
-                # Create associated key frame
-                key_frame = KeyFrame()
-                key_frame.frame_nr = int(frame_nr)
-                key_frame.image_sequence = image_sequence
-                key_frame.image = image
-                key_frame.save()
+            # Delete frames that were not added
+            to_delete = KeyFrameAnnotation.objects.filter(image_annotation=annotation).exclude(frame_nr__in=frame_list)
+            deleted_count = len(to_delete)
+            to_delete.delete()
 
-            messages.success(request, 'The image sequence and frames were stored.')
-            return redirect('datasets')
-
-    return render(request, 'annotationweb/add_key_frames.html', {'image_sequence': image_sequence})
+            messages.success(request, 'The ' + str(len(frame_list)) + ' key frames were stored. ' + str(deleted_count) + ' key frames were deleted.')
+            return redirect('task', task_id)
+    else:
+        frames = KeyFrameAnnotation.objects.filter(image_annotation__image=image_sequence, image_annotation__task=task)
+        return render(request, 'annotationweb/add_key_frames.html', {'image_sequence': image_sequence, 'task': task, 'frames': frames})
 
 
 def show_frame(request, image_sequence_id, frame_nr, task_id):

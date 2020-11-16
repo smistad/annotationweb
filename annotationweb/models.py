@@ -113,6 +113,7 @@ class ImageAnnotation(models.Model):
     image_quality = models.CharField(max_length=50, choices=IMAGE_QUALITY_CHOICES)
     comments = models.TextField()
     rejected = models.BooleanField()
+    finished = models.BooleanField(default=True)
 
 
 class KeyFrameAnnotation(models.Model):

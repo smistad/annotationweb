@@ -1,6 +1,9 @@
 {% extends 'annotationweb/one_column_layout.html' %}
 
 {% block javascript %}
+
+initializeAnnotation({{ task.id }}, {{ image_sequence.id }});
+
 loadSequence(
     {{ image_sequence.id }},
     {{ image_sequence.start_frame_nr }},
@@ -8,7 +11,7 @@ loadSequence(
     true,
     false,
     false,
-    [ {% for frame_nr in frames %}{{ frame_nr }},{% endfor %}],
+    [ {% for frame in frames %}{{ frame.frame_nr }},{% endfor %}],
     0,
     0,
     false
@@ -17,27 +20,29 @@ loadSequence(
 {% endblock %}
 
 {% block content %}
-<h2>Add key frames</h2>
+<h2>Set key frames</h2>
 
 {% for message in messages %}
 <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
 {% endfor %}
 
 <div id="progressbar"><div class="progress-label">Loading...</div></div>
-<div id="sliderText">Drag the slider to view the other frames in the ultrasound sequence:</div>
+<div id="sliderText">Drag the slider to view the other frames in the sequence:</div>
 <div id="slider"></div>
 <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 
 <br><br>
+<strong style="color: red;">If you delete a frame which already has been an annotated, that annotation will be deleted!</strong>
+<br>
 <button id="addFrameButton">Add current frame</button>
+<button id="nextFrameButton">Go to next key frame</button>
+<button id="removeFrameButton">Delete current key frame</button>
 
 <h4>Selected frames</h4>
-<ul>
-<div id="framesSelected">
-</div>
+<ul id="framesSelected">
 </ul>
 
-<form action="{% url 'add_key_frames' image_sequence.id %}" method="post">
+<form action="{% url 'select_key_frames' task.id image_sequence.id  %}" method="post">
     {% csrf_token %}
     <div id="framesForm"></div>
     <input type="submit" value="Finished">

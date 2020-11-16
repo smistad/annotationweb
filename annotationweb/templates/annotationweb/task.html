@@ -40,7 +40,7 @@
         <img src="{% url 'show_image' image.id task.id %}" width="100%">
         {{ image.format }}<br>
 
-        {% if image.annotation %}
+        {% if image.annotation.finished %}
         {% if image.annotation.rejected %}
             <span style="color: darkred; font-weight: bold;">REJECTED</span><br>
         {% endif %}
@@ -69,7 +69,10 @@
         <a href="{% url 'annotate' task.id image.id %}">Edit</a>
         {% else %}
         Not annotated.<br>
-        <a href="{% url 'annotate' task.id image.id %}">Annotate</a>
+        <a href="{% url 'annotate' task.id image.id %}">Annotate</a><br>
+        {% endif %}
+        {% if user.is_staff %}
+        <a href="{% url 'select_key_frames' task.id image.id %}">Select key frames</a>
         {% endif %}
 
     </div>

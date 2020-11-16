@@ -168,7 +168,7 @@ function setupSegmentation() {
 
         if(g_targetFrames.includes(g_currentFrameNr)){
             var target_frame_idx = g_targetFrames.indexOf(g_currentFrameNr)
-            var target_id = "sliderMarker" + target_frame_idx
+            var target_id = "sliderMarker" + g_currentFrameNr;
 
             slider.querySelector(target_id).remove();
             g_targetFrames.splice(target_frame_idx,1);
