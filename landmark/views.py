@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from .models import *
 from annotationweb.models import Task, ImageAnnotation
 from django.contrib import messages
-from django.http import HttpResponse, Http404, JsonResponse
+from django.http import HttpResponse, Http404, JsonResponse, HttpResponseRedirect
 import random
 import json
 import common.task
@@ -22,9 +22,13 @@ def process_image(request, task_id, image_id):
         context['landmarks'] = Landmark.objects.filter(image__image_id=image_id, image__task_id=task_id)
 
         return render(request, 'landmark/process_image.html', context)
-    except IndexError:
+    except common.task.NoMoreImages:
         messages.info(request, 'This task is finished, no more images to annotate.')
         return redirect('index')
+    except RuntimeError as e:
+        messages.error(request, str(e))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
 
 
 def save(request):

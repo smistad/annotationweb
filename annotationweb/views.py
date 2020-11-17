@@ -363,6 +363,10 @@ def select_key_frames(request, task_id, image_id):
                     key_frame.image_annotation = annotation
                     key_frame.frame_nr = frame_nr
                     key_frame.save()
+                    if annotation.finished:
+                        # New frame, mark annotation as unfinished
+                        annotation.finished = False
+                        annotation.save()
 
             # Delete frames that were not added
             to_delete = KeyFrameAnnotation.objects.filter(image_annotation=annotation).exclude(frame_nr__in=frame_list)
@@ -546,13 +550,14 @@ def task(request, task_id):
         queryset = queryset.filter(
             subject__dataset__task=task,
             subject__in=subjects_selected
-        ).exclude(imageannotation__task=task)
+        ).exclude(imageannotation__task=task, imageannotation__finished=True)
     else:
         if task.type == Task.CLASSIFICATION:
             labels_selected = search_filters.get_value('label')
             queryset = queryset.filter(
                 imageannotation__image_quality__in=image_quality,
                 imageannotation__task=task,
+                imageannotation__finished=True,
                 imageannotation__user__in=users_selected,
                 imageannotation__keyframeannotation__imagelabel__in=labels_selected,
                 subject__in=subjects_selected,
@@ -561,6 +566,7 @@ def task(request, task_id):
             queryset = queryset.filter(
                 imageannotation__image_quality__in=image_quality,
                 imageannotation__task=task,
+                imageannotation__finished=True,
                 imageannotation__user__in=users_selected,
                 subject__in=subjects_selected
             )

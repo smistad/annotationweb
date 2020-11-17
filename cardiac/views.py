@@ -3,7 +3,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 import json
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponse, Http404, JsonResponse
+from django.http import HttpResponse, Http404, JsonResponse, HttpResponseRedirect
 import random
 from io import StringIO, BytesIO
 import base64
@@ -65,9 +65,12 @@ def segment_image(request, task_id, image_id):
             pass
 
         return render(request, 'cardiac/segment_image.html', context)
-    except IndexError:
+    except common.task.NoMoreImages:
         messages.info(request, 'This task is finished, no more images to segment.')
         return redirect('index')
+    except RuntimeError as e:
+        messages.error(request, str(e))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 def save_segmentation(request):

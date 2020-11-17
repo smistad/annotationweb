@@ -66,11 +66,12 @@
             Date: {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
         {% endif %}
 
-        <a href="{% url 'annotate' task.id image.id %}">Edit</a>
+        <a href="{% url 'annotate' task.id image.id %}">Edit annotations</a><br>
         {% else %}
         Not annotated.<br>
         <a href="{% url 'annotate' task.id image.id %}">Annotate</a><br>
         {% endif %}
+        {{ image.annotation_frames | length }} key frames.<br>
         {% if user.is_staff %}
         <a href="{% url 'select_key_frames' task.id image.id %}">Select key frames</a>
         {% endif %}

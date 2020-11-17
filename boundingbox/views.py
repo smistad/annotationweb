@@ -4,7 +4,7 @@ from .models import *
 from annotationweb.models import Task, ImageAnnotation
 from .forms import *
 from django.contrib import messages
-from django.http import HttpResponse, Http404, JsonResponse
+from django.http import HttpResponse, Http404, JsonResponse, HttpResponseRedirect
 import random
 import json
 import common.task
@@ -29,9 +29,12 @@ def process_image(request, task_id, image_id):
             pass
 
         return render(request, 'boundingbox/process_image.html', context)
-    except ValueError:
+    except common.task.NoMoreImages:
         messages.info(request, 'This task is finished, no more images to segment.')
         return redirect('index')
+    except RuntimeError as e:
+        messages.error(request, str(e))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 def save_boxes(request):

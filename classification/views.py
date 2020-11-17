@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.http import Http404
 
@@ -30,9 +30,12 @@ def label_image(request, task_id, image_id):
             pass
 
         return render(request, 'classification/label_image.html', context)
-    except IndexError:
+    except common.task.NoMoreImages:
         messages.info(request, 'This task is finished, no more images to annotate.')
         return redirect('index')
+    except RuntimeError as e:
+        messages.error(request, str(e))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 def save_labels(request):
