@@ -72,7 +72,7 @@ class Task(models.Model):
     user = models.ManyToManyField(User)
     description = models.TextField(default='', blank=True)
     large_image_layout = models.BooleanField(default=False, help_text='Use a large image layout for annotation')
-    post_processing_method = models.CharField(default='', help_text='Name of post processing method to use', max_length=255)
+    post_processing_method = models.CharField(default='', help_text='Name of post processing method to use', max_length=255, blank=True)
 
     def __str__(self):
         return self.name
