@@ -10,8 +10,8 @@ It was initially developed by Erik Smistad working at both SINTEF Medical Techno
 But has been extended by several contributors at both SINTEF and NTNU. 
 
 Warning: This is reasearch-ware and thus seriously lack documentation and tests.
-You are welcome to contribute to this project, and feel free to direct
-any questions to @smistad.
+
+You are more than welcome to contribute to this project, and feel free to ask questions.
 
 
 Requirements
@@ -72,8 +72,9 @@ To setup annotation web for deployment on a server use apache2 and mod_wsgi:
 sudo apt-get install python3-pip apache2 libapache2-mod-wsgi-py3
 ```
 
-**2. Then clone the repo on the server**
+**2. Then clone the repo on the server** for instance to /var/www/
 ```bash
+cd /var/www/
 git clone https://github.com/smistad/annotationweb.git
 ```
 
@@ -126,9 +127,72 @@ sudo nano /etc/apache2/sites-available/annotationweb.conf
 ```
 The config should look something like this:
 ```
+<VirtualHost *:80>
+    ServerName awesome-webserver.com
+
+    ServerAdmin you@domain.com
+    DocumentRoot /var/www/annotationweb/
+
+    Alias /static /var/www/annotationweb/static
+    <Directory /var/www/annotationweb/static>
+        Require all granted
+    </Directory>
+
+    <Directory /var/www/annotationweb/annotationweb>
+        <Files wsgi.py>
+            Require all granted
+        </Files>
+    </Directory>
+
+    WSGIDaemonProcess example python-path=/var/www/annotationweb/:/var/www/annotationweb/environment/lib/python3.6/site-packages
+    WSGIProcessGroup example
+    WSGIScriptAlias / /var/www/annotationweb/annotationweb/wsgi.py
+
+    ErrorLog ${APACHE_LOG_DIR}/annotationweb.error.log
+    CustomLog ${APACHE_LOG_DIR}/annotationweb.access.log combined
+</VirtualHost>
 ```
 Or, if you need https/SSL encryption:
 ```
+# Redirect to secure site
+<VirtualHost *:80>
+    ServerName awesome-webserver.com
+    ServerAdmin you@domain.com
+    Redirect permanent / https://awesome-webserver.no
+</VirtualHost>
+
+<VirtualHost *:443>
+    # Common stuff
+    ServerName awesome-webserver.com
+    ServerAdmin you@domain.com
+    DocumentRoot /var/www/annotationweb/
+
+    # SSL stuff
+    SSLEngine on
+    # Only allow strong encryption, and disable SSLv3 
+    SSLCipherSuite HIGH:!aNULL:!MD5:!SSLv3
+    SSLCertificateFile "/var/www/annotationweb/ssl/certificate.crt"
+    SSLCertificateKeyFile "/var/www/annotationweb/ssl/certificate.key"
+    SSLCACertificateFile "/var/www/annotationweb/ssl/certificate.ca.crt"
+
+    Alias /static /var/www/annotationweb/static
+    <Directory /var/www/annotationweb/static>
+        Require all granted
+    </Directory>
+
+    <Directory /var/www/annotationweb/annotationweb>
+        <Files wsgi.py>
+            Require all granted
+        </Files>
+    </Directory>
+
+    WSGIDaemonProcess example python-path=/var/www/annotationweb/:/var/www/annotationweb/environment/lib/python3.6/site-packages
+    WSGIProcessGroup example
+    WSGIScriptAlias / /var/www/annotationweb/annotationweb/wsgi.py
+
+    ErrorLog ${APACHE_LOG_DIR}/annotationweb.error.log
+    CustomLog ${APACHE_LOG_DIR}/annotationweb.access.log combined
+</VirtualHost>
 ```
 
 **10. Enable website and have fun**
