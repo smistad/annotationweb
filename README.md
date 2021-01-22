@@ -6,7 +6,7 @@ image sequences such as ultrasound and camera recordings.
 It uses mainly django/python for the backend and javascript/jQuery and HTML canvas for 
 the interactive annotation frontend.
 
-Annotation web is developed by SINTEF Medical Technology and Norwegian University of Science and Technology (NTNU), and is released under a permissive [MIT license](https://github.com/smistad/annotationweb/LICENSE.md)
+Annotation web is developed by SINTEF Medical Technology and Norwegian University of Science and Technology (NTNU), and is released under a permissive [MIT license](https://github.com/smistad/annotationweb/LICENSE.md).
 
 You are more than welcome to contribute to this project, and feel free to ask questions.
 
