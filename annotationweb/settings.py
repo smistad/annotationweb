@@ -20,7 +20,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'ub5-=5c#9bp2mt0m)g@^61e1r2rs&a3!ia6ksyvq1-uofjatid'
+# Generate a security key with the following command, and insert it below:
+# python manage.py shell -c 'from django.core.management import utils; print(utils.get_random_secret_key())'
+# You can safely change this at any time, but note that logged in users will be logged out.
+# See more info here: https://medium.com/@bayraktar.eralp/changing-rotating-django-secret-key-without-logging-users-out-804a29d3ea65
+#SECRET_KEY = 'insert secret key her!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
