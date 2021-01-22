@@ -19,7 +19,7 @@ def get_next_unprocessed_image(task):
     :param task:
     :return image:
     """
-    queryset = ImageSequence.objects.filter(subject__dataset__task=task).exclude(imageannotation__task=task, imageannotation__finished=True)
+    queryset = ImageSequence.objects.filter(imageannotation__task=task, imageannotation__finished=False)
     if not task.user_frame_selection:
         # If user cannot select their own key frames, skip those without a key frame
         queryset = queryset.exclude(imageannotation__keyframeannotation__isnull=True)

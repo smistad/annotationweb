@@ -19,9 +19,8 @@ from common.user import is_annotater
 
 def get_task_statistics(tasks, user):
     for task in tasks:
-        # TODO Fix these number calculations
         task.total_number_of_images = ImageSequence.objects.filter(subject__dataset__task=task.id).count()
-        task.number_of_annotated_images = ImageSequence.objects.filter(imageannotation__in=ImageAnnotation.objects.filter(task_id=task.id)).count()
+        task.number_of_annotated_images = ImageSequence.objects.filter(imageannotation__in=ImageAnnotation.objects.filter(task_id=task.id, finished=True)).count()
 
         if task.total_number_of_images == 0:
             task.percentage_finished = 0
