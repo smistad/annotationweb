@@ -10,10 +10,10 @@ Annotation web is developed by SINTEF Medical Technology and Norwegian Universit
 
 You are more than welcome to contribute to this project, and feel free to ask questions.
 
-Main features
+**Main features**
 * Pure web-based system. Annotaters only need a web browser, they don't have to install anything, and everything is stored on the server.
 * Fast and interactive annotation of temporal data/video using javascript and HTML 5 canvas.
-* Secure login with two-factor authentication
+* Secure login with two-factor authentication.
 * Multiple annotation tasks are implemented, such image classification, segmentation using splines, landmark and bounding box.
 
 For more information, see the following wiki pages:
