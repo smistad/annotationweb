@@ -21,6 +21,6 @@ You are more than welcome to contribute to this project, and feel free to ask qu
 For more information, see the following wiki pages:
 * [Development setup](https://github.com/smistad/annotationweb/wiki/Development-setup) - Running annotation web locally on your machine
 * [Server setup](https://github.com/smistad/annotationweb/wiki/Server-setup) - Running annotation web on a server
-* [Importing data]()
-* [Setting up an annotation task]()
-* [Exporting annotated data]()
+* [Importing data](https://github.com/smistad/annotationweb/wiki/Importing-data)
+* [Setting up an annotation task](https://github.com/smistad/annotationweb/wiki/Setup-annotation-task)
+* [Exporting annotated data](https://github.com/smistad/annotationweb/wiki/Export-annotations)
