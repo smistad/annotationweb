@@ -10,6 +10,8 @@ Annotation web is developed by SINTEF Medical Technology and Norwegian Universit
 
 You are more than welcome to contribute to this project, and feel free to ask questions.
 
+![Annotation web](https://github.com/smistad/annotationweb/wiki/images/annotationweb.png)
+
 **Main features**
 * Pure web-based system. Annotaters only need a web browser, they don't have to install anything, and everything is stored on the server.
 * Fast and interactive annotation of temporal data/video using javascript and HTML 5 canvas.
