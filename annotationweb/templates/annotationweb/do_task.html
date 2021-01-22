@@ -47,7 +47,7 @@ setReturnURL('{{ return_url|safe }}');
 {% if image_sequence %}
 <h2>Sequence</h2>
 <div id="progressbar"><div class="progress-label">Loading...</div></div>
-<div id="sliderText">Drag the slider to view the other frames in the sequence:</div>
+<div id="sliderText">Drag the slider to view the other frames in the sequence. Current frame <span id="currentFrame"></span></div>
 <div id="slider"></div>
 <div class="actionButtons">
     <button id="playButton" type="button">Play</button>

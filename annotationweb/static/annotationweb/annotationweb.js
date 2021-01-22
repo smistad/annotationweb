@@ -58,6 +58,7 @@ function goToFrame(frameNr) {
     setPlayButton(false);
     g_currentFrameNr = frameNr;
     $('#slider').slider('value', frameNr); // Update slider
+    $('#currentFrame').text(g_currentFrameNr);
     var marker_index = g_targetFrames.findIndex(index => index === frameNr);
     if(marker_index) {
         g_currentTargetFrameIndex = g_currentFrameNr;
