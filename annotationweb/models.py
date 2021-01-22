@@ -80,6 +80,25 @@ class Task(models.Model):
     class Meta:
         ordering = ['name']
 
+    @property
+    def total_number_of_images(self):
+        if self.user_frame_selection:
+            return ImageSequence.objects.filter(subject__dataset__task=self).count()
+        else:
+            return ImageSequence.objects.filter(imageannotation__task=self).count()
+
+    @property
+    def number_of_annotated_images(self):
+        return ImageSequence.objects.filter(imageannotation__in=ImageAnnotation.objects.filter(task=self, finished=True)).count()
+
+    @property
+    def percentage_finished(self):
+        if self.total_number_of_images == 0:
+            return 0
+        else:
+            return round(self.number_of_annotated_images*100 / self.total_number_of_images, 1)
+
+
 
 class ImageSequence(models.Model):
     format = models.CharField(max_length=1024, help_text='Should contain # which will be replaced with an integer, '
