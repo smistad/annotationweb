@@ -32,11 +32,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('user.urls')),
     path('classification/', include('classification.urls')),
-    path('segmentation/', include('segmentation.urls')),
     path('boundingbox/', include('boundingbox.urls')),
     path('landmark/', include('landmark.urls')),
     path('cardiac/', include('cardiac.urls')),
-    path('cardiac_landmark/', include('cardiac_landmark.urls')),
     path('spline-segmentation/', include('spline_segmentation.urls'))
 ]
 

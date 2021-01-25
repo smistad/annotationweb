@@ -275,40 +275,8 @@ def add_image_sequence(request, subject_id):
                 new_image_sequence.subject = subject
 
                 new_image_sequence.save()  # Save to db
-                if request.POST['frame_selection'] == 'none':
-                    messages.success(request, 'Sequence successfully added')
-                    return redirect('datasets')
-                elif request.POST['frame_selection'] == 'manual':
-                    return redirect('add_key_frames', new_image_sequence.id)
-                elif request.POST['frame_selection'] == 'every_n_frame':
-                    try:
-                        frame_step = int(request.POST['frame_step'])
-                        frame_start = int(request.POST['frame_start'])
-                    except:
-                        messages.error(request, 'No input given to every X frame.')
-                    if frame_step <= 0 or frame_step >= new_image_sequence.nr_of_frames or frame_start < 0 \
-                            or frame_start >= new_image_sequence.nr_of_frames:
-                        messages.error(request, 'Incorrect frame step or start nr.')
-                    else:
-                        # Add every frame_step
-                        for frame_nr in range(frame_start, new_image_sequence.nr_of_frames, frame_step):
-                            raise NotImplemented()
-                            # Create image
-                            image = Image()
-                            image.filename = new_image_sequence.format.replace('#', str(frame_nr))
-                            image.subject = subject
-                            image.save()
-
-                            # Create associated key frame
-                            key_frame = KeyFrame()
-                            key_frame.frame_nr = frame_nr
-                            key_frame.image_sequence = new_image_sequence
-                            key_frame.image = image
-                            key_frame.save()
-
-                        messages.success(request, 'The image sequence and frames were stored.')
-                        return redirect('datasets')
-
+                messages.success(request, 'Sequence successfully added')
+                return redirect('datasets')
     else:
         form = ImageSequenceForm()
 
@@ -441,16 +409,12 @@ def task_description(request, task_id):
 
     if task.type == task.CLASSIFICATION:
         url = reverse('classification:label_image', args=[task_id])
-    elif task.type == task.SEGMENTATION:
-        url = reverse('segmentation:segment_image', args=[task_id])
     elif task.type == task.BOUNDING_BOX:
         url = reverse('boundingbox:process_image', args=[task_id])
     elif task.type == task.LANDMARK:
         url = reverse('landmark:process_image', args=[task_id])
     elif task.type == task.CARDIAC_SEGMENTATION:
         url = reverse('cardiac:segment_image', args=[task_id])
-    elif task.type == task.CARDIAC_LANDMARK:
-        url = reverse('cardiac_landmark:landmark_image', args=[task_id])
     elif task.type == task.SPLINE_SEGMENTATION:
         url = reverse('spline_segmentation:segment_image', args=[task_id])
     else:
@@ -598,14 +562,10 @@ def get_redirection(task):
         return 'classification:label_image'
     elif task.type == Task.BOUNDING_BOX:
         return 'boundingbox:process_image'
-    elif task.type == Task.SEGMENTATION:
-        return 'segmentation:segment_image'
     elif task.type == Task.LANDMARK:
         return 'landmark:process_image'
     elif task.type == Task.CARDIAC_SEGMENTATION:
         return 'cardiac:segment_image'
-    elif task.type == Task.CARDIAC_LANDMARK:
-        return 'cardiac_landmark:landmark_image'
     elif task.type == Task.SPLINE_SEGMENTATION:
         return 'spline_segmentation:segment_image'
 

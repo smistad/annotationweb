@@ -38,20 +38,16 @@ class Label(models.Model):
 
 
 class Task(models.Model):
-    SEGMENTATION = 'segmentation'
     CLASSIFICATION = 'classification'
     BOUNDING_BOX = 'boundingbox'
     LANDMARK = 'landmark'
     CARDIAC_SEGMENTATION = 'cardiac_segmentation'
-    CARDIAC_LANDMARK = 'cardiac_landmark'
     SPLINE_SEGMENTATION = 'spline_segmentation'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
-        (SEGMENTATION, 'Segmentation'),
         (BOUNDING_BOX, 'Bounding box'),
         (LANDMARK, 'Landmark'),
         (CARDIAC_SEGMENTATION, 'Cardiac segmentation'),
-        (CARDIAC_LANDMARK, 'Cardiac landmark'),
         (SPLINE_SEGMENTATION, 'Spline segmentation')
     )
 

@@ -15,14 +15,12 @@
         <tr>
             <th>ID</th>
             <th>Add data</th>
-            <th>Import</th>
             <th>Delete</th>
         </tr>
         {% for subject in dataset.subject_set.all %}
             <tr>
                 <td>{{ subject.name }}</td>
                 <td><a href="{% url 'add_image_sequence' subject.id %}">Add an image sequence</a></td>
-                <td><a href="{% url 'import' subject.id %}">Import data</a></td>
                 <td><a href="{% url 'delete_subject' subject.id %}">Delete</a></td>
             </tr>
         {% endfor %}

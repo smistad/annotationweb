@@ -1,8 +1,0 @@
-{% extends 'annotationweb/do_task.html' %}
-
-{% block task_javascript %}
-{% if image_sequence %}
-loadSegmentation({{ image_sequence.id }}, {{ frame_nr }});
-{% endif %}
-
-{% endblock task_javascript %}
