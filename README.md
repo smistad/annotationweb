@@ -19,7 +19,7 @@ You are more than welcome to contribute to this project, and feel free to ask qu
 * Multiple annotation tasks are implemented, such image classification, segmentation using splines, landmark and bounding box.
 
 For more information, see the following wiki pages:
-* [Wiki main page](https://github.com/smistad/annotationweb/wiki)
+* [System overview](https://github.com/smistad/annotationweb/wiki/System-overview) - Overview of the system design, goal, code structure, etc.
 * [Development setup](https://github.com/smistad/annotationweb/wiki/Development-setup) - Running annotation web locally on your machine
 * [Server setup](https://github.com/smistad/annotationweb/wiki/Server-setup) - Running annotation web on a server
 * [Importing data](https://github.com/smistad/annotationweb/wiki/Importing-data)
