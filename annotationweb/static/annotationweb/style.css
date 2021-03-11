@@ -23,21 +23,27 @@ body {
 }
 
 #contentRight {
-    width: 50%;
+    width: 60%;
     float: left;
-    padding-left: 5px;
+    padding-left: 30px;
     box-sizing: border-box;
 }
 
 #contentLeft {
-    width: 50%;
+    width: 40%;
     float: left;
-    padding-right: 5px;
+    padding-right: 30px;
     box-sizing: border-box;
 }
 
 .labelButton {
     font-size: 20px;
+    margin: 2px;
+}
+
+.actionButtons{
+      display: flex;
+      width: 60%;
 }
 
 #menuWrapper {
@@ -125,9 +131,10 @@ button {
     font-size: 20px;
     color: #000000;
     border: none;
-    padding: 4px;
+    padding: 10px;
     cursor: hand;
     cursor: pointer;
+    border-radius: 8px;
 }
 
 #imageQuality {
