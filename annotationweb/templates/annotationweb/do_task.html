@@ -1,3 +1,11 @@
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    #info {
+       display: none;
+    }
+</style>
+</head>
 {% extends 'annotationweb/two_column_layout.html' %}
 
 {% block javascript %}
@@ -40,25 +48,25 @@ setReturnURL('{{ return_url|safe }}');
 {% endfor %}
 <div id="message"></div>
 
-<h1>{{ task.name }}</h1>
+<h2>{{ task.name }}</h2>
 
-{{ task.number_of_annotated_images }} of {{ task.total_number_of_images}} videos/images have been labeled ({{ task.percentage_finished }}%).<br />
+{{ task.number_of_annotated_images }} of {{ task.total_number_of_images}} videos/images have been labeled ({{ task.percentage_finished }}%)
 
 {% if image_sequence %}
-<h2>Sequence</h2>
+<h3>Sequence</h3>
 <div id="progressbar"><div class="progress-label">Loading...</div></div>
 <div id="sliderText">Drag the slider to view the other frames in the sequence. Current frame <span id="currentFrame"></span></div>
 <div id="slider"></div>
 <div class="actionButtons">
-    <button id="playButton" type="button">Play</button>
+    <button id="playButton" type="button"><i id="play" class="fa fa-play"></i></button>
 {% if task.user_frame_selection %}
-    <button id="addFrameButton" type="button">Select frame for annotation</button>
-    <button id="removeFrameButton" type="button">Remove selected</button>
+    <button id="addFrameButton" type="button" title="Select frame"><i class="fa fa-plus"></i></button>
+    <button id="removeFrameButton" type="button" title="Remove selected frame"><i class="fa fa-minus"></i></button>
 {% endif %}
-    <button id="nextFrameButton" type="button">Skip to next annotation frame</button>
+    <button id="nextFrameButton" type="button" title="Next frame"><i class="fa fa-step-forward"></i></button>
 </div>
 {% endif %}
-<h2>Actions</h2>
+<h3>Actions</h3>
 <div class="actionButtons">
     {% if previous_image_id %}
     <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?{{ request.GET.urlencode }}');">Previous</button>
@@ -66,16 +74,16 @@ setReturnURL('{{ return_url|safe }}');
     {% if next_image_id %}
     <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
     {% endif %}
-    <button id="clearButton">Clear</button>
-    <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected.">Save as rejected</button>
-    <button id="saveButton">Save</button>
-    <button onclick="javascript:window.location.href='{% url 'task' task.id %}'">Image list</button>
+    <button id="clearButton" title="Clear"><i class="fa fa-eraser"></i></button>
+    <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected." title="Save as rejected"><i class="fa fa-remove"></i></button>
+    <button id="saveButton" title="Save"><i class="fa fa-save"></i></button>
+    <button onclick="javascript:window.location.href='{% url 'task' task.id %}'" title="Image list"><i class="fa fa-list"></i></button>
 </div>
 <div id="dialogConfirm">
     You have done changes to the annotation. <br>
     Do you wish to save the changes before going to the next/previous image?
 </div>
-<h2>Annotation</h2>
+<h3>Annotation</h3>
 <div id="imageQuality">
 <form id="imageQualityForm">
     Image quality:
@@ -83,11 +91,6 @@ setReturnURL('{{ return_url|safe }}');
     <input type="radio" name="quality" value="{{ quality_id }}" required{% if chosen_quality == quality_id %} checked="checked"{% endif %}> {{ quality_name }}
     {% endfor %}
 </form>
-</div>
-
-<div>
-{% block task_instructions %}
-{% endblock %}
 </div>
 
 <div id="labelButtons">
@@ -109,13 +112,19 @@ setReturnURL('{{ return_url|safe }}');
 {% endfor %}
 {% endblock label_buttons %}
 </div>
+<br>
+<div>
+{% block task_instructions %}
+{% endblock %}
+</div>
 
 <div>
-    <h2>Comments</h2>
+    <h3>Comments</h3>
     <textarea id="comments" style="width: 100%; height: 100px">{{ comments }}</textarea>
 </div>
 
 {% endblock content_left %}
+
 {% block content_right %}
 
 <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
@@ -123,19 +132,35 @@ setReturnURL('{{ return_url|safe }}');
 {% block task_content %}
 {% endblock %}
 
-<h2>Image info</h2>
-<strong>Dataset:</strong> {{ image_sequence.subject.dataset.name }} <strong>Subject:</strong> {{ image_sequence.subject.name }}<br>
-<strong>Filename:</strong> {{ image_sequence.format }}<br>
+<br>
+<button onclick=showImageInfo() title="Image information" style="width: 7%">
+    <i class="fa fa-info"></i>
+</button>
+<div id="info">
+    <strong>Dataset:</strong> {{ image_sequence.subject.dataset.name }}
+    <strong>Subject:</strong> {{ image_sequence.subject.name }}<br>
+    <strong>Filename:</strong> {{ image_sequence.format }}<br>
+</div>
+<script>
+    function showImageInfo(){
+        var e = document.getElementById("info");
+        if (e.style.display === 'block'){
+            e.style.display = 'none';}
+        else{
+            e.style.display = 'block';}
+    }
+</script>
+
 
 {% if image.metadata_set.count > 0 %}
-<h2>Image metadata</h2>
+<h3>Image metadata</h3>
 {% for metadata in image.metadata_set.all %}
 <strong>{{ metadata.name }}:</strong> {{ metadata.value }}<br>
 {% endfor %}
 {% endif %}
 
 {% if task.description|length > 0 %}
-<h2>Task description</h2>
+<h3>Task description</h3>
 
 {{ task.description|safe }}
 {% endif %}
