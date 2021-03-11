@@ -69,6 +69,7 @@ button {
     padding: 10px;
     margin: 4px;
     flex-grow: 1;
+    border-radius: 6px;
 }
 
 button:hover {
