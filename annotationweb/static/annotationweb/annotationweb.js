@@ -48,9 +48,11 @@ function incrementFrame() {
 function setPlayButton(play) {
     g_isPlaying = play;
     if(g_isPlaying) {
-        $("#playButton").html('Pause');
+        document.getElementById('playButton').title = 'Pause';
+        document.getElementById('play').className = "fa fa-pause";
     } else {
-        $("#playButton").html('Play');
+        document.getElementById('playButton').title = 'Play';
+        document.getElementById('play').className = "fa fa-play";
     }
 }
 
@@ -87,13 +89,13 @@ function save() {
                 location.reload();
             }
         } else {
-            messageBox.innerHTML = '<div class="error"><strong>Save failed!</strong><br> ' + data.message + '</div>';
+            messageBox.innerHTML = '<div class="error"><strong>Save failed: remember to choose image quality</strong><br> ' + data.message + '</div>';
         }
         console.log(data.message);
     }).fail(function(data) {
         console.log("Ajax failed");
         var messageBox = document.getElementById("message");
-        messageBox.innerHTML = '<span class="error">Save failed!</span>';
+        messageBox.innerHTML = '<span class="error">Save failed: remember to choose image quality</span>';
     }).always(function(data) {
         console.log("Ajax complete");
     });
