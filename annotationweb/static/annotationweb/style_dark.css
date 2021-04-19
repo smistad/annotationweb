@@ -69,6 +69,7 @@ button {
     padding: 10px;
     margin: 4px;
     flex-grow: 1;
+    border-radius: 6px;
 }
 
 button:hover {
@@ -94,10 +95,67 @@ hr {
     flex-wrap: wrap;
 }
 
+.material-icons{
+    display: inline-flex;
+    vertical-align: text-bottom;
+}
+
 #saveButton {
-    background-color: #6ea863;
+    font-size:28px;
+    line-height:0px;
+    background-color: #6ea869;
+}
+
+#saveButton:before{
+	content: '\e171';
+	font-family: Material Icons;
+    font-size: 32px;
+    vertical-align: bottom;
+    padding-right: 8px;
+}
+
+#saveButton:hover {
+	background: #6ea869;
+	color: #fff;
 }
 
 #rejectButton {
     background-color: #a84a4a;
+    font-size:28px;
+}
+
+#rejectButton:before{
+	content: '\f00d';
+	font-family: FontAwesome;
+    font-size: 28px;
+    padding-right: 8px;
+}
+
+#rejectButton:hover {
+	background: #a84a4a;
+	color: #fff;
+}
+
+#imageListButton{
+    font-size:28px;
+    line-height:0px;
+}
+
+#imageListButton:before{
+	content: '\e172';
+	font-family: "Material Icons";
+    font-size: 32px;
+    vertical-align: bottom;
+    padding-right: 8px;
+}
+
+#clearButton {
+    font-size:28px;
+}
+
+#clearButton:before{
+    content: '\f12d';
+	font-family: FontAwesome;
+    font-size: 28px;
+    padding-right: 8px;
 }

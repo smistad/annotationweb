@@ -157,7 +157,9 @@ function setupSegmentation() {
 
 
     $("#clearButton").click(function() {
-        // TODO fix
+        g_annotationHasChanged = true;
+        g_controlPoints[g_currentFrameNr][g_currentObject].control_points = [];
+        redrawSequence();
     });
 
     // TODO MOVE to annotation
