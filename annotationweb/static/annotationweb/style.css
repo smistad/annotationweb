@@ -23,21 +23,21 @@ body {
 }
 
 #contentRight {
-    width: 60%;
+    width: 62%;
     float: left;
-    padding-left: 30px;
+    padding-left: 15px;
     box-sizing: border-box;
 }
 
 #contentLeft {
-    width: 40%;
+    width: 38%;
     float: left;
-    padding-right: 30px;
+    padding-right: 15px;
     box-sizing: border-box;
 }
 
 .labelButton {
-    font-size: 20px;
+    font-size: 24px;
     margin: 2px;
 }
 
