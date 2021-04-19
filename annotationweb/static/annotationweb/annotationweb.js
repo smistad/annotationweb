@@ -89,7 +89,7 @@ function save() {
                 location.reload();
             }
         } else {
-            messageBox.innerHTML = '<div class="error"><strong>Save failed: remember to choose image quality</strong><br> ' + data.message + '</div>';
+            messageBox.innerHTML = '<div class="error"><strong>Save failed</strong><br> ' + data.message + '</div>';
         }
         console.log(data.message);
     }).fail(function(data) {
