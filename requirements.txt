@@ -1,4 +1,4 @@
-Django==2.2.18
+Django==2.2.20
 h5py==2.10.0
 numpy==1.19
 Pillow==7.1.0
