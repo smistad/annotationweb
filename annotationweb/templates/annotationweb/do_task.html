@@ -1,5 +1,6 @@
 <head>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <style>
     #info {
        display: none;
@@ -60,10 +61,10 @@ setReturnURL('{{ return_url|safe }}');
 <div class="actionButtons">
     <button id="playButton" type="button"><i id="play" class="fa fa-play"></i></button>
 {% if task.user_frame_selection %}
-    <button id="addFrameButton" type="button" title="Select frame"><i class="fa fa-plus"></i></button>
-    <button id="removeFrameButton" type="button" title="Remove selected frame"><i class="fa fa-minus"></i></button>
+    <button id="addFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
+    <button id="removeFrameButton" type="button" title="Remove selected frame from annotations"><i class="fa fa-minus"></i></button>
 {% endif %}
-    <button id="nextFrameButton" type="button" title="Next frame"><i class="fa fa-step-forward"></i></button>
+    <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>
 </div>
 {% endif %}
 <h3>Actions</h3>
@@ -74,10 +75,10 @@ setReturnURL('{{ return_url|safe }}');
     {% if next_image_id %}
     <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
     {% endif %}
-    <button id="clearButton" title="Clear"><i class="fa fa-eraser"></i></button>
-    <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected." title="Save as rejected"><i class="fa fa-remove"></i></button>
-    <button id="saveButton" title="Save"><i class="fa fa-save"></i></button>
-    <button onclick="javascript:window.location.href='{% url 'task' task.id %}'" title="Image list"><i class="fa fa-list"></i></button>
+    <button id="clearButton" title="Clear">Clear</button>
+    <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected." title="Save as rejected">Reject</button>
+    <button id="saveButton" title="Save">Save</button>
+    <button id="imageListButton" onclick="javascript:window.location.href='{% url 'task' task.id %}'" title="Image list">List</button>
 </div>
 <div id="dialogConfirm">
     You have done changes to the annotation. <br>
