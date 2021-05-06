@@ -159,3 +159,7 @@ th, td {
 ul{
     list-style-type: none;
 }
+
+#info {
+    display: none;
+}
