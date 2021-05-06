@@ -7,7 +7,6 @@ var g_pointToMove = -1;
 var g_labelToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
-var g_shiftKeyPressed = false;
 var g_currentLabel = -1;
 
 function getMaxObjectID() {
@@ -21,9 +20,6 @@ function getMaxObjectID() {
 }
 
 function setupSegmentation() {
-
-    // Remove any previous event handlers
-    $('#canvas').off();
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
@@ -144,10 +140,6 @@ function setupSegmentation() {
         }
 
         redrawSequence();
-    });
-
-    $(document).on('keyup keydown', function(event) {
-        g_shiftKeyPressed = event.shiftKey;
     });
 
     $(document).keydown(function(event) {

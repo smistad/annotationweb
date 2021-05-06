@@ -18,7 +18,6 @@ var g_motionModeContext;
 var g_createMotionModeImage = 0;
 var g_motionModeLine = -1;
 var g_moveMotionModeLIne = false;
-var g_shiftKeyPressed = false;
 var g_targetFrameTypes = {};
 var g_currentLabel = -1;
 
@@ -207,9 +206,6 @@ function setupSegmentation() {
         redrawSequence();
     });
 
-    $(document).on('keyup keydown', function(event) {
-        g_shiftKeyPressed = event.shiftKey;
-    });
 
     // Set first label active
     changeLabel(g_labelButtons[0].id);
