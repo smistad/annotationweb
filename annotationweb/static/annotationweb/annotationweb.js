@@ -20,6 +20,7 @@ var g_nextURL = '';
 var g_rejected = false;
 var g_targetFrames = []; // Frames to annotate
 var g_currentTargetFrameIndex = -1; // Index of current target frame (g_targetFrames), -1 if not on target frame
+var g_shiftKeyPressed = false;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -182,6 +183,43 @@ function addKeyFrame(frame_nr) {
     $("#framesForm").append('<input id="selectedFramesForm' + frame_nr + '" type="hidden" name="frames" value="' + frame_nr + '">');
 }
 
+function goToNextKeyFrame() {
+    if(g_targetFrames.length === 0)
+        return;
+    // Find next key frame
+    let i;
+    if(g_targetFrames[g_targetFrames.length-1] <= g_currentFrameNr) {
+        i = 0;
+    } else if(g_targetFrames.length === 1) {
+        i = 0;
+    } else {
+        for (i = 0; i < g_targetFrames.length; i++) {
+            if(g_targetFrames[i] > g_currentFrameNr)
+                break;
+        }
+    }
+    g_currentTargetFrameIndex = i;
+    goToFrame(g_targetFrames[i]);
+}
+
+function goToPreviousKeyFrame() {
+    if(g_targetFrames.length === 0)
+        return;
+    // Find previous key frame
+    let i;
+    if(g_targetFrames[0] >= g_currentFrameNr || g_targetFrames[g_targetFrames.length-1] < g_currentFrameNr) {
+        i = g_targetFrames.length-1;
+    } else if(g_targetFrames.length === 1) {
+        i = 0;
+    } else {
+        for (i = g_targetFrames.length-1; i > 0; i--) {
+            if(g_targetFrames[i] < g_currentFrameNr)
+                break;
+        }
+    }
+    g_currentTargetFrameIndex = i;
+    goToFrame(g_targetFrames[i]);
+}
 function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_sequence, user_frame_selection, annotate_single_frame, frames_to_annotate, images_to_load_before, images_to_load_after, auto_play) {
     // If user cannot select frame, and there are no target frames, select last frame as target frame
     if(!user_frame_selection && annotate_single_frame && frames_to_annotate.length === 0) {
@@ -287,30 +325,58 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         }
     });
 
+
+
     $("#nextFrameButton").click(function() {
-        if(g_targetFrames.length === 0)
-            return;
-        // Find next frame
-        var i;
-        if(g_targetFrames[g_targetFrames.length-1] <= g_currentFrameNr) {
-            i = 0;
-        } else {
-            for (i = 0; i < g_targetFrames.length; i++) {
-                if(g_targetFrames[i] > g_currentFrameNr)
-                    break;
-            }
-        }
-        g_currentTargetFrameIndex = i;
-        goToFrame(g_targetFrames[i]);
+        goToNextKeyFrame();
     });
 
-    $("#canvas").click(function() {
-        // Stop playing if user clicks image
-        setPlayButton(false);
-        //g_currentFrameNr = target_frame;
-        //$('#slider').slider('value', target_frame); // Update slider
-        redrawSequence();
+    // Moving between frames
+    // Scrolling (mouse must be over canvas)
+    $("#canvas").bind('mousewheel DOMMouseScroll', function(event){
+        console.log('Mousewheel event!');
+        if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
+            // scroll up
+            if(g_shiftKeyPressed) {
+                goToNextKeyFrame();
+            } else {
+                goToFrame(g_currentFrameNr + 1);
+            }
+        } else {
+            // scroll down
+            if(g_shiftKeyPressed) {
+                goToPreviousKeyFrame();
+            } else {
+                goToFrame(g_currentFrameNr - 1);
+            }
+        }
+        event.preventDefault();
     });
+
+    // Arrow key pressed
+    $(document).keydown(function(event){
+        g_shiftKeyPressed = event.shiftKey;
+        if(event.which === 37) { // Left
+            if(g_shiftKeyPressed) {
+                goToPreviousKeyFrame();
+            } else {
+                goToFrame(g_currentFrameNr - 1);
+            }
+        } else if(event.which === 39) { // Right
+            if(g_shiftKeyPressed) {
+                goToNextKeyFrame();
+            } else {
+                goToFrame(g_currentFrameNr + 1);
+            }
+        }
+    });
+
+    $(document).on("keyup keydown", function(event) {
+        g_shiftKeyPressed = event.shiftKey;
+        if(g_shiftKeyPressed)
+            console.log('Shift pressed!');
+    });
+
 
     // Load images
     g_framesLoaded = 0;
