@@ -105,40 +105,6 @@ function setupSegmentation() {
         redrawSequence();
     });
 
-    var z = document.getElementById("canvas");
-    var baseWidth = 500;
-    var padding = 100;
-
-    var zoomStep = 30;
-
-    var handleWheel = function (event) {
-        // cross-browser wheel delta
-        // Chrome / IE: both are set to the same thing - WheelEvent for Chrome, MouseWheelEvent for IE
-        // Firefox: first one is undefined, second one is MouseScrollEvent
-        var e = window.event || event;
-        // Chrome / IE: first one is +/-120 (positive on mouse up), second one is zero
-        // Firefox: first one is undefined, second one is -/+3 (negative on mouse up)
-        var delta = Math.max(-1, Math.min(1, e.wheelDelta || -e.detail));
-
-        // Do something with `delta`
-        console.log(z.clientWidth, padding, zoomStep, delta)
-        var zz = z.clientWidth + zoomStep * delta;
-        zz = Math.max(zoomStep, Math.min(2 * baseWidth, zz));
-        console.log(zz)
-
-        z.style.width = zz + "px";
-
-        z.innerHTML = "<small>" + window.event + " | " + event +
-          "</small><br><small>" +   e.wheelDelta + " | " + e.detail +
-          "</small><br>" + delta + " | " + zz + " | " + z.clientWidth + "px";
-
-        e.preventDefault();
-    };
-
-    $('#canvas').bind('mousewheel DOMMouseScroll', function(event){
-        handleWheel(event);
-    });
-
     $('#canvas').dblclick(function(e) {
         if(g_move)
             return;
