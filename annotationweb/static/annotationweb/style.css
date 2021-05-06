@@ -43,7 +43,7 @@ body {
 
 .actionButtons{
       display: flex;
-      width: 60%;
+      width: 100%;
 }
 
 #menuWrapper {
