@@ -276,7 +276,7 @@ def add_image_sequence(request, subject_id):
 
                 new_image_sequence.save()  # Save to db
                 messages.success(request, 'Sequence successfully added')
-                return redirect('datasets')
+                return redirect('dataset_details', subject.dataset.id)
     else:
         form = ImageSequenceForm()
 
@@ -400,6 +400,30 @@ def delete_subject(request, subject_id):
     else:
         return render(request, 'annotationweb/delete_subject.html', {'subject': subject})
 
+
+@staff_member_required()
+def subject_details(request, subject_id):
+    try:
+        subject = Subject.objects.get(pk=subject_id)
+    except Subject.DoesNotExist:
+        return Http404('The subject does not exist')
+
+    return render(request, 'annotationweb/subject_details.html', {'subject': subject})
+
+@staff_member_required()
+def delete_sequence(request, sequence_id):
+    try:
+        sequence = ImageSequence.objects.get(pk=sequence_id)
+    except ImageSequence.DoesNotExist:
+        return Http404('The sequence does not exist')
+
+    if request.method == 'POST':
+        if request.POST['choice'] == 'Yes':
+            sequence.delete()
+            messages.success(request, 'The subject ' + sequence.format + ' was deleted.')
+        return redirect('subject_details', sequence.subject.id)
+    else:
+        return render(request, 'annotationweb/delete_sequence.html', {'sequence': sequence})
 
 def task_description(request, task_id):
     try:
