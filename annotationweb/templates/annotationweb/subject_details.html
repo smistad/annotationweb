@@ -15,12 +15,14 @@
     <tr>
         <th>Format</th>
         <th>Nr. of frames</th>
+        <th>Nr. of annotations</th>
         <th>Delete</th>
     </tr>
     {% for sequence in subject.imagesequence_set.all %}
     <tr>
         <td>{{ sequence.format }}</td>
         <td>{{ sequence.nr_of_frames }}</td>
+        <td>{{ sequence.imageannotation_set.count }}</td>
         <td><a href="{% url 'delete_sequence' sequence.id %}">Delete</a></td>
     </tr>
     {% endfor %}
