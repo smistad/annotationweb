@@ -51,9 +51,6 @@ function setupSegmentation() {
     g_image = g_context.getImageData(0, 0, g_canvasWidth, g_canvasHeight);
     g_imageData = g_image.data;
 
-    // Remove any previous event handlers
-    $('#canvas').off();
-
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
 
@@ -159,11 +156,9 @@ function setupSegmentation() {
         setPlayButton(false);
         if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
             return;
-        setupSliderMark(g_currentFrameNr, g_framesLoaded, '#555555');
+        addKeyFrame(g_currentFrameNr, '#555555');
         g_targetFrameTypes[g_currentFrameNr] = 'Normal';
-        g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
-        g_targetFrames.sort(function(a, b){return a-b});
     });
 
 
@@ -171,11 +166,9 @@ function setupSegmentation() {
         setPlayButton(false);
         if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
             return;
-        setupSliderMark(g_currentFrameNr, g_framesLoaded, '#CC3434');
+        addKeyFrame(g_currentFrameNr, '#CC3434');
         g_targetFrameTypes[g_currentFrameNr] = 'ED';
-        g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
-        g_targetFrames.sort(function(a, b){return a-b});
     });
 
 
@@ -183,11 +176,9 @@ function setupSegmentation() {
         setPlayButton(false);
         if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
             return;
-        setupSliderMark(g_currentFrameNr, g_framesLoaded, '#0077b3');
+        addKeyFrame(g_currentFrameNr, '#0077b3');
         g_targetFrameTypes[g_currentFrameNr] = 'ES';
-        g_targetFrames.push(g_currentFrameNr);
         g_currentTargetFrameIndex = g_targetFrames.length-1;
-        g_targetFrames.sort(function(a, b){return a-b});
     });
 
     $('#copyAnnotation').click(function() {

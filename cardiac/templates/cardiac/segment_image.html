@@ -32,7 +32,7 @@
         g_targetFrameTypes['{{ frame.frame_nr }}'] = '{{ frame.frame_metadata }}';
         // A hack for updating markers
         g_progressbar.on('markercomplete', function() {
-            var marker_index = g_targetFrames.findIndex(index => index === {{ frame.frame_nr }});
+            var marker_index = {{ frame.frame_nr }};
             var type = g_targetFrameTypes['{{ frame.frame_nr }}'];
             var color = '#555555';
             if(type == 'ED') {
