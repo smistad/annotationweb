@@ -14,12 +14,14 @@
     <table>
         <tr>
             <th>ID</th>
+            <th>Details</th>
             <th>Add data</th>
             <th>Delete</th>
         </tr>
         {% for subject in dataset.subject_set.all %}
             <tr>
                 <td>{{ subject.name }}</td>
+                <td><a href="{% url 'subject_details' subject.id %}">Details</a></td>
                 <td><a href="{% url 'add_image_sequence' subject.id %}">Add an image sequence</a></td>
                 <td><a href="{% url 'delete_subject' subject.id %}">Delete</a></td>
             </tr>

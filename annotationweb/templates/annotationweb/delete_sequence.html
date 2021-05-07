@@ -1,0 +1,14 @@
+{% extends 'annotationweb/one_column_layout.html' %}
+
+{% block content %}
+<form action="{% url 'delete_sequence' sequence.id %}" method="post">
+    {% csrf_token %}
+    <p>
+        Are you sure you want to delete the image sequence {{ sequence.format }} which has {{ sequence.imageannotation_set.count }} annotations? <br>
+        The annotations will also be deleted.
+    </p>
+    <p>
+        <input type="submit" name="choice" value="Yes"> <input type="submit" name="choice" value="No">
+    </p>
+</form>
+{% endblock %}
