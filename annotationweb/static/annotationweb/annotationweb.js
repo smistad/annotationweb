@@ -173,10 +173,11 @@ function setupSliderMark(frame, color) {
     console.log('Made marker');
 }
 
-function addKeyFrame(frame_nr) {
+function addKeyFrame(frame_nr, color) {
+    color = typeof color !== 'undefined' ? color : '#0077b3';
     if(g_targetFrames.includes(frame_nr)) // Already exists
         return;
-    setupSliderMark(frame_nr);
+    setupSliderMark(frame_nr, color);
     g_targetFrames.push(frame_nr);
     g_targetFrames.sort(function(a, b){return a-b});
     $("#framesSelected").append('<li id="selectedFrames' + frame_nr + '">' + frame_nr + '</li>');
@@ -296,6 +297,9 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
       complete: function() {
             // Remove progress bar and redraw
             progressLabel.text( "Finished loading!" );
+            for(var i = 0; i < frames_to_annotate.length; ++i) {
+                addKeyFrame(frames_to_annotate[i]);
+            }
             g_progressbar.hide();
             redrawSequence();
             g_progressbar.trigger('markercomplete');
@@ -304,9 +308,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
       }
     });
 
-    for(var i = 0; i < frames_to_annotate.length; ++i) {
-        addKeyFrame(frames_to_annotate[i]);
-    }
+
 
     $("#addFrameButton").click(function() {
         setPlayButton(false);
@@ -334,6 +336,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     // Moving between frames
     // Scrolling (mouse must be over canvas)
     $("#canvas").bind('mousewheel DOMMouseScroll', function(event){
+        g_shiftKeyPressed = event.shiftKey;
         console.log('Mousewheel event!');
         if(event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
             // scroll up
@@ -371,10 +374,8 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         }
     });
 
-    $(document).on("keyup keydown", function(event) {
+    $(document).keyup(function(event) {
         g_shiftKeyPressed = event.shiftKey;
-        if(g_shiftKeyPressed)
-            console.log('Shift pressed!');
     });
 
 

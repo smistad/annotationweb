@@ -32,7 +32,7 @@
         g_targetFrameTypes['{{ frame.frame_nr }}'] = '{{ frame.frame_metadata }}';
         // A hack for updating markers
         g_progressbar.on('markercomplete', function() {
-            var marker_index = g_targetFrames.findIndex(index => index === {{ frame.frame_nr }});
+            var marker_index = {{ frame.frame_nr }};
             var type = g_targetFrameTypes['{{ frame.frame_nr }}'];
             var color = '#555555';
             if(type == 'ED') {
@@ -72,14 +72,14 @@
         <div id="slider">
         </div>
         <div class="actionButtons">
-            <button id="playButton" type="button">Play</button>
+            <button id="playButton" type="button"><i id="play" class="fa fa-play"></i></button></button>
             {% if task.user_frame_selection %}
-                <button id="addEDFrameButton" type="button" style="background-color: #CC3434">Add as ED frame</button>
-                <button id="addESFrameButton" type="button" style="background-color: #0077b3">Add as ES frame</button>
-                <button id="addNormalFrameButton" type="button">Add frame</button>
+                <button id="addEDFrameButton" type="button" style="background-color: #CC3434">Mark ED</button>
+                <button id="addESFrameButton" type="button" style="background-color: #0077b3">Mark ES</button>
+                <button id="addNormalFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
             {% endif %}
-            <button id="copyAnnotation" type="button">Copy annotation from previous frame</button>
-            <button id="nextFrameButton" type="button">Skip to next annotation frame</button>
+            <button id="copyAnnotation" type="button" title="Copy annotation from previous frame"><i class="fa fa-copy"></i></button>
+            <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>
         </div>
     {% endif %}
     <h2>Actions</h2>
@@ -91,9 +91,9 @@
             <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
         {% endif %}
         <button id="clearButton">Clear</button>
-        <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected.">Save as rejected</button>
+        <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected.">Reject</button>
         <button id="saveButton">Save</button>
-        <button onclick="javascript:window.location.href='{% url 'task' task.id %}'">Image list</button>
+        <button id="imageListButton" onclick="javascript:window.location.href='{% url 'task' task.id %}'" title="Image list">List</button>
     </div>
     <div id="dialogConfirm">
         You have done changes to the annotation. <br>
