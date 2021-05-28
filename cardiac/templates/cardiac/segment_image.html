@@ -64,10 +64,11 @@
 
     <h1>{{ task.name }}</h1>
 
-    {{ number_of_labeled_images }} of {{ total_number_of_images}} videos/images have been labeled ({{ percentage_finished }}%).<br />
+    {{ task.number_of_annotated_images }} of {{ task.total_number_of_images}} videos/images have been labeled ({{ task.percentage_finished }}%)
 
     {% if image_sequence %}
         <div id="progressbar"><div class="progress-label">Loading...</div></div>
+        <div id="sliderText">Drag the slider to view the other frames in the sequence. Current frame <span id="currentFrame"></span></div>
         <canvas id="m-mode-canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
         <div id="slider">
         </div>
