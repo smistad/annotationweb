@@ -186,25 +186,30 @@ class CardiacSegmentationExporter(Exporter):
                 point.x *= x_scaling
 
         # Endpoints of object 2 are the same as object 1
-        control_points2.insert(0, control_points0[-1])
-        control_points2.append(control_points0[0])
+        if len(control_points0) > 0 and len(control_points2) > 0:
+            control_points2.insert(0, control_points0[-1])
+            control_points2.append(control_points0[0])
 
         # Create new endpoints for object 1
-        point = self.calculate_new_endpoints(control_points0, control_points1[0])
-        control_points1.insert(0, point)
-        point = self.calculate_new_endpoints(control_points0, control_points1[-1])
-        control_points1.append(point)
+        if len(control_points1) > 0:
+            point = self.calculate_new_endpoints(control_points0, control_points1[0])
+            control_points1.insert(0, point)
+            point = self.calculate_new_endpoints(control_points0, control_points1[-1])
+            control_points1.append(point)
 
         # Create compounded segmentation object
         #image_size[1] = int(round(image_size[1]/x_scaling))
         #spacing[1] = spacing[0]
         segmentation = np.zeros(image_size, dtype=np.uint8)
-        object_segmentation = self.get_object_segmentation(image_size, control_points1, x_scaling)
-        segmentation[object_segmentation == 1] = 2  # Draw epi before endo
-        object_segmentation = self.get_object_segmentation(image_size, control_points2, x_scaling)
-        segmentation[object_segmentation == 1] = 3
-        object_segmentation = self.get_object_segmentation(image_size, control_points0, x_scaling)
-        segmentation[object_segmentation == 1] = 1
+        if len(control_points1) > 0:
+            object_segmentation = self.get_object_segmentation(image_size, control_points1, x_scaling)
+            segmentation[object_segmentation == 1] = 2  # Draw epi before endo
+        if len(control_points2) > 0:
+            object_segmentation = self.get_object_segmentation(image_size, control_points2, x_scaling)
+            segmentation[object_segmentation == 1] = 3
+        if len(control_points0) > 0:
+            object_segmentation = self.get_object_segmentation(image_size, control_points0, x_scaling)
+            segmentation[object_segmentation == 1] = 1
 
         segmentation_mhd = MetaImage(data=segmentation)
         segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
