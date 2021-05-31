@@ -15,6 +15,7 @@ from common.utility import get_image_as_http_response
 import common.task
 from annotationweb.models import KeyFrameAnnotation
 from spline_segmentation.models import ControlPoint
+from django.db import transaction
 
 
 def segment_next_image(request, task_id):
@@ -98,38 +99,40 @@ def save_segmentation(request):
         }
     else:
         try:
-            annotations = common.task.save_annotation(request)
+            # Use atomic transaction here so if something crashes the annotations are restored..
+            with transaction.atomic():
+                annotations = common.task.save_annotation(request)
 
-            # Save segmentation
-            # Save control points
-            for annotation in annotations:
-                frame_nr = str(annotation.frame_nr)
+                # Save segmentation
+                # Save control points
+                for annotation in annotations:
+                    frame_nr = str(annotation.frame_nr)
 
-                # Set frame metadata
-                annotation.frame_metadata = target_frame_types[frame_nr]
-                annotation.save()
+                    # Set frame metadata
+                    annotation.frame_metadata = target_frame_types[frame_nr]
+                    annotation.save()
 
-                for object in control_points[frame_nr]:
-                    nr_of_control_points = len(control_points[frame_nr][object]['control_points'])
-                    if nr_of_control_points < 3:
-                        continue
-                    for point in range(nr_of_control_points):
-                        control_point = ControlPoint()
-                        control_point.image = annotation
-                        control_point.x = float(control_points[frame_nr][object]['control_points'][point]['x'])
-                        control_point.y = float(control_points[frame_nr][object]['control_points'][point]['y'])
-                        control_point.index = point
-                        control_point.object = int(object)
-                        # TODO modify this line to have proper label:
-                        control_point.label = Label.objects.get(id=int(control_points[frame_nr][object]['label']['id']))
-                        control_point.uncertain = bool(
-                            control_points[frame_nr][object]['control_points'][point]['uncertain'])
-                        control_point.save()
+                    for object in control_points[frame_nr]:
+                        nr_of_control_points = len(control_points[frame_nr][object]['control_points'])
+                        if nr_of_control_points < 3:
+                            continue
+                        for point in range(nr_of_control_points):
+                            control_point = ControlPoint()
+                            control_point.image = annotation
+                            control_point.x = float(control_points[frame_nr][object]['control_points'][point]['x'])
+                            control_point.y = float(control_points[frame_nr][object]['control_points'][point]['y'])
+                            control_point.index = point
+                            control_point.object = int(object)
+                            # TODO modify this line to have proper label:
+                            control_point.label = Label.objects.get(id=int(control_points[frame_nr][object]['label']['id']))
+                            control_point.uncertain = bool(
+                                control_points[frame_nr][object]['control_points'][point]['uncertain'])
+                            control_point.save()
 
-            response = {
-                'success': 'true',
-                'message': 'Annotation saved',
-            }
+                response = {
+                    'success': 'true',
+                    'message': 'Annotation saved',
+                }
         except Exception as e:
             response = {
                 'success': 'false',

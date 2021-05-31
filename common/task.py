@@ -6,6 +6,7 @@ from annotationweb.models import Task, ImageAnnotation, Subject, Label, ImageSeq
 from annotationweb.forms import ImageListForm
 from django.db.models.aggregates import Count
 from common.search_filters import SearchFilter
+from django.db import transaction
 
 
 class NoMoreImages(Exception):
@@ -281,45 +282,46 @@ def setup_task_context(request, task_id, type, image_id):
 
 
 def save_annotation(request):
-    if request.method != 'POST':
-        raise Exception('ERROR: Must use POST when saving processed image.')
+    with transaction.atomic():
+        if request.method != 'POST':
+            raise Exception('ERROR: Must use POST when saving processed image.')
 
-    # Image quality is required
-    if 'quality' not in request.POST:
-        raise Exception('ERROR: You must select image quality.')
+        # Image quality is required
+        if 'quality' not in request.POST:
+            raise Exception('ERROR: You must select image quality.')
 
-    image_id = int(request.POST['image_id'])
-    task_id = int(request.POST['task_id'])
-    new_key_frames = json.loads(request.POST['target_frames'])
-    rejected = request.POST['rejected'] == 'true'
-    comments = request.POST['comments']
+        image_id = int(request.POST['image_id'])
+        task_id = int(request.POST['task_id'])
+        new_key_frames = json.loads(request.POST['target_frames'])
+        rejected = request.POST['rejected'] == 'true'
+        comments = request.POST['comments']
 
-    # Delete old key frames if they exist, this will also delete old annotations
-    key_frames = KeyFrameAnnotation.objects.filter(image_annotation__task_id=task_id, image_annotation__image_id=image_id)
-    key_frames.delete()
+        # Delete old key frames if they exist, this will also delete old annotations
+        key_frames = KeyFrameAnnotation.objects.filter(image_annotation__task_id=task_id, image_annotation__image_id=image_id)
+        key_frames.delete()
 
-    # Save to DB
-    try:
-        annotation = ImageAnnotation.objects.get(task_id=task_id, image_id=image_id)
-    except ImageAnnotation.DoesNotExist:
-        annotation = ImageAnnotation()
-        annotation.image_id = image_id
-        annotation.task_id = task_id
+        # Save to DB
+        try:
+            annotation = ImageAnnotation.objects.get(task_id=task_id, image_id=image_id)
+        except ImageAnnotation.DoesNotExist:
+            annotation = ImageAnnotation()
+            annotation.image_id = image_id
+            annotation.task_id = task_id
 
-    annotation.rejected = rejected
-    annotation.comments = comments
-    annotation.user = request.user
-    annotation.finished = True
-    annotation.image_quality = request.POST['quality']
-    annotation.save()
+        annotation.rejected = rejected
+        annotation.comments = comments
+        annotation.user = request.user
+        annotation.finished = True
+        annotation.image_quality = request.POST['quality']
+        annotation.save()
 
-    annotations = []
-    for frame in new_key_frames:
-        keyframe = KeyFrameAnnotation()
-        keyframe.frame_nr = int(frame)
-        keyframe.image_annotation = annotation
-        keyframe.save()
-        annotations.append(keyframe)
+        annotations = []
+        for frame in new_key_frames:
+            keyframe = KeyFrameAnnotation()
+            keyframe.frame_nr = int(frame)
+            keyframe.image_annotation = annotation
+            keyframe.save()
+            annotations.append(keyframe)
 
     return annotations
 
