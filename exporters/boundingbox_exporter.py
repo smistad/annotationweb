@@ -1,7 +1,7 @@
 from common.exporter import Exporter
 from common.metaimage import MetaImage
 from common.utility import create_folder, copy_image
-from annotationweb.models import ImageAnnotation, Dataset, Task, Label, Subject
+from annotationweb.models import ImageAnnotation, Dataset, Task, Label, Subject, KeyFrameAnnotation
 from boundingbox.models import BoundingBox
 from django import forms
 import os
@@ -67,18 +67,19 @@ class BoundingBoxExporter(Exporter):
         for subject in data:
             subject_path = join(path, subject.name)
             create_folder(subject_path)
-            images = ProcessedImage.objects.filter(task=self.task, image__subject=subject, rejected=False)
-            for image in images:
-                name = image.image.filename
+            frames = KeyFrameAnnotation.objects.filter(image_annotation__task=self.task, image_annotation__image__subject=subject, image_annotation__rejected=False)
+            for frame in frames:
+                image_sequence = frame.image_annotation.image
 
                 # Copy image
-                image_id = image.image.pk
-                new_filename = join(subject_path, str(image_id) + '.png')
-                copy_image(name, new_filename)
+                filename = image_sequence.format.replace('#', str(frame.frame_nr))
+                target_name = os.path.basename(image_sequence.format).replace('#',str(frame.frame_nr))
+                new_filename = join(subject_path, target_name)
+                copy_image(filename, new_filename)
 
                 # Write bounding boxes txt file
-                boxes = BoundingBox.objects.filter(image=image)
-                with open(join(subject_path, str(image_id) + '.txt'), 'w') as f:
+                boxes = BoundingBox.objects.filter(image=frame)
+                with open(join(subject_path, str(frame.frame_nr) + '.txt'), 'w') as f:
                     for box in boxes:
                         center_x = round(box.x + box.width*0.5)
                         center_y = round(box.y + box.height*0.5)
