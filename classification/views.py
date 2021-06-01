@@ -2,11 +2,10 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.http import Http404
-
 import common.task
-
 from .models import *
 from annotationweb.models import Task, ImageAnnotation
+from django.db import transaction
 
 
 def label_next_image(request, task_id):
@@ -44,24 +43,25 @@ def save_labels(request):
         if rejected:
             annotations = common.task.save_annotation(request)
         else:
-            try:
-                label_id = int(request.POST['label_id'])
-                label = Label.objects.get(pk=label_id)
-            except:
-                raise Exception('You must select a classification label.')
+            with transaction.atomic():
+                try:
+                    label_id = int(request.POST['label_id'])
+                    label = Label.objects.get(pk=label_id)
+                except:
+                    raise Exception('You must select a classification label.')
 
-            annotations = common.task.save_annotation(request)
-            for annotation in annotations:
-                labeled_image = ImageLabel()
-                labeled_image.image = annotation
-                labeled_image.label = label
-                labeled_image.task = annotation.image_annotation.task
-                labeled_image.save()
+                annotations = common.task.save_annotation(request)
+                for annotation in annotations:
+                    labeled_image = ImageLabel()
+                    labeled_image.image = annotation
+                    labeled_image.label = label
+                    labeled_image.task = annotation.image_annotation.task
+                    labeled_image.save()
 
-        response = {
-            'success': 'true',
-            'message': 'Completed'
-        }
+            response = {
+                'success': 'true',
+                'message': 'Completed'
+            }
         messages.success(request, 'Classification saved')
     except Exception as e:
         response = {

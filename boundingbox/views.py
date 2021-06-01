@@ -8,6 +8,7 @@ from django.http import HttpResponse, Http404, JsonResponse, HttpResponseRedirec
 import random
 import json
 import common.task
+from django.db import transaction
 
 
 def process_next_image(request, task_id):
@@ -39,27 +40,28 @@ def process_image(request, task_id, image_id):
 
 def save_boxes(request):
     try:
-        annotations = common.task.save_annotation(request)
-        boxes = json.loads(request.POST['boxes'])
+        with transaction.atomic():
+            annotations = common.task.save_annotation(request)
+            boxes = json.loads(request.POST['boxes'])
 
-        # Store every box
-        for annotation in annotations:
-            frame_nr = str(annotation.frame_nr)
-            for box in boxes[frame_nr]:
-                bb = BoundingBox()
-                bb.x = int(box['x'])
-                bb.y = int(box['y'])
-                bb.width = int(box['width'])
-                bb.height = int(box['height'])
-                bb.image = annotation
-                bb.label_id = int(box['label_id'])
-                bb.save()
+            # Store every box
+            for annotation in annotations:
+                frame_nr = str(annotation.frame_nr)
+                for box in boxes[frame_nr]:
+                    bb = BoundingBox()
+                    bb.x = int(box['x'])
+                    bb.y = int(box['y'])
+                    bb.width = int(box['width'])
+                    bb.height = int(box['height'])
+                    bb.image = annotation
+                    bb.label_id = int(box['label_id'])
+                    bb.save()
 
-        response = {
-            'success': 'true',
-            'message': 'Completed'
-        }
-        messages.success(request, str(len(boxes)) + ' boxes were saved')
+            response = {
+                'success': 'true',
+                'message': 'Completed'
+            }
+            messages.success(request, str(len(boxes)) + ' boxes were saved')
     except Exception as e:
         response = {
             'success': 'false',
