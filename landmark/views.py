@@ -7,6 +7,7 @@ from django.http import HttpResponse, Http404, JsonResponse, HttpResponseRedirec
 import random
 import json
 import common.task
+from django.db import transaction
 
 
 def process_next_image(request, task_id):
@@ -33,23 +34,24 @@ def process_image(request, task_id, image_id):
 
 def save(request):
     try:
-        annotation = common.task.save_annotation(request)
+        with transaction.atomic():
+            annotation = common.task.save_annotation(request)
 
-        # Store every landmark
-        landmarks = json.loads(request.POST['landmarks'])
-        for landmark in landmarks:
-            new_landmark = Landmark()
-            new_landmark.x = int(landmark['x'])
-            new_landmark.y = int(landmark['y'])
-            new_landmark.image = annotation
-            new_landmark.label_id = int(landmark['label_id'])
-            new_landmark.save()
+            # Store every landmark
+            landmarks = json.loads(request.POST['landmarks'])
+            for landmark in landmarks:
+                new_landmark = Landmark()
+                new_landmark.x = int(landmark['x'])
+                new_landmark.y = int(landmark['y'])
+                new_landmark.image = annotation
+                new_landmark.label_id = int(landmark['label_id'])
+                new_landmark.save()
 
-        response = {
-            'success': 'true',
-            'message': 'Completed'
-        }
-        messages.success(request, str(len(landmarks)) + ' landmarks were saved')
+            response = {
+                'success': 'true',
+                'message': 'Completed'
+            }
+            messages.success(request, str(len(landmarks)) + ' landmarks were saved')
     except Exception as e:
         response = {
             'success': 'false',
