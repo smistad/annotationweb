@@ -4,11 +4,9 @@
 
 {# Add previously stored boxes if they exist #}
 {% for landmark in landmarks %}
-addLandmark({{ landmark.x }}, {{ landmark.y }}, {{ landmark.label_id }});
+addLandmark({{ landmark.x }}, {{ landmark.y }}, {{ landmark.label_id }} , {{ landmark.image.frame_nr }});
 {% endfor %}
 
-{% if image_sequence %}
-loadLandmarkTask({{ image_sequence.id }}, {{ frame_nr }});
-{% endif %}
+loadLandmarkTask({{ image_sequence.id }});
 
 {% endblock task_javascript %}

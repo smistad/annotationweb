@@ -20,7 +20,7 @@ def process_image(request, task_id, image_id):
         context['javascript_files'] = ['landmark/landmark.js']
 
         # Load landmarks if they exist
-        context['landmarks'] = Landmark.objects.filter(image__image_id=image_id, image__task_id=task_id)
+        context['landmarks'] = Landmark.objects.filter(image__image_annotation__image_id=image_id, image__image_annotation__task_id=task_id)
 
         return render(request, 'landmark/process_image.html', context)
     except common.task.NoMoreImages:
@@ -31,27 +31,30 @@ def process_image(request, task_id, image_id):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
-
 def save(request):
     try:
         with transaction.atomic():
-            annotation = common.task.save_annotation(request)
+            annotations = common.task.save_annotation(request)
 
             # Store every landmark
             landmarks = json.loads(request.POST['landmarks'])
-            for landmark in landmarks:
-                new_landmark = Landmark()
-                new_landmark.x = int(landmark['x'])
-                new_landmark.y = int(landmark['y'])
-                new_landmark.image = annotation
-                new_landmark.label_id = int(landmark['label_id'])
-                new_landmark.save()
+            counter = 0
+            for annotation in annotations:
+                frame_nr = str(annotation.frame_nr)
+                for landmark in landmarks[frame_nr]:
+                    new_landmark = Landmark()
+                    new_landmark.x = int(landmark['x'])
+                    new_landmark.y = int(landmark['y'])
+                    new_landmark.image = annotation
+                    new_landmark.label_id = int(landmark['label_id'])
+                    new_landmark.save()
+                    counter += 1
 
             response = {
                 'success': 'true',
                 'message': 'Completed'
             }
-            messages.success(request, str(len(landmarks)) + ' landmarks were saved')
+            messages.success(request, str(counter) + ' landmarks were saved')
     except Exception as e:
         response = {
             'success': 'false',

@@ -45,6 +45,7 @@ def save_boxes(request):
             boxes = json.loads(request.POST['boxes'])
 
             # Store every box
+            counter = 0
             for annotation in annotations:
                 frame_nr = str(annotation.frame_nr)
                 for box in boxes[frame_nr]:
@@ -56,12 +57,13 @@ def save_boxes(request):
                     bb.image = annotation
                     bb.label_id = int(box['label_id'])
                     bb.save()
+                    counter += 1
 
             response = {
                 'success': 'true',
                 'message': 'Completed'
             }
-            messages.success(request, str(len(boxes)) + ' boxes were saved')
+            messages.success(request, str(counter) + ' boxes were saved')
     except Exception as e:
         response = {
             'success': 'false',
