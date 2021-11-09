@@ -297,9 +297,6 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
       complete: function() {
             // Remove progress bar and redraw
             progressLabel.text( "Finished loading!" );
-            for(var i = 0; i < frames_to_annotate.length; ++i) {
-                addKeyFrame(frames_to_annotate[i]);
-            }
             g_progressbar.hide();
             redrawSequence();
             g_progressbar.trigger('markercomplete');
@@ -308,7 +305,9 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
       }
     });
 
-
+    for(var i = 0; i < frames_to_annotate.length; ++i) {
+        addKeyFrame(frames_to_annotate[i]);
+    }
 
     $("#addFrameButton").click(function() {
         setPlayButton(false);
