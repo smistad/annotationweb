@@ -21,6 +21,7 @@
         <th>Image list</th>
         <th>Annotate</th>
         <th>Export</th>
+        <th>Copy Task</th>
         <th>Delete</th>
     </tr>
     {% for task in tasks %}
@@ -38,6 +39,7 @@
             {% endif %}
         </td>
         <td align="center"><a href="{% url 'export' task.id %}">Export</a>
+        <td align="center"><a href="{% url 'copy_task' task.id %}">Copy Task</a>
         <td align="center"><a href="{% url 'delete_task' task.id %}">Delete</a></td>
     </tr>
     {% endfor %}

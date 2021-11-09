@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from django.http import QueryDict
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -636,3 +637,46 @@ def annotate_image(request, task_id, image_id):
 
     url = reverse(get_redirection(task), kwargs={'task_id': task.id, 'image_id': image_id})
     return redirect(url + '?' + request.GET.urlencode())
+
+@staff_member_required
+def copy_task(request, task_id):
+    """This will only copy the task itself and key frames, not the annotations"""
+    try:
+        task = Task.objects.get(pk=task_id)
+        with transaction.atomic():
+            datasets = task.dataset.all() # Keep
+            labels = task.label.all() # Keep
+            task.pk = None # Set primary key to none to copy
+            task.name = task.name + ' Copy'
+            task.save()
+
+            # Must take care of relations here.. how?? Copy relations:
+            task.dataset.clear()
+            for dataset in datasets:
+                print(dataset)
+                task.dataset.add(dataset)
+            task.label.clear()
+            for label in labels:
+                print(label)
+                task.label.add(label)
+            task.user.clear() # Not keep
+            task.save()
+
+            # Copy all ImageAnnotation and KeyFrameAnnotations
+            for annotation in ImageAnnotation.objects.filter(task_id=task_id):
+                key_frames = KeyFrameAnnotation.objects.filter(image_annotation=annotation)
+                annotation.finished = False
+                annotation.pk = None # Set primary key to none to copy
+                annotation.task = task
+                annotation.save()
+                for key_frame in key_frames:
+                    key_frame.pk = None
+                    key_frame.image_annotation = annotation
+                    key_frame.save()
+        messages.success(request, 'Task copy complete')
+        return redirect('index')
+    except Task.DoesNotExist:
+        return Http404('The Task does not exist')
+    except Exception as e:
+        messages.error(request, 'Error in copy: ' + str(e))
+        return redirect('index')

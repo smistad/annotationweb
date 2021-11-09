@@ -6,6 +6,7 @@ from . import views
 app_name = 'annotationweb'
 urlpatterns = [
     path('', views.index, name='index'),
+    path('copy-task/<int:task_id>/', views.copy_task, name='copy_task'),
     path('datasets/', views.datasets, name='datasets'),
     path('add-image-sequence/<int:subject_id>/', views.add_image_sequence, name='add_image_sequence'),
     path('show_frame/<int:image_sequence_id>/<int:frame_nr>/<int:task_id>/', views.show_frame, name='show_frame'),
