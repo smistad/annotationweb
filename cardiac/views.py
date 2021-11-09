@@ -52,6 +52,7 @@ def segment_image(request, task_id, image_id):
 
     try:
         context = common.task.setup_task_context(request, task_id, Task.CARDIAC_SEGMENTATION, image_id)
+        image_id = context['image'].id  # Because image_id can initially be None
         context['javascript_files'] = ['cardiac/segmentation.js']
 
         # Check if image is already segmented, if so get data and pass to template
