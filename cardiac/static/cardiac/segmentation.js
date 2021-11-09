@@ -274,6 +274,10 @@ function createMotionModeCanvas() {
 
 
 function addControlPointsForNewFrame(frameNr) {
+    if(!(g_targetFrames.includes(frameNr))) { // Target frame must be created first!
+        alert('You can only add annotations to target frame. Select a target frame or create a new one.');
+        return;
+    }
     if(frameNr in g_controlPoints) // Already exists
         return;
     g_controlPoints[frameNr] = {};
