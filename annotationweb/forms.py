@@ -11,7 +11,7 @@ class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = ['name', 'dataset', 'show_entire_sequence', 'frames_before',
-                  'frames_after', 'auto_play', 'user_frame_selection', 'annotate_single_frame', 'shuffle_videos', 'type', 'label', 'user', 'description']
+                  'frames_after', 'auto_play', 'user_frame_selection', 'annotate_single_frame', 'shuffle_videos', 'type', 'label', 'user', 'description', 'large_image_layout']
 
     # def clean(self):
     #     cleaned_data = super(TaskForm, self).clean()

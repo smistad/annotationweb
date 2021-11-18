@@ -1,0 +1,18 @@
+{% extends 'annotationweb/do_task.html' %}
+
+{% block task_javascript %}
+
+{# Add previously stored boxes if they exist #}
+{% for box in boxes %}
+addBox({{ box.image.frame_nr }}, {{ box.x }}, {{ box.y }}, {{ box.x }} + {{ box.width }}, {{ box.y }} + {{ box.height }}, {{ box.label_id }});
+{% endfor %}
+
+{% if image_sequence %}
+loadVideoAnnotationTask({{ image_sequence.id }});
+{% endif %}
+
+{% endblock task_javascript %}
+
+{% block task_instructions %}
+   TODO Put task instructions here..
+{% endblock task_instructions %}
