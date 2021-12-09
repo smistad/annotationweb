@@ -13,6 +13,12 @@ loadBBTask({{ image_sequence.id }});
 
 {% endblock task_javascript %}
 
+{%  block CopyContentButton %}
+    <div id="CopyContentButton">
+        <button type="button" onclick="copyToNext()">Copy to next frame</button>
+    </div>
+{% endblock %}
+
 {% block task_instructions %}
 {# TODO Put task instructions here.. #}
 {% endblock task_instructions %}
