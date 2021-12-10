@@ -268,6 +268,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     }
     g_startFrame = start;
     g_sequenceLength = end-start;
+    console.log("Start frame = " + toString(g_startFrame) + ", sequence length = " + toString(g_sequenceLength));
 
     // Create slider
     $("#slider").slider(
@@ -547,12 +548,12 @@ function changeImage(url) {
 function copyToNext() {
     // TODO: Check content of g_boxes[g_currentFrameNr+1] -> Is it empty/exist? Overwrite?
     if (g_currentFrameNr < g_sequenceLength + 1) {
-        var boxes_to_copy = g_boxes[g_currentFrameNr]
+        var boxes_to_copy = g_boxes[g_currentFrameNr];
         for (var i = 0; i < boxes_to_copy.length; i++) {
             addBox(g_currentFrameNr + 1, boxes_to_copy[i].x, boxes_to_copy[i].y,
                 boxes_to_copy[i].x + boxes_to_copy[i].width,
                 boxes_to_copy[i].y + boxes_to_copy[i].height,
-                boxes_to_copy[i].label_id)
+                boxes_to_copy[i].label_id);
         }
         //console.log(boxes_to_copy)
         // Uncomment the next two lines if you want a confirmation message.
