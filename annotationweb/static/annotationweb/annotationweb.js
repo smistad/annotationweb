@@ -268,6 +268,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     }
     g_startFrame = start;
     g_sequenceLength = end-start;
+    console.log("Start frame = " + toString(g_startFrame) + ", sequence length = " + toString(g_sequenceLength));
 
     // Create slider
     $("#slider").slider(
@@ -342,14 +343,18 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             if(g_shiftKeyPressed) {
                 goToNextKeyFrame();
             } else {
-                goToFrame(g_currentFrameNr + 1);
+                if (g_currentFrameNr < end) {
+                    goToFrame(g_currentFrameNr + 1);
+                }
             }
         } else {
             // scroll down
             if(g_shiftKeyPressed) {
                 goToPreviousKeyFrame();
             } else {
-                goToFrame(g_currentFrameNr - 1);
+                if (g_currentFrameNr > start) {
+                    goToFrame(g_currentFrameNr - 1);
+                }
             }
         }
         event.preventDefault();
@@ -362,13 +367,17 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             if(g_shiftKeyPressed) {
                 goToPreviousKeyFrame();
             } else {
-                goToFrame(g_currentFrameNr - 1);
+                if (g_currentFrameNr > start) {
+                    goToFrame(g_currentFrameNr - 1);
+                }
             }
         } else if(event.which === 39) { // Right
             if(g_shiftKeyPressed) {
                 goToNextKeyFrame();
             } else {
-                goToFrame(g_currentFrameNr + 1);
+                if (g_currentFrameNr < end) {
+                    goToFrame(g_currentFrameNr + 1);
+                }
             }
         }
     });
