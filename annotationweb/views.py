@@ -43,7 +43,7 @@ def index(request):
         return render(request, 'annotationweb/index_admin.html', context)
 
 
-@staff_member_requiredMerge
+@staff_member_required
 def export(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
