@@ -442,6 +442,8 @@ def task_description(request, task_id):
         url = reverse('cardiac:segment_image', args=[task_id])
     elif task.type == task.SPLINE_SEGMENTATION:
         url = reverse('spline_segmentation:segment_image', args=[task_id])
+    elif task.type == task.CARDIAC_PLAX_SEGMENTATION:
+        url = reverse('cardiac_parasternal_long_axis:segment_image', args=[task_id])
     else:
         raise NotImplementedError()
 
@@ -591,6 +593,8 @@ def get_redirection(task):
         return 'landmark:process_image'
     elif task.type == Task.CARDIAC_SEGMENTATION:
         return 'cardiac:segment_image'
+    elif task.type == Task.CARDIAC_PLAX_SEGMENTATION:
+        return 'cardiac_parasternal_long_axis:segment_image'
     elif task.type == Task.SPLINE_SEGMENTATION:
         return 'spline_segmentation:segment_image'
 

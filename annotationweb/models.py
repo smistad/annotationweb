@@ -42,12 +42,14 @@ class Task(models.Model):
     BOUNDING_BOX = 'boundingbox'
     LANDMARK = 'landmark'
     CARDIAC_SEGMENTATION = 'cardiac_segmentation'
+    CARDIAC_PLAX_SEGMENTATION = 'cardiac_plax_segmentation'
     SPLINE_SEGMENTATION = 'spline_segmentation'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
         (BOUNDING_BOX, 'Bounding box'),
         (LANDMARK, 'Landmark'),
-        (CARDIAC_SEGMENTATION, 'Cardiac segmentation'),
+        (CARDIAC_SEGMENTATION, 'Cardiac apical segmentation'),
+        (CARDIAC_PLAX_SEGMENTATION, 'Cardiac PLAX segmentation'),
         (SPLINE_SEGMENTATION, 'Spline segmentation')
     )
 
