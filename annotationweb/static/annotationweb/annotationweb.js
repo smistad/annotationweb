@@ -21,6 +21,7 @@ var g_rejected = false;
 var g_targetFrames = []; // Frames to annotate
 var g_currentTargetFrameIndex = -1; // Index of current target frame (g_targetFrames), -1 if not on target frame
 var g_shiftKeyPressed = false;
+var g_userFrameSelection = false;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -28,6 +29,16 @@ function max(a, b) {
 
 function min(a, b) {
     return a < b ? a : b;
+}
+
+function mousePos(e, canvas) {
+    var scale =  g_canvasWidth / $('#canvas').width();
+    var mouseX = (e.pageX - canvas.offsetLeft)*scale;
+    var mouseY = (e.pageY - canvas.offsetTop)*scale;
+    return {
+        x: mouseX,
+        y: mouseY,
+    }
 }
 
 function incrementFrame() {
@@ -227,6 +238,7 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         // Select last frame as target frame
         frames_to_annotate.push(nrOfFrames-1);
     }
+    g_userFrameSelection = user_frame_selection;
 
 
     console.log('In load sequence');
