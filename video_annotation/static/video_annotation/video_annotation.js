@@ -93,7 +93,7 @@ function setupSegmentation() {
         insideBox = isInsideBox(pos.x, pos.y);
         if(insideBox.isInside)
             // TODO: eliminate all the boxes like this one in the next frames
-            var box = g_boxes[g_currentFrameNr][insideBox.boxNr]
+            var box = g_boxes[g_currentFrameNr][insideBox.boxNr];
             propagateModification(g_currentFrameNr,
                 box.x, box.y, box.x + box.width, box.y + box.height, box.label, false, true);
     });
