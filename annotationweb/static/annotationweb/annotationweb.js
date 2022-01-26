@@ -43,7 +43,7 @@ function incrementFrame() {
     $('#slider').slider('value', g_currentFrameNr); // Update slider
     $('#currentFrame').text(g_currentFrameNr);
     redrawSequence();
-    window.setTimeout(incrementFrame, 50);
+    window.setTimeout(incrementFrame, 100);
 }
 
 function setPlayButton(play) {
