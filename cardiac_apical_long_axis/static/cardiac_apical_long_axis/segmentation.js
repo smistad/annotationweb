@@ -41,8 +41,6 @@ function getMaxObjectID() {
 }
 
 function setupSegmentation() {
-
-
     // Initialize canvas with background image
     g_context.clearRect(0, 0, g_context.canvas.width, g_context.canvas.height); // Clears the canvas
     g_context.drawImage(g_backgroundImage, 0, 0, g_canvasWidth, g_canvasHeight); // Draw background image
@@ -161,7 +159,6 @@ function setupSegmentation() {
         g_currentTargetFrameIndex = g_targetFrames.length-1;
     });
 
-
     $("#addEDFrameButton").click(function() {
         setPlayButton(false);
         if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
@@ -170,7 +167,6 @@ function setupSegmentation() {
         g_targetFrameTypes[g_currentFrameNr] = 'ED';
         g_currentTargetFrameIndex = g_targetFrames.length-1;
     });
-
 
     $("#addESFrameButton").click(function() {
         setPlayButton(false);
@@ -334,27 +330,6 @@ function insertControlPoint(x, y, label, index) {
     g_controlPoints[g_currentFrameNr][g_currentObject].control_points.splice(index+1, 0, controlPoint);
 }
 
-function snapToAVLine(x, y) {
-    // See https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
-    var y1 = getControlPoint(0, 0).y;
-    var y2 = getControlPoint(-1, 0).y;
-    var x1 = getControlPoint(0, 0).x;
-    var x2 = getControlPoint(-1, 0).x;
-    var a = (y2 - y1);
-    var b = -(x2 - x1);
-    var c = x2*y1 - y2*x1;
-    var distance = Math.abs(a*x + b*y + c) / Math.sqrt(a*a + b*b);
-    // Calculate new position
-    x = (b*(b*x - a*y) - a*c) / (a*a + b*b);
-    y = (a*(-b*x + a*y) - b*c) / (a*a + b*b);
-
-    return {
-        distance: distance,
-        x: x,
-        y: y
-    };
-}
-
 function addControlPoint(x, y, target_frame, object, label, uncertain) {
     console.log('Adding control point for ' + target_frame + ' object ' + object)
     var controlPoint = createControlPoint(x, y, label, uncertain);
@@ -416,7 +391,7 @@ function redraw(){
     var controlPointSize = 6;
     g_context.lineWidth = 2;
 
-    for(var i = 0; i < 6; ++i) {
+    for(var i = 0; i < 4; ++i) {
         if(!(i in g_controlPoints[g_currentFrameNr])) {
             g_controlPoints[g_currentFrameNr][i] = {label: g_labelButtons[i], control_points: []};
         }
@@ -431,11 +406,6 @@ function redraw(){
     if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][3].control_points.length > 0) {
         g_controlPoints[g_currentFrameNr][3].control_points.splice(0, 0, getControlPoint(-2, 0));
         g_controlPoints[g_currentFrameNr][3].control_points.push(getControlPoint(-1, 0));
-    }
-    // For LVOT, insert aorta annulus endpoint
-    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][3].control_points.length > 0 && g_controlPoints[g_currentFrameNr][5].control_points.length > 0) {
-        g_controlPoints[g_currentFrameNr][5].control_points.splice(0, 0, getControlPoint(-1, 0));
-        g_controlPoints[g_currentFrameNr][5].control_points.push(getControlPoint(-2, 0));
     }
 
     // Draw straight line from epicard endpoints to LV endoendpoints
@@ -457,7 +427,7 @@ function redraw(){
     }
 
     // Draw controlPoint
-    for(var labelIndex = 0; labelIndex < 6; labelIndex++) {
+    for(var labelIndex = 0; labelIndex < 4; labelIndex++) {
         if(!(labelIndex in g_controlPoints[g_currentFrameNr]))
             continue;
         var label = g_controlPoints[g_currentFrameNr][labelIndex].label;
@@ -469,14 +439,6 @@ function redraw(){
             var d = getControlPoint(min(g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1, i + 2), labelIndex);
             if(labelIndex === 0 && i === g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 3) { // Special treatment of endocard, where last point connect to aorta annulus should not be rounded but straighted
                 d = getControlPoint(min(g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1, i + 1), labelIndex);
-            }
-            if(labelIndex === 5 && i === g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1) {
-                d = getControlPoint(min(g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 1, i + 1), labelIndex);
-            }
-            if(labelIndex === 4) { // Special treatment of RV, should be closed circular
-                a = getControlPoint(i-1, labelIndex);
-                c = getControlPoint((i + 1) % (g_controlPoints[g_currentFrameNr][labelIndex].control_points.length), labelIndex);
-                d = getControlPoint((i + 2) % (g_controlPoints[g_currentFrameNr][labelIndex].control_points.length), labelIndex);
             }
 
             // Draw line as spline
@@ -555,37 +517,6 @@ function redraw(){
         g_context.setLineDash([]); // Clear
     }
 
-    // Draw LVOT plane line
-    if(5 in g_controlPoints[g_currentFrameNr] && g_controlPoints[g_currentFrameNr][5].control_points.length > 2) {
-        let y0 = getControlPoint(-1, 5).y;
-        let y1 = getControlPoint(-2, 5).y;
-        let x0 = getControlPoint(-1, 5).x;
-        let x1 = getControlPoint(-2, 5).x;
-        let y01 = getControlPoint(-2, 5).y;
-        let y11 = getControlPoint(-3, 5).y;
-        let x01 = getControlPoint(-2, 5).x;
-        let x11 = getControlPoint(-3, 5).x;
-        g_context.beginPath();
-        g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
-        g_context.strokeStyle = colorToHexString(0, 100, 100);
-        g_context.moveTo(x0, y0);
-        g_context.lineTo(x1, y1);
-        g_context.stroke();
-        g_context.setLineDash([]); // Clear
-
-        g_context.beginPath();
-        g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
-        g_context.strokeStyle = colorToHexString(0, 255, 255);
-        g_context.moveTo(x01, y01);
-        g_context.lineTo(x11, y11);
-        g_context.stroke();
-    }
-    // Remove LVOT
-    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][3].control_points.length > 0 && g_controlPoints[g_currentFrameNr][5].control_points.length > 0) {
-        g_controlPoints[g_currentFrameNr][5].control_points.splice(0, 1);
-        g_controlPoints[g_currentFrameNr][5].control_points.splice(g_controlPoints[g_currentFrameNr][5].control_points.length - 1, 1);
-    }
-
     // Draw LA annulus plane line
     if(0 in g_controlPoints[g_currentFrameNr] && g_controlPoints[g_currentFrameNr][0].control_points.length > 4) {
         let y0 = getControlPoint(0, 0).y;
@@ -653,7 +584,7 @@ function changeLabel(label_id) {
 function sendDataForSave() {
     return $.ajax({
         type: "POST",
-        url: "/cardiac-plax/segmentation/save/",
+        url: "/cardiac-alax/segmentation/save/",
         data: {
             control_points: JSON.stringify(g_controlPoints),
             target_frames: JSON.stringify(g_targetFrames),
