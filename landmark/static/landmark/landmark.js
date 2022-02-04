@@ -18,6 +18,7 @@ function setupLandmarkTask() {
             if(g_userFrameSelection) {
                 if(!g_targetFrames.includes(g_currentFrameNr)) {
                     addKeyFrame(g_currentFrameNr);
+                    g_landmarks[g_currentFrameNr] = [];
                 }
             }
             if(g_targetFrames.includes(g_currentFrameNr)) {
