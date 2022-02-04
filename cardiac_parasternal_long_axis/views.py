@@ -25,8 +25,15 @@ def add_default_labels(task_id):
     # Check if task has proper labels set up.
     # If not add them to the database,
     task = Task.objects.get(pk=task_id)
-    labels = (('Endocardium', (0, 255, 0)), ('Epicardium', (0, 0, 255)), ('Left atrium', (255, 0, 0)), ('Aorta', (150, 70, 50)), ('Right ventricle', (255, 255, 0)))
-    if len(task.label.all()) != 5:
+    labels = (
+        ('Endocardium', (0, 255, 0)),
+        ('Epicardium', (0, 0, 255)),
+        ('Left atrium', (255, 0, 0)),
+        ('Aorta', (150, 70, 50)),
+        ('Right ventricle', (255, 255, 0)),
+        ('LVOT', (0, 255, 255))
+    )
+    if len(task.label.all()) != 6:
         # Remove old ones
         for label in task.label.all():
             task.label.remove(label)
@@ -82,7 +89,7 @@ def save_segmentation(request):
     control_points = json.loads(request.POST['control_points'])
     target_frame_types = json.loads(request.POST['target_frame_types'])
     print(control_points)
-    objects = ('Endocardium', 'Epicardium', 'Left atrium', 'Aorta', 'Right ventricle')
+    objects = ('Endocardium', 'Epicardium', 'Left atrium', 'Aorta', 'Right ventricle', 'LVOT')
 
     rejected = request.POST['rejected'] == 'true'
 

@@ -126,6 +126,14 @@ class CardiacPLAXSegmentationExporter(Exporter):
                 b = control_points[i]
                 c = control_points[min(max_index, i+1)]
                 d = control_points[min(max_index, i+2)]
+                # Check if d point is any straight line pairs
+                asd = min(max_index, i+2)
+                found = False
+                for line in straight_lines:
+                    if line[0] == asd or line[1] == asd:
+                        found = True
+                if found:
+                    d = control_points[min(max_index, i + 1)]
             else:
                 if i == 0:
                     first = max_index-1
@@ -135,6 +143,8 @@ class CardiacPLAXSegmentationExporter(Exporter):
                 b = control_points[i]
                 c = control_points[(i+1) % max_index]
                 d = control_points[(i+2) % max_index]
+
+
             print('Control points', image_size, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
             length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
             step_size = min(0.01, 1.0 / (length*4))
@@ -201,6 +211,7 @@ class CardiacPLAXSegmentationExporter(Exporter):
         control_points2 = list(ControlPoint.objects.filter(image=frame, object=2).order_by('index'))
         control_points3 = list(ControlPoint.objects.filter(image=frame, object=3).order_by('index'))
         control_points4 = list(ControlPoint.objects.filter(image=frame, object=4).order_by('index'))
+        control_points5 = list(ControlPoint.objects.filter(image=frame, object=5).order_by('index'))
 
         if x_scaling != 1:
             for point in control_points0:
@@ -213,6 +224,8 @@ class CardiacPLAXSegmentationExporter(Exporter):
                 point.x *= x_scaling
             for point in control_points4:
                 point.x *= x_scaling
+            for point in control_points5:
+                point.x *= x_scaling
 
         # Endpoints of object 2 (LA) are the same as object 0 (endo/LV)
         if len(control_points0) > 0 and len(control_points2) > 0:
@@ -222,7 +235,10 @@ class CardiacPLAXSegmentationExporter(Exporter):
         if len(control_points3) > 0 and len(control_points0) > 0:
             control_points3.insert(0, control_points0[-2])
             control_points3.append(control_points0[-1])
-
+        # (LVOT) (5) endpoints
+        if len(control_points0) > 0 and len(control_points5) > 0:
+            control_points5.insert(0, control_points0[-1])
+            control_points5.append(control_points0[-2])
         # (myocard/epi) (1) endpoints
         if len(control_points0) > 0 and len(control_points1) > 0:
             control_points1.insert(0, control_points0[0])
@@ -247,6 +263,9 @@ class CardiacPLAXSegmentationExporter(Exporter):
         if len(control_points4) > 0:
             object_segmentation = self.get_object_segmentation(image_size, control_points4, x_scaling)
             segmentation[object_segmentation == 1] = 5
+        if len(control_points5) > 0:
+            object_segmentation = self.get_object_segmentation(image_size, control_points5, x_scaling, straight_lines=[[0, -1], [-2, -1], [-3, -2]])
+            segmentation[np.logical_and(object_segmentation == 1, segmentation != 2)] = 6 # Draw LVOT after endo, but epi should be subtracted
 
         # Remove data outside ultrasound sector
         segmentation[image == 0] = 0 # TODO improve this maybe?
