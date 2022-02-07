@@ -433,7 +433,7 @@ function redraw(){
         g_controlPoints[g_currentFrameNr][3].control_points.push(getControlPoint(-1, 0));
     }
     // For LVOT, insert aorta annulus endpoint
-    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][3].control_points.length > 0 && g_controlPoints[g_currentFrameNr][5].control_points.length > 0) {
+    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][5].control_points.length > 0) {
         g_controlPoints[g_currentFrameNr][5].control_points.splice(0, 0, getControlPoint(-1, 0));
         g_controlPoints[g_currentFrameNr][5].control_points.push(getControlPoint(-2, 0));
     }
@@ -494,7 +494,7 @@ function redraw(){
             for(var t = 0.0; t < 1; t += step) {
                 if(labelIndex < 4 && i === g_controlPoints[g_currentFrameNr][labelIndex].control_points.length-1) // Do not draw after last control point, except for RV
                     break;
-                if(labelIndex === 5 && i >= g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 3) // Do not draw last two lines for LVOT
+                if(labelIndex === 5 && i >= g_controlPoints[g_currentFrameNr][labelIndex].control_points.length - 4) // Do not draw last lines for LVOT
                     break
                 if(
                     labelIndex === 0 &&
@@ -556,7 +556,7 @@ function redraw(){
     }
 
     // Draw LVOT plane line
-    if(5 in g_controlPoints[g_currentFrameNr] && g_controlPoints[g_currentFrameNr][5].control_points.length > 2) {
+    if(5 in g_controlPoints[g_currentFrameNr] && g_controlPoints[g_currentFrameNr][5].control_points.length > 3) {
         let y0 = getControlPoint(-1, 5).y;
         let y1 = getControlPoint(-2, 5).y;
         let x0 = getControlPoint(-1, 5).x;
@@ -565,6 +565,12 @@ function redraw(){
         let y11 = getControlPoint(-3, 5).y;
         let x01 = getControlPoint(-2, 5).x;
         let x11 = getControlPoint(-3, 5).x;
+
+        let y02 = getControlPoint(-3, 5).y;
+        let y12 = getControlPoint(-4, 5).y;
+        let x02 = getControlPoint(-3, 5).x;
+        let x12 = getControlPoint(-4, 5).x;
+
         g_context.beginPath();
         g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
         g_context.strokeStyle = colorToHexString(0, 100, 100);
@@ -579,9 +585,16 @@ function redraw(){
         g_context.moveTo(x01, y01);
         g_context.lineTo(x11, y11);
         g_context.stroke();
+        g_context.setLineDash([]); // Clear
+
+        g_context.beginPath();
+        g_context.strokeStyle = colorToHexString(0, 255, 255);
+        g_context.moveTo(x02, y02);
+        g_context.lineTo(x12, y12);
+        g_context.stroke();
     }
     // Remove LVOT
-    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][3].control_points.length > 0 && g_controlPoints[g_currentFrameNr][5].control_points.length > 0) {
+    if (g_controlPoints[g_currentFrameNr][0].control_points.length > 1 && g_controlPoints[g_currentFrameNr][5].control_points.length > 0) {
         g_controlPoints[g_currentFrameNr][5].control_points.splice(0, 1);
         g_controlPoints[g_currentFrameNr][5].control_points.splice(g_controlPoints[g_currentFrameNr][5].control_points.length - 1, 1);
     }

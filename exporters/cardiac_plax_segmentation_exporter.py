@@ -264,7 +264,7 @@ class CardiacPLAXSegmentationExporter(Exporter):
             object_segmentation = self.get_object_segmentation(image_size, control_points4, x_scaling)
             segmentation[object_segmentation == 1] = 5
         if len(control_points5) > 0:
-            object_segmentation = self.get_object_segmentation(image_size, control_points5, x_scaling, straight_lines=[[0, -1], [-2, -1], [-3, -2]])
+            object_segmentation = self.get_object_segmentation(image_size, control_points5, x_scaling, straight_lines=[[0, -1], [-2, -1], [-3, -2], [-4, -3]])
             segmentation[np.logical_and(object_segmentation == 1, segmentation != 2)] = 6 # Draw LVOT after endo, but epi should be subtracted
 
         # Remove data outside ultrasound sector
