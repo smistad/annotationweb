@@ -7,6 +7,7 @@ from annotationweb.forms import ImageListForm
 from django.db.models.aggregates import Count
 from common.search_filters import SearchFilter
 from django.db import transaction
+from django.db.models import Q, Exists, OuterRef
 
 
 class NoMoreImages(Exception):
@@ -20,7 +21,9 @@ def get_next_unprocessed_image(task):
     :param task:
     :return image:
     """
-    queryset = ImageSequence.objects.filter(imageannotation__task=task, imageannotation__finished=False)
+    queryset = ImageSequence.objects.filter(subject__dataset__task=task) # Get all sequences for this task
+    # Exclude does that are marked as finished, or not opened at all
+    queryset = queryset.exclude(imageannotation__in=ImageAnnotation.objects.filter(task=task, finished=True))
     if not task.user_frame_selection:
         # If user cannot select their own key frames, skip those without a key frame
         queryset = queryset.exclude(imageannotation__keyframeannotation__isnull=True)

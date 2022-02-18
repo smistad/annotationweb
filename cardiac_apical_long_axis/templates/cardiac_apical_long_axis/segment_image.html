@@ -1,0 +1,150 @@
+{% extends 'annotationweb/two_column_layout.html' %}
+
+{% block javascript %}
+
+    initializeAnnotation({{ task.id }}, {{ image.id }});
+
+    {% if image_sequence %}
+        loadSequence(
+        {{ image_sequence.id }},
+        {{ image_sequence.start_frame_nr }},
+        {{ image_sequence.nr_of_frames }},
+        {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
+        {%  if task.user_frame_selection %}true{% else %}false{% endif %},
+        {%  if task.annotate_single_frame %}true{% else %}false{% endif %},
+        [ {% for frame_nr in frames %}{{ frame_nr }},{% endfor %}],
+        {{ task.frames_before }},
+        {{ task.frames_after }},
+        {% if task.auto_play %}true{% else %}false{% endif %}
+        );
+    {% endif %}
+    loadSegmentationTask({{ image_sequence.id }});
+
+
+    {# Add label buttons #}
+    {% for label in labels %}
+        addLabelButton({{ label.id }}, {{ label.color_red }}, {{ label.color_green }}, {{ label.color_blue }}, {% if label.parent %}{{ label.parent.id }}{% else  %}0{% endif %});
+    {% endfor %}
+
+
+    {% for frame in target_frames %}
+        addControlPointsForNewFrame({{ frame.frame_nr }});
+        g_targetFrameTypes['{{ frame.frame_nr }}'] = '{{ frame.frame_metadata }}';
+        // A hack for updating markers
+        g_progressbar.on('markercomplete', function() {
+            var marker_index = {{ frame.frame_nr }};
+            var type = g_targetFrameTypes['{{ frame.frame_nr }}'];
+            var color = '#555555';
+            if(type == 'ED') {
+                color = '#CC3434';
+            } else if(type == 'ES') {
+                color = '#0077b3';
+            }
+            console.log('Updating marker ' + marker_index + ' with ' + color);
+            $('#sliderMarker' + marker_index).css('background-color', color);
+        });
+    {% endfor %}
+
+    {% for control_point in control_points %}
+        addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.image.frame_nr }}, {{ control_point.object }}, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
+    {% endfor %}
+
+    {% if return_url %}
+        setReturnURL('{{ return_url|safe }}');
+    {% endif %}
+
+{% endblock javascript %}
+
+{% block content_left %}
+
+    {% for message in messages %}
+        <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+    <div id="message"></div>
+
+    <h1>{{ task.name }}</h1>
+
+    {{ task.number_of_annotated_images }} of {{ task.total_number_of_images}} videos/images have been labeled ({{ task.percentage_finished }}%)
+
+    {% if image_sequence %}
+        <div id="progressbar"><div class="progress-label">Loading...</div></div>
+        <div id="sliderText">Drag the slider to view the other frames in the sequence. Current frame <span id="currentFrame"></span></div>
+        <canvas id="m-mode-canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+        <div id="slider">
+        </div>
+        <div class="actionButtons">
+            <button id="playButton" type="button"><i id="play" class="fa fa-play"></i></button></button>
+            {% if task.user_frame_selection %}
+                <button id="addEDFrameButton" type="button" style="background-color: #CC3434">Mark ED</button>
+                <button id="addESFrameButton" type="button" style="background-color: #0077b3">Mark ES</button>
+                <button id="addNormalFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
+            {% endif %}
+            <button id="copyAnnotation" type="button" title="Copy annotation from previous frame"><i class="fa fa-copy"></i></button>
+            <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>
+        </div>
+    {% endif %}
+    <h2>Actions</h2>
+    <div class="actionButtons">
+        {% if previous_image_id %}
+            <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?{{ request.GET.urlencode }}');">Previous</button>
+        {% endif %}
+        {% if next_image_id %}
+            <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
+        {% endif %}
+        <button id="clearButton">Clear</button>
+        <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected.">Reject</button>
+        <button id="saveButton">Save</button>
+        <button id="imageListButton" onclick="javascript:window.location.href='{% url 'task' task.id %}'" title="Image list">List</button>
+    </div>
+    <div id="dialogConfirm">
+        You have done changes to the annotation. <br>
+        Do you wish to save the changes before going to the next/previous image?
+    </div>
+    <h2>Annotation</h2>
+    <div id="imageQuality">
+        <form id="imageQualityForm">
+            Image quality:
+            {% for quality_id, quality_name in image_quality_choices %}
+                <input type="radio" name="quality" value="{{ quality_id }}" required{% if chosen_quality == quality_id %} checked="checked"{% endif %}> {{ quality_name }}
+            {% endfor %}
+        </form>
+    </div>
+
+
+    <div id="labelButtons">
+        {% block label_buttons %}
+            <div class="flexButtons">
+                {% for label in toplabels %}
+                    <button onclick="changeLabel({{ label.id }})" class="labelButton" id="labelButton{{ label.id }}">{{ label.name }}</button>
+                {% endfor %}
+            </div>
+        {% endblock label_buttons %}
+    </div>
+    <div>
+    <h2>Comments</h2>
+    <textarea id="comments" style="width: 100%; height: 100px">{{ comments }}</textarea>
+    </div>
+
+{% endblock content_left %}
+{% block content_right %}
+
+    <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+
+
+    {% block task_content %}
+    {% endblock %}
+
+    {% if image.metadata_set.count > 0 %}
+        <h2>Image metadata</h2>
+        {% for metadata in image.metadata_set.all %}
+            <strong>{{ metadata.name }}:</strong> {{ metadata.value }}<br>
+        {% endfor %}
+    {% endif %}
+
+    {% if task.description|length > 0 %}
+        <h2>Task description</h2>
+
+        {{ task.description|safe }}
+    {% endif %}
+
+{% endblock content_right %}
