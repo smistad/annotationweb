@@ -17,6 +17,7 @@ function setupLandmarkTask() {
             console.log(g_userFrameSelection);
             if(g_userFrameSelection) {
                 if(!g_targetFrames.includes(g_currentFrameNr)) {
+                    setPlayButton(false);
                     addKeyFrame(g_currentFrameNr);
                     g_landmarks[g_currentFrameNr] = [];
                 }
@@ -53,11 +54,27 @@ function setupLandmarkTask() {
         redrawSequence();
     });
 
+    $("#addFrameButton").click(function() {
+        g_landmarks[g_currentFrameNr] = [];
+    });
+
+    $('#removeFrameButton').click(function() {
+        // Remove landmarks in this frame
+        if(g_currentFrameNr in g_landmarks){
+            delete g_landmarks[g_currentFrameNr];
+        }
+        redrawSequence();
+    });
+
+
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
-        g_landmarks = [];
+        if(g_currentFrameNr in g_landmarks){
+            delete g_landmarks[g_currentFrameNr];
+        }
+        g_landmarks[g_currentFrameNr] = [];
         $('#slider').slider('value', g_frameNr); // Update slider
-        redraw();
+        redrawSequence();
     });
 
     // Set first label active
