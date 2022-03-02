@@ -10,22 +10,71 @@ function setupLandmarkTask() {
     console.log("Setting up canvas task..");
 
     // Define event callbacks
-    $('#canvas').mousedown(function(e) {
-        var scale =  g_canvasWidth / $('#canvas').width();
-        var mouseX = (e.pageX - this.offsetLeft)*scale;
-        var mouseY = (e.pageY - this.offsetTop)*scale;
+    $('#canvas').click(function(e) {
+        var pos = mousePos(e, this);
+        if(!g_shiftKeyPressed) {
+            // Check if frame is a key frame
+            console.log(g_userFrameSelection);
+            if(g_userFrameSelection) {
+                if(!g_targetFrames.includes(g_currentFrameNr)) {
+                    setPlayButton(false);
+                    addKeyFrame(g_currentFrameNr);
+                    g_landmarks[g_currentFrameNr] = [];
+                }
+            }
+            if(g_targetFrames.includes(g_currentFrameNr)) {
+                console.log("adding landmark..");
+                // Check if already exists
+                let exists = false;
+                for(let i = 0; i < g_landmarks[g_currentFrameNr].length; ++i) {
+                    let landmark = g_landmarks[g_currentFrameNr][i];
+                    if(landmark.label_id === g_currentLabel && Math.abs(pos.x - landmark.x) < 6 && Math.abs(pos.y - landmark.y) < 6) {
+                        exists = true;
+                    }
+                }
+                if(!exists)
+                    addLandmark(pos.x, pos.y, g_currentLabel, g_currentFrameNr);
+            }
+        } else {
+            console.log("deleting landmark..");
+            let frameNr = g_currentFrameNr;
+            if(frameNr in g_landmarks) {
+                for(let i = 0; i < g_landmarks[frameNr].length; ++i) {
+                    let landmark = g_landmarks[frameNr][i];
+                    console.log('Testing..');
+                    if(Math.abs(pos.x - landmark.x) < 8 && Math.abs(pos.y - landmark.y) < 8) {
+                        console.log('Deleting landmark..');
+                        // Delete it
+                        g_landmarks[frameNr].splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+        redrawSequence();
+    });
 
-        console.log("adding landmark..");
-        addLandmark(mouseX, mouseY, g_currentLabel, g_currentFrameNr);
-        redraw();
+    $("#addFrameButton").click(function() {
+        g_landmarks[g_currentFrameNr] = [];
+    });
+
+    $('#removeFrameButton').click(function() {
+        // Remove landmarks in this frame
+        if(g_currentFrameNr in g_landmarks){
+            delete g_landmarks[g_currentFrameNr];
+        }
+        redrawSequence();
     });
 
 
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
-        g_landmarks = [];
+        if(g_currentFrameNr in g_landmarks){
+            delete g_landmarks[g_currentFrameNr];
+        }
+        g_landmarks[g_currentFrameNr] = [];
         $('#slider').slider('value', g_frameNr); // Update slider
-        redraw();
+        redrawSequence();
     });
 
     // Set first label active

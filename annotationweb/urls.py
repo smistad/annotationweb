@@ -38,6 +38,8 @@ urlpatterns = [
     path('boundingbox/', include('boundingbox.urls')),
     path('landmark/', include('landmark.urls')),
     path('cardiac/', include('cardiac.urls')),
+    path('cardiac-plax/', include('cardiac_parasternal_long_axis.urls')),
+    path('cardiac-alax/', include('cardiac_apical_long_axis.urls')),
     path('spline-segmentation/', include('spline_segmentation.urls')),
     path('video-annotation/', include('video_annotation.urls'))
 ]

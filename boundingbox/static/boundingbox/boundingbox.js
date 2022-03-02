@@ -103,16 +103,6 @@ function setupSegmentation() {
     redrawSequence();
 }
 
-function mousePos(e, canvas) {
-    var scale =  g_canvasWidth / $('#canvas').width();
-    var mouseX = (e.pageX - canvas.offsetLeft)*scale;
-    var mouseY = (e.pageY - canvas.offsetTop)*scale;
-    return {
-        x: mouseX,
-        y: mouseY,
-    }
-}
-
 function isInsideBox(x, y) {
     var boxNr = g_invalidBoxNr;
     var isInside = false;

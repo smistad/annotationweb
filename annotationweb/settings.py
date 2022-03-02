@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'user',
     'cardiac',
     'spline_segmentation',
+    'cardiac_parasternal_long_axis',
+    'cardiac_apical_long_axis',
     'video_annotation',
     'django_otp',
     'django_otp.plugins.otp_totp',
