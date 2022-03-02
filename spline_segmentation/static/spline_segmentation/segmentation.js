@@ -124,21 +124,11 @@ function setupSegmentation() {
         redrawSequence();
     });
 
-    // TODO MOVE to annotation
-    $('#removeTargetFrameButton').click(function() {
-        goToFrame(g_currentFrameNr)
-        setPlayButton(false);
-        $('#slider').slider('value', g_currentFrameNr); // Update slider
-
-        if(g_targetFrames.includes(g_currentFrameNr)){
-            var target_frame_idx = g_targetFrames.indexOf(g_currentFrameNr)
-            var target_id = "sliderMarker" + g_currentFrameNr;
-
-            slider.querySelector(target_id).remove();
-            g_targetFrames.splice(target_frame_idx,1);
-            g_controlPoints.splice(target_frame_idx,1);
+    $('#removeFrameButton').click(function() {
+        // Remove splines in this frame
+        if(g_currentFrameNr in g_controlPoints){
+            delete g_controlPoints[g_currentFrameNr];
         }
-
         redrawSequence();
     });
 

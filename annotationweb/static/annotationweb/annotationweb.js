@@ -70,7 +70,7 @@ function setPlayButton(play) {
 
 function goToFrame(frameNr) {
     setPlayButton(false);
-    g_currentFrameNr = frameNr;
+    g_currentFrameNr = min(max(0, frameNr), g_framesLoaded-1);
     $('#slider').slider('value', frameNr); // Update slider
     $('#currentFrame').text(g_currentFrameNr);
     var marker_index = g_targetFrames.findIndex(index => index === frameNr);
@@ -95,8 +95,8 @@ function save() {
                 window.location = g_returnURL;
             } else {
                 // Reset image quality form before refreshing
-                $('#imageQualityForm')[0].reset();
-                $('#comments').val('');
+                //$('#imageQualityForm')[0].reset();
+                //$('#comments').val('');
                 // Refresh page
                 location.reload();
             }
