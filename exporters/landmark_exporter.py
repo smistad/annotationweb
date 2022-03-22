@@ -73,6 +73,7 @@ class LandmarkExporter(Exporter):
                 with open(join(storage_path, str(annotation.id) + '.txt'), 'w') as f:
                     f.write(subject.name + '\n')
                     f.write(annotation.image.format + '\n')
+                    f.write(annotation.comments.replace('\n', '<br>') + '\n')
                     for frame in frames:
                         # Write bounding boxes txt file
                         landmarks = Landmark.objects.filter(image=frame)
