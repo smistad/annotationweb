@@ -73,7 +73,7 @@ class LandmarkExporter(Exporter):
                 with open(join(storage_path, str(annotation.id) + '.txt'), 'w') as f:
                     f.write(subject.name + '\n')
                     f.write(annotation.image.format + '\n')
-                    f.write(annotation.comments.replace('\n', '<br>') + '\n')
+                    f.write((annotation.comments).encode('ascii', 'ignore').decode('ascii').replace('\n', '<br>') + '\n') # Encoding fix
                     # Get aspect ratio to correct x landmarks, because they are stored with isotropic spacing, while images
                     # are often not stored in isotropic spacing
                     metaimage = MetaImage(filename=annotation.image.format.replace('#', str(0)))
