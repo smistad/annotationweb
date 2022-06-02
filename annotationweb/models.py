@@ -45,6 +45,7 @@ class Task(models.Model):
     CARDIAC_PLAX_SEGMENTATION = 'cardiac_plax_segmentation'
     CARDIAC_ALAX_SEGMENTATION = 'cardiac_alax_segmentation'
     SPLINE_SEGMENTATION = 'spline_segmentation'
+    SPLINE_LINE_POINT = 'spline_line_point'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
         (BOUNDING_BOX, 'Bounding box'),
@@ -52,7 +53,8 @@ class Task(models.Model):
         (CARDIAC_SEGMENTATION, 'Cardiac apical segmentation'),
         (CARDIAC_PLAX_SEGMENTATION, 'Cardiac PLAX segmentation'),
         (CARDIAC_ALAX_SEGMENTATION, 'Cardiac ALAX segmentation'),
-        (SPLINE_SEGMENTATION, 'Spline segmentation')
+        (SPLINE_SEGMENTATION, 'Spline segmentation'),
+        (SPLINE_LINE_POINT, 'Splines, lines & point segmentation')
     )
 
     name = models.CharField(max_length=200)

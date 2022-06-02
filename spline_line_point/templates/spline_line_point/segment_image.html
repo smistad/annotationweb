@@ -1,0 +1,35 @@
+{% extends 'annotationweb/do_task.html' %}
+
+{% block task_javascript %}
+    {% if image_sequence %}
+        loadSegmentationTask({{ image_sequence.id }});
+    {% endif %}
+
+    {% for frame in target_frames %}
+        addControlPointsForNewFrame({{ frame.frame_nr }});
+    {% endfor %}
+
+    {% for control_point in control_points %}
+        addControlPoint({{ control_point.x }}, {{ control_point.y }}, {{ control_point.image.frame_nr }}, {{ control_point.object }}, {{ control_point.label_id }}, {% if control_point.uncertain %}true{% else %}false{% endif %});
+    {% endfor %}
+{% endblock task_javascript %}
+
+{% block task_instructions %}
+ <button onclick=showHelp() title="Help with annotation" style="width: 12%">
+     <i class="fa fa-question" style="display: inline-block"></i></button>
+    <div id="help" style="font-size: 16px; display: none; float: right">
+        Hold CTRL to create a new object of the selected type.<br>
+        Click on yellow control points to switch to that object.<br>
+        Double click on yellow control points to delete it.<br>
+        Hold mouse button on yellow control point to move it.<br>
+    </div>
+    <script>
+        function showHelp(){
+            var e = document.getElementById("help");
+            if (e.style.display === 'none'){
+                e.style.display = 'block';}
+            else{
+                e.style.display = 'none';}
+        }
+    </script>
+{% endblock task_instructions %}
