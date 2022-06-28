@@ -446,6 +446,8 @@ def task_description(request, task_id):
         url = reverse('cardiac_parasternal_long_axis:segment_image', args=[task_id])
     elif task.type == task.CARDIAC_ALAX_SEGMENTATION:
         url = reverse('cardiac_apical_long_axis:segment_image', args=[task_id])
+    elif task.type == task.SPLINE_LINE_POINT:
+        url = reverse('spline_line_point:segment_image', args=[task_id])
     else:
         raise NotImplementedError()
 
@@ -601,6 +603,8 @@ def get_redirection(task):
         return 'cardiac_apical_long_axis:segment_image'
     elif task.type == Task.SPLINE_SEGMENTATION:
         return 'spline_segmentation:segment_image'
+    elif task.type == Task.SPLINE_LINE_POINT:
+        return 'spline_line_point:segment_image'
 
 
 # @register.simple_tag
