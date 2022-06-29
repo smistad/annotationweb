@@ -39,6 +39,7 @@ def save_segmentation(request):
     error_messages = ''
 
     control_points = json.loads(request.POST['control_points'])
+    target_frame_types = json.loads(request.POST['target_frame_types'])
     n_labels = int(request.POST['n_labels'])
 
     try:
@@ -50,6 +51,11 @@ def save_segmentation(request):
             # Save control points
             for annotation in annotations:
                 frame_nr = str(annotation.frame_nr)
+
+                # Set frame metadata
+                annotation.frame_metadata = target_frame_types[frame_nr]
+                annotation.save()
+
                 for object in control_points[frame_nr]:
                     nr_of_control_points = len(control_points[frame_nr][object]['control_points'])
                     if nr_of_control_points < 1:
