@@ -17,11 +17,46 @@ import PIL
 class SplineSegmentationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
     delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=False, required=False)
+    json_annotations = forms.BooleanField(label='Export JSON annotations for instance segmentation', initial=False,
+                                          required=False)
 
     def __init__(self, task, data=None):
         super().__init__(data)
         self.fields['subjects'] = forms.ModelMultipleChoiceField(
             queryset=Subject.objects.filter(dataset__task=task))
+
+
+def create_json(coord, image_size, filename):
+    """This function creates a JSON dictionary according to labelme format"""
+
+    data = []
+    coordinates = coord
+
+    for i in range(len(coordinates)):
+        if i % 2 == 0:
+            data.append(
+                {
+                    "label": str(coordinates[i + 1]),
+                    "points": coordinates[i],
+                    "group_id": 'null',
+                    "shape_type": "polygon",
+                    "flags": {},
+                }
+            )
+
+    json_dict = {
+        "version": "4.5.6",
+        "flags": {},
+        "shapes": data,
+        "imagePath": os.path.basename(os.path.normpath(filename[:-7])) + '.png',
+        "imageData": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAF/AVEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0f",
+        "imageHeight": image_size[0],
+        "imageWidth": image_size[1]
+
+    }
+
+    return json_dict
+
 
 
 class SplineSegmentationExporter(Exporter):
@@ -37,6 +72,7 @@ class SplineSegmentationExporter(Exporter):
 
     def export(self, form):
         delete_existing_data = form.cleaned_data['delete_existing_data']
+        json_annotations = form.cleaned_data['json_annotations']
         # Create dir, delete old if it exists
         path = form.cleaned_data['path']
         if delete_existing_data:
@@ -51,11 +87,11 @@ class SplineSegmentationExporter(Exporter):
         # Create folder if it doesn't exist
         create_folder(path)
 
-        self.add_subjects_to_path(path, form.cleaned_data['subjects'])
+        self.add_subjects_to_path(path, form.cleaned_data['subjects'], json_annotations)
 
         return True, path
 
-    def add_subjects_to_path(self, path, data):
+    def add_subjects_to_path(self, path, data, json_annotations):
 
         # For each subject
         for subject in data:
@@ -89,14 +125,14 @@ class SplineSegmentationExporter(Exporter):
                     image_pil = PIL.Image.open(new_filename)
                     image_size = image_pil.size
                     spacing = [1, 1]
-                self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing)
+                self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing, json_annotations)
 
         return True, path
 
     def get_object_segmentation(self, image_size, frame):
         segmentation = np.zeros(image_size, dtype=np.uint8)
         tension = 0.5
-
+        xy_unique = []
         labels = Label.objects.filter(task=frame.image_annotation.task).order_by('id')
         counter = 1
         for label in labels:
@@ -104,6 +140,7 @@ class SplineSegmentationExporter(Exporter):
             for object in objects:
                 previous_x = None
                 previous_y = None
+                xy = []
                 control_points = ControlPoint.objects.filter(label=label, image=frame, object=object.object).order_by('index')
                 max_index = len(control_points)
                 for i in range(max_index):
@@ -152,26 +189,45 @@ class SplineSegmentationExporter(Exporter):
                         previous_x = x
                         previous_y = y
 
+                        xy.append(previous_x)
+                        xy.append(previous_y)
+
                         segmentation[y, x] = counter
+
+                    xy = [xy[j:j + 2] for j in range(0, len(xy), 2)]
+                    xy_unique.append(xy)
+                    xy_unique.append(a.label)
+
+                coordinates = []
+                [coordinates.append(x) for x in xy_unique if x not in coordinates]
 
             # Fill the hole
             segmentation[binary_fill_holes(segmentation == counter)] = counter
 
             counter += 1
 
-        return segmentation
+        return segmentation, coordinates
 
-    def save_segmentation(self, frame, image_size, filename, spacing):
+
+    def save_segmentation(self, frame, image_size, filename, spacing, json_annotations):
         image_size = [image_size[1], image_size[0]]
 
         # Create compounded segmentation object
-        segmentation = self.get_object_segmentation(image_size, frame)
+        segmentation, coords = self.get_object_segmentation(image_size, frame)
 
-        segmentation_mhd = MetaImage(data=segmentation)
-        segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
-        segmentation_mhd.set_spacing(spacing)
-        metadata = ImageMetadata.objects.filter(image=frame.image_annotation.image)
-        for item in metadata:
-            segmentation_mhd.set_attribute(item.name, item.value)
-        segmentation_mhd.write(filename)
+        if json_annotations:
+            json_dict = create_json(coords, image_size, filename)
+            with open(filename[:-7] + '.json', "w") as f:
+                print("The json file is created")
+                jason_str = json.dumps(json_dict)
+                f.write(jason_str)
+
+        else:
+            segmentation_mhd = MetaImage(data=segmentation)
+            segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
+            segmentation_mhd.set_spacing(spacing)
+            metadata = ImageMetadata.objects.filter(image=frame.image_annotation.image)
+            for item in metadata:
+                segmentation_mhd.set_attribute(item.name, item.value)
+            segmentation_mhd.write(filename)
 
