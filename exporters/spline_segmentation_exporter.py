@@ -20,7 +20,7 @@ import base64
 class SplineSegmentationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
     delete_existing_data = forms.BooleanField(label='Delete any existing data at storage path', initial=False, required=False)
-    json_annotations = forms.BooleanField(label='Export JSON annotations for instance segmentation', initial=False,
+    json_annotations = forms.BooleanField(label='Export annotations as geoJSON files for instance segmentation', initial=False,
                                           required=False)
 
     def __init__(self, task, data=None):
