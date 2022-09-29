@@ -40,7 +40,7 @@ def img_b64_to_arr(img_b64):
 def img_arr_to_b64(img_arr):
     """convert image array to image data (base 64) according to labelme format"""
 
-    img_pil = Image.open(img_arr)
+    img_pil = Image.fromarray(img_arr)
     f = io.BytesIO()
     img_pil.save(f, format='PNG')
     data = f.getvalue()
@@ -241,7 +241,14 @@ class SplineSegmentationExporter(Exporter):
         segmentation, coords = self.get_object_segmentation(image_size, frame)
 
         if json_annotations:
-            image_data = img_arr_to_b64(frame.image_annotation.image.format.replace('#', str(frame.frame_nr)))
+            image_filename = frame.image_annotation.image.format.replace('#', str(frame.frame_nr))
+            if image_filename.endswith('.mhd'):
+                image_mhd = MetaImage(filename=image_filename)
+                image_array = image_mhd.get_pixel_data()
+            else:
+                image_pil = PIL.Image.open(image_filename)
+                image_array = np.asarray(image_pil)
+            image_data = img_arr_to_b64(image_array)
             json_dict = create_json(coords, image_size, filename, image_data)
             with open(filename[:-7] + '.json', "w") as f:
                 print("The json file is created")
