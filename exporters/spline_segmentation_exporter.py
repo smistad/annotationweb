@@ -12,7 +12,10 @@ import numpy as np
 import json
 from scipy.ndimage.morphology import binary_fill_holes
 import PIL
-
+import io
+import codecs
+from PIL import Image
+import base64
 
 class SplineSegmentationExporterForm(forms.Form):
     path = forms.CharField(label='Storage path', max_length=1000)
@@ -26,7 +29,27 @@ class SplineSegmentationExporterForm(forms.Form):
             queryset=Subject.objects.filter(dataset__task=task))
 
 
-def create_json(coord, image_size, filename):
+def img_b64_to_arr(img_b64):
+    """convert image data to image array"""
+
+    f = io.BytesIO()
+    f.write(base64.b64decode(img_b64))
+    img_arr = np.array(PIL.Image.open(f))
+    return img_arr
+
+def img_arr_to_b64(img_arr):
+    """convert image array to image data (base 64) according to labelme format"""
+
+    img_pil = Image.open(img_arr)
+    f = io.BytesIO()
+    img_pil.save(f, format='PNG')
+    data = f.getvalue()
+    encData = codecs.encode(data, 'base64').decode()
+    encData = encData.replace('\n', '')
+    return encData
+
+
+def create_json(coord, image_size, filename, image_data):
     """This function creates a JSON dictionary according to labelme format"""
 
     data = []
@@ -49,7 +72,7 @@ def create_json(coord, image_size, filename):
         "flags": {},
         "shapes": data,
         "imagePath": os.path.basename(os.path.normpath(filename[:-7])) + '.png',
-        "imageData": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAF/AVEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0f",
+        "imageData": image_data,
         "imageHeight": image_size[0],
         "imageWidth": image_size[1]
 
@@ -132,9 +155,11 @@ class SplineSegmentationExporter(Exporter):
     def get_object_segmentation(self, image_size, frame):
         segmentation = np.zeros(image_size, dtype=np.uint8)
         tension = 0.5
-        xy_unique = []
+        coordinates = []
         labels = Label.objects.filter(task=frame.image_annotation.task).order_by('id')
         counter = 1
+        xy_new_temp =0
+
         for label in labels:
             objects = ControlPoint.objects.filter(label=label, image=frame).only('object').distinct()
             for object in objects:
@@ -194,12 +219,12 @@ class SplineSegmentationExporter(Exporter):
 
                         segmentation[y, x] = counter
 
-                    xy = [xy[j:j + 2] for j in range(0, len(xy), 2)]
-                    xy_unique.append(xy)
-                    xy_unique.append(a.label)
+                    xy_new = [xy[j:j + 2] for j in range(0, len(xy), 2)]
 
-                coordinates = []
-                [coordinates.append(x) for x in xy_unique if x not in coordinates]
+                    if i == max_index-1 and xy_new_temp != xy_new:
+                        coordinates.append(xy_new)
+                        coordinates.append(a.label)
+                        xy_new_temp = xy_new
 
             # Fill the hole
             segmentation[binary_fill_holes(segmentation == counter)] = counter
@@ -216,7 +241,8 @@ class SplineSegmentationExporter(Exporter):
         segmentation, coords = self.get_object_segmentation(image_size, frame)
 
         if json_annotations:
-            json_dict = create_json(coords, image_size, filename)
+            image_data = img_arr_to_b64(frame.image_annotation.image.format.replace('#', str(frame.frame_nr)))
+            json_dict = create_json(coords, image_size, filename, image_data)
             with open(filename[:-7] + '.json', "w") as f:
                 print("The json file is created")
                 jason_str = json.dumps(json_dict)
