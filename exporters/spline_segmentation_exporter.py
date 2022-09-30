@@ -49,7 +49,7 @@ def img_arr_to_b64(img_arr):
     return encData
 
 
-def create_json(coord, image_size, filename, image_data):
+def create_json(coord, image_size, image_data, image_path):
     """This function creates a JSON dictionary according to labelme format"""
 
     data = []
@@ -71,7 +71,7 @@ def create_json(coord, image_size, filename, image_data):
         "version": "4.5.6",
         "flags": {},
         "shapes": data,
-        "imagePath": os.path.basename(os.path.normpath(filename[:-7])) + '.png',
+        "imagePath": image_path,
         "imageData": image_data,
         "imageHeight": image_size[0],
         "imageWidth": image_size[1]
@@ -242,14 +242,17 @@ class SplineSegmentationExporter(Exporter):
 
         if json_annotations:
             image_filename = frame.image_annotation.image.format.replace('#', str(frame.frame_nr))
+            image_path = os.path.basename(os.path.normpath(image_filename))
             if image_filename.endswith('.mhd'):
                 image_mhd = MetaImage(filename=image_filename)
                 image_array = image_mhd.get_pixel_data()
+
             else:
                 image_pil = PIL.Image.open(image_filename)
                 image_array = np.asarray(image_pil)
+
             image_data = img_arr_to_b64(image_array)
-            json_dict = create_json(coords, image_size, filename, image_data)
+            json_dict = create_json(coords, image_size, image_data, image_path)
             with open(filename[:-7] + '.json', "w") as f:
                 print("The json file is created")
                 jason_str = json.dumps(json_dict)
