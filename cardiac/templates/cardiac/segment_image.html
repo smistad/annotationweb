@@ -78,6 +78,7 @@
                 <button id="addEDFrameButton" type="button" style="background-color: #CC3434">Mark ED</button>
                 <button id="addESFrameButton" type="button" style="background-color: #0077b3">Mark ES</button>
                 <button id="addNormalFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
+                <button id="removeFrameButton" type="button" title="Remove selected frame from annotations"><i class="fa fa-minus"></i></button>
             {% endif %}
             <button id="copyAnnotation" type="button" title="Copy annotation from previous frame"><i class="fa fa-copy"></i></button>
             <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>
@@ -120,6 +121,27 @@
             </div>
         {% endblock label_buttons %}
     </div>
+
+    {% block task_instructions %}
+    <button onclick=showHelp() title="Help with annotation" style="width: 12%">
+        <i class="fa fa-question" style="display: inline-block"></i></button>
+    <div id="help" style="font-size: 16px; display: none; float: right">
+        Left click to connect a new control point to the shape.<br>
+        Click on yellow control points to switch to that object.<br>
+        Double click on yellow control points to delete it.<br>
+        Hold mouse button on yellow control point to move it.<br>
+    </div>
+    <script>
+        function showHelp(){
+            var e = document.getElementById("help");
+            if (e.style.display === 'none'){
+                e.style.display = 'block';}
+            else{
+                e.style.display = 'none';}
+        }
+    </script>
+    {% endblock task_instructions %}
+
     <div>
     <h2>Comments</h2>
     <textarea id="comments" style="width: 100%; height: 100px">{{ comments }}</textarea>
@@ -130,6 +152,24 @@
 
     <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
 
+    <br>
+    <button onclick=showImageInfo() title="Image information" style="width: 7%">
+        <i class="fa fa-info"></i>
+    </button>
+    <div id="info">
+        <strong>Dataset:</strong> {{ image_sequence.subject.dataset.name }}
+        <strong>Subject:</strong> {{ image_sequence.subject.name }}<br>
+        <strong>Filename:</strong> {{ image_sequence.format }}<br>
+    </div>
+    <script>
+        function showImageInfo(){
+            var e = document.getElementById("info");
+            if (e.style.display === 'block'){
+                e.style.display = 'none';}
+            else{
+                e.style.display = 'block';}
+        }
+    </script>
 
     {% block task_content %}
     {% endblock %}

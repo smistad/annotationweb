@@ -147,7 +147,15 @@ function setupSegmentation() {
 
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
-        // TODO fix
+        g_controlPoints[g_currentFrameNr][g_currentObject].control_points = [];
+        redrawSequence();
+    });
+
+    $('#removeFrameButton').click(function() {
+        // Remove splines in this frame
+        if(g_currentFrameNr in g_controlPoints){
+            delete g_controlPoints[g_currentFrameNr];
+        }
         redrawSequence();
     });
 
@@ -535,29 +543,11 @@ function redraw(){
 
 }
 
-// Override redraw sequence in sequence.js
 function redrawSequence() {
     createMotionModeCanvas();
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     redraw();
-
-    // Draw motion mode line
-    g_context.beginPath();
-    g_context.setLineDash([]); // Clear
-    g_context.lineWidth = 8;
-    g_context.strokeStyle = colorToHexString(0, 255, 255);
-    // Draw solid line where it can be moved
-    g_context.moveTo(g_motionModeLine, 0);
-    g_context.lineTo(g_motionModeLine, g_canvasHeight/10);
-    g_context.stroke();
-    g_context.lineWidth = 2;
-    // Draw dashed line for the rest
-    g_context.setLineDash([5, 5]); // dashes are 5px and spaces are 5px
-    g_context.moveTo(g_motionModeLine, g_canvasHeight/10);
-    g_context.lineTo(g_motionModeLine, g_canvasHeight);
-    g_context.stroke();
-    g_context.setLineDash([]); // Clear
 }
 
 // Override of annotationweb.js
