@@ -175,6 +175,7 @@ class SplineLinePointExporter(Exporter):
 
         segmentation_mhd = MetaImage(data=segmentation)
         segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
+        segmentation_mhd.set_attribute('View', frame.image_annotation.comments)
         segmentation_mhd.set_attribute('FrameType', frame.frame_metadata)
         segmentation_mhd.set_spacing(spacing)
         metadata = ImageMetadata.objects.filter(image=frame.image_annotation.image)
