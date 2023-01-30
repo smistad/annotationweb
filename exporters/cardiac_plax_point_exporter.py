@@ -142,6 +142,8 @@ class CardiacPLAXPointExporter(Exporter):
             control_points1.append(control_points0[-2])
 
         with open(filename, 'w') as f:
+            f.write(f'FrameType {frame.frame_metadata}\n')
+            f.write(f'ImageQuality {frame.image_annotation.image_quality}\n')
             f.write(f'# Label: {control_points0[3].label.name}\n')
             for point in control_points0:
                 f.write(f'{point.x} {point.y}\n')
