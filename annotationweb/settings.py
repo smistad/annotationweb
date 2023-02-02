@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'spline_line_point',
     'cardiac_parasternal_long_axis',
     'cardiac_apical_long_axis',
+    'image_quality',
     'django_otp',
     'django_otp.plugins.otp_totp',
 ]
