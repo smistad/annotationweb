@@ -12,6 +12,22 @@ function setupRanking(categories) {
         });
         redrawSequence();
     });
+
+    $('#copyAnnotation').click(function() {
+        // Verify that we are on a target frame;
+        if(g_targetFrames.indexOf(g_currentFrameNr) < 0 || g_targetFrames.length === 1)
+            return;
+
+        // Find previous frame
+        var frame_index = g_targetFrames.findIndex(index => index === g_currentFrameNr);
+        var copy_index = frame_index - 1;
+        if(copy_index < 0)
+            return;
+
+        // Copy and potentially replace previous annotation
+        g_rankings[g_currentFrameNr] = JSON.parse(JSON.stringify(g_rankings[g_targetFrames[copy_index]])); // Hack for doing deep copy
+        redrawSequence();
+    });
 }
 
 function updateRanking(category_id, element) {
