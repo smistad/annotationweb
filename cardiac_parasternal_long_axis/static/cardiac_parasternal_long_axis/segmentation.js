@@ -89,10 +89,10 @@ function setupSegmentation() {
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var cursor = 'default';
-              if(g_move) {
+          if(g_move) {
             cursor = 'move';
             setControlPoint(g_pointToMove, g_currentObject, mouseX, mouseY);
-            redrawSequence();
+            redrawSequence(e);
         } else {
             if(!e.ctrlKey &&
                 g_currentFrameNr in g_controlPoints &&
@@ -405,8 +405,7 @@ function isPointOnSpline(pointX, pointY) {
     return -1;
 }
 
-
-function redraw(){
+function redraw(event){
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
 
@@ -625,15 +624,20 @@ function redraw(){
         g_context.setLineDash([]); // Clear
     }
 
+    if(g_move) {
+        // Zoom at mouse position when moving control points
+        zoomAtMousePosition(event);
+    }
 
 }
 
 // Override redraw sequence in sequence.js
-function redrawSequence() {
+function redrawSequence(event) {
     createMotionModeCanvas();
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
-    redraw();
+
+    redraw(event);
 
     // Draw motion mode line
     g_context.beginPath();
