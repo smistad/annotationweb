@@ -565,13 +565,8 @@ function imageDataToCanvas(imagedata) {
     return canvas;
 }
 
-function zoomAtMousePosition(event) {
-    if(event !== undefined) {
-        let scale = g_canvasWidth / $('#canvas').width();
-        let mouseX = (event.pageX - $('#canvas').offset().left) * scale;
-        let mouseY = (event.pageY - $('#canvas').offset().top) * scale;
-        // Have to convert imagedata to canvas for this to work
-        let background = g_context.getImageData(mouseX - 50, mouseY - 50, 100, 100);
-        g_context.drawImage(imageDataToCanvas(background), mouseX - 100, mouseY - 100, 200, 200);
-    }
+function zoomAtMousePosition(mouseX, mouseY) {
+    // Have to convert imagedata to canvas for this to work
+    let background = g_context.getImageData(mouseX - 50, mouseY - 50, 100, 100);
+    g_context.drawImage(imageDataToCanvas(background), mouseX - 100, mouseY - 100, 200, 200);
 }

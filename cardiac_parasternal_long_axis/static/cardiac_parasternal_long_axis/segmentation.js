@@ -20,6 +20,9 @@ var g_motionModeLine = -1;
 var g_moveMotionModeLIne = false;
 var g_targetFrameTypes = {};
 var g_currentLabel = -1;
+let g_zoom = false;
+let g_mousePositionX;
+let g_mousePositionY;
 
 function getLabelIdxWithId(id) {
     for(var i = 0; i < g_labelButtons.length; i++) {
@@ -84,12 +87,26 @@ function setupSegmentation() {
         redrawSequence();
     });
 
+    $(document).keydown(function(e) {
+        console.log(String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = true;
+        }
+    });
+    $(document).keyup(function(e) {
+        console.log('up', String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = false;
+        }
+    });
     $('#canvas').mousemove(function(e) {
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var cursor = 'default';
-          if(g_move) {
+        g_mousePositionX = mouseX;
+        g_mousePositionY = mouseY;
+        if(g_move) {
             cursor = 'move';
             setControlPoint(g_pointToMove, g_currentObject, mouseX, mouseY);
             redrawSequence(e);
@@ -623,12 +640,6 @@ function redraw(event){
         g_context.stroke();
         g_context.setLineDash([]); // Clear
     }
-
-    if(g_move) {
-        // Zoom at mouse position when moving control points
-        zoomAtMousePosition(event);
-    }
-
 }
 
 // Override redraw sequence in sequence.js
@@ -638,6 +649,11 @@ function redrawSequence(event) {
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
 
     redraw(event);
+    if(g_zoom) {
+        // Zoom at mouse position when moving control points
+        zoomAtMousePosition(g_mousePositionX, g_mousePositionY);
+    }
+
 
     // Draw motion mode line
     g_context.beginPath();
