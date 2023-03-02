@@ -50,55 +50,122 @@
   pk: 1
   fields:
     iq_task: 1
-    name: Basal Left
+    name: Basal Left Endocardium
+    placeholder_text: Endocardium
     image_position_x: 7
     image_position_y: 47
+    rankings: [1, 2, 3, 4, 5, 6]
+
+- model: image_quality.category
+  pk: 9
+  fields:
+    iq_task: 1
+    name: Basal Left Myocardium
+    placeholder_text: Myocardium
+    image_position_x: 7
+    image_position_y: 52
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
   pk: 2
   fields:
     iq_task: 1
-    name: Basal Right
+    name: Basal Right Endocardium
+    placeholder_text: Endocardium
     image_position_x: 73
     image_position_y: 47
+    rankings: [1, 2, 3, 4, 5, 6]
+
+
+- model: image_quality.category
+  pk: 10
+  fields:
+    iq_task: 1
+    name: Basal Right Myocardium
+    placeholder_text: Myocardium
+    image_position_x: 73
+    image_position_y: 52
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
   pk: 3
   fields:
     iq_task: 1
-    name: Mid Left
+    name: Mid Left Endocardium
+    placeholder_text: Endocardium
     image_position_x: 7
     image_position_y: 32
+    rankings: [1, 2, 3, 4, 5, 6]
+
+- model: image_quality.category
+  pk: 11
+  fields:
+    iq_task: 1
+    name: Mid Left Myocardium
+    placeholder_text: Myocardium
+    image_position_x: 7
+    image_position_y: 37
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
   pk: 4
   fields:
     iq_task: 1
-    name: Mid Right
+    name: Mid Right Endocardium
+    placeholder_text: Endocardium
     image_position_x: 73
     image_position_y: 29
+    rankings: [1, 2, 3, 4, 5, 6]
+
+- model: image_quality.category
+  pk: 12
+  fields:
+    iq_task: 1
+    name: Mid Right Myocardium
+    placeholder_text: Myocardium
+    image_position_x: 73
+    image_position_y: 34
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
   pk: 5
   fields:
     iq_task: 1
-    name: Apical Left
+    name: Apical Left Endocardium
+    placeholder_text: Endocardium
     image_position_x: 7
     image_position_y: 15
+    rankings: [1, 2, 3, 4, 5, 6]
+
+- model: image_quality.category
+  pk: 13
+  fields:
+    iq_task: 1
+    name: Apical Left Myocardium
+    placeholder_text: Myocardium
+    image_position_x: 7
+    image_position_y: 20
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
   pk: 6
   fields:
     iq_task: 1
-    name: Apical Right
+    name: Apical Right Endocardium
+    placeholder_text: Endocardium
     rankings: [1, 2, 3, 4, 5, 6]
     image_position_x: 73
     image_position_y: 15
+
+- model: image_quality.category
+  pk: 14
+  fields:
+    iq_task: 1
+    name: Apical Right Myocardium
+    placeholder_text: Myocardium
+    image_position_x: 73
+    image_position_y: 20
+    rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
   pk: 7
@@ -107,7 +174,7 @@
     name: Annulus Left
     rankings: [1, 2, 3, 4, 5, 6]
     image_position_x: 7
-    image_position_y: 60
+    image_position_y: 61
 
 - model: image_quality.category
   pk: 8
@@ -115,5 +182,5 @@
     iq_task: 1
     name: Annulus Right
     image_position_x: 73
-    image_position_y: 60
+    image_position_y: 61
     rankings: [1, 2, 3, 4, 5, 6]

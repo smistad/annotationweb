@@ -78,7 +78,7 @@
         {% for category in categories %}
             {% if category.image_position_x > 0 %}
             <select style="position: absolute; top: {{category.image_position_y}}%; left: {{category.image_position_x}}%;" onchange="updateRanking({{ category.id }}, this);" class="rank-select" data-id="{{ category.id }}">
-                <option value="-1" data-color="white"></option>
+                <option value="-1" data-color="gray" disabled>{{ category.placeholder_text }}</option>
                 {% for rank in category.rankings.all|dictsortreversed:'index' %}
                 <option value="{{ rank.id }}" data-color="{{ rank.color }}">{{ rank.name }}</option>
                 {% endfor %}

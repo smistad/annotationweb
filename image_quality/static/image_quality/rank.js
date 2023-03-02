@@ -12,6 +12,10 @@ function setupRanking(categories) {
         });
         redrawSequence();
     });
+    $("#removeFrameButton").click(function() {
+        delete g_rankings[g_currentFrameNr];
+        redrawSequence();
+    });
 
     $('#copyAnnotation').click(function() {
         // Verify that we are on a target frame;

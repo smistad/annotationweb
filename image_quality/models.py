@@ -23,6 +23,7 @@ class Category(models.Model):
     image_position_x = models.PositiveIntegerField(default=0)
     image_position_y = models.PositiveIntegerField(default=0)
     rankings = models.ManyToManyField(Rank)
+    placeholder_text = models.CharField(max_length=255, default='')
 
     def __str__(self):
         return self.name
