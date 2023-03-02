@@ -41,7 +41,8 @@ urlpatterns = [
     path('cardiac-plax/', include('cardiac_parasternal_long_axis.urls')),
     path('cardiac-alax/', include('cardiac_apical_long_axis.urls')),
     path('spline-segmentation/', include('spline_segmentation.urls')),
-    path('spline-line-point/', include('spline_line_point.urls'))
+    path('spline-line-point/', include('spline_line_point.urls')),
+    path('image-quality/', include('image_quality.urls')),
 ]
 
 # This is for making statics in a development environment
