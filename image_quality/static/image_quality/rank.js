@@ -6,9 +6,15 @@ function setupRanking(categories) {
     g_categories = categories;
     $('#addFrameButton').click(function() {
         g_rankings[g_currentFrameNr] = {}
-        g_categories.forEach((id) => {
-            console.log('category ids', id);
-            g_rankings[g_currentFrameNr][id] = -1;
+        Object.keys(g_categories).forEach((id) => {
+            let default_value = g_categories[id];
+            console.log('category ids', id, default_value);
+            if(default_value !== '') {
+                console.log('Got default value: ', default_value)
+                g_rankings[g_currentFrameNr][id] = default_value;
+            } else {
+                g_rankings[g_currentFrameNr][id] = -1;
+            }
         });
         redrawSequence();
     });

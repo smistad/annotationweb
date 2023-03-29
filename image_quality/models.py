@@ -24,6 +24,7 @@ class Category(models.Model):
     image_position_y = models.PositiveIntegerField(default=0)
     rankings = models.ManyToManyField(Rank)
     placeholder_text = models.CharField(max_length=255, default='')
+    default_rank = models.ForeignKey(Rank, blank=True, null=True, on_delete=models.CASCADE, related_name='default_rank') # If this is set, it will be the rank select by default
 
     def __str__(self):
         return self.name

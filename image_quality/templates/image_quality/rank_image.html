@@ -20,7 +20,9 @@
         );
     {% endif %}
 
-    setupRanking([{% for category in categories %}{{ category.id }},{% endfor %}]);
+    setupRanking({
+        {% for category in categories %}{{ category.id }}: '{{ category.default_rank.id }}',{% endfor %}
+    });
 
     {% for ranking in rankings %}
         if(!({{ ranking.annotation.frame_nr }} in g_rankings))
@@ -72,31 +74,36 @@
         <button id="imageListButton" onclick="javascript:window.location.href='{% url 'task' task.id %}'" title="Image list">List</button>
     </div>
 
-    <div id="rank">
     <form>
+        <div id="rank">
         <img src="{% static image_quality_task.image.url %}" style="max-width: 100%">
         {% for category in categories %}
             {% if category.image_position_x > 0 %}
-            <select style="position: absolute; top: {{category.image_position_y}}%; left: {{category.image_position_x}}%;" onchange="updateRanking({{ category.id }}, this);" class="rank-select" data-id="{{ category.id }}">
+            <select style="position: absolute; top: {{category.image_position_y}}%; left: {{category.image_position_x}}%;" onchange="updateRanking({{ category.id }}, this);" class="rank-select" data-id="{{ category.id }}" alt="Reverberations etc.">
                 <option value="-1" data-color="gray" disabled>{{ category.placeholder_text }}</option>
                 {% for rank in category.rankings.all|dictsortreversed:'index' %}
                 <option value="{{ rank.id }}" data-color="{{ rank.color }}">{{ rank.name }}</option>
                 {% endfor %}
             </select>
-            {% else %}
+            {% endif %}
+        {% endfor %}
+        </div>
+        <div>
+        {% for category in categories %}
+            {% if category.image_position_x == 0 %}
             <div>
                 <strong>{{  category.name }}</strong>
-                <select class="rank-select" data-id="{{ category.id }}">
-                    <option value="-1"></option>
+                <select onchange="updateRanking({{ category.id }}, this);" class="rank-select" data-id="{{ category.id }}">
+                    <option value="-1" data-color="gray" disabled>{{ category.placeholder_text }}</option>
                     {% for rank in category.rankings.all|dictsortreversed:'index' %}
-                    <option value="{{ rank.id }}">{{ rank.name }}</option>
+                        <option value="{{ rank.id }}" data-color="{{ rank.color }}">{{ rank.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             {% endif %}
         {% endfor %}
+        </div>
     </form>
-    </div>
 
     <div id="dialogConfirm">
         You have done changes to the annotation. <br>

@@ -46,6 +46,20 @@
     name: Out of sector
     color: '#737373'
 
+- model: image_quality.rank
+  pk: 7
+  fields:
+    index: 1
+    name: No artifact
+    color: '#e3db5e'
+
+- model: image_quality.rank
+  pk: 8
+  fields:
+    index: 0
+    name: Artifact
+    color: '#f22'
+
 - model: image_quality.category
   pk: 1
   fields:
@@ -53,7 +67,7 @@
     name: Basal Left Endocardium
     placeholder_text: Endocardium
     image_position_x: 7
-    image_position_y: 47
+    image_position_y: 45
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -63,7 +77,7 @@
     name: Basal Left Myocardium
     placeholder_text: Myocardium
     image_position_x: 7
-    image_position_y: 52
+    image_position_y: 50
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -73,7 +87,7 @@
     name: Basal Right Endocardium
     placeholder_text: Endocardium
     image_position_x: 73
-    image_position_y: 47
+    image_position_y: 45
     rankings: [1, 2, 3, 4, 5, 6]
 
 
@@ -84,7 +98,7 @@
     name: Basal Right Myocardium
     placeholder_text: Myocardium
     image_position_x: 73
-    image_position_y: 52
+    image_position_y: 50
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -94,7 +108,7 @@
     name: Mid Left Endocardium
     placeholder_text: Endocardium
     image_position_x: 7
-    image_position_y: 32
+    image_position_y: 26
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -104,7 +118,7 @@
     name: Mid Left Myocardium
     placeholder_text: Myocardium
     image_position_x: 7
-    image_position_y: 37
+    image_position_y: 31
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -114,7 +128,7 @@
     name: Mid Right Endocardium
     placeholder_text: Endocardium
     image_position_x: 73
-    image_position_y: 29
+    image_position_y: 26
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -124,7 +138,7 @@
     name: Mid Right Myocardium
     placeholder_text: Myocardium
     image_position_x: 73
-    image_position_y: 34
+    image_position_y: 31
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -134,7 +148,7 @@
     name: Apical Left Endocardium
     placeholder_text: Endocardium
     image_position_x: 7
-    image_position_y: 15
+    image_position_y: 7
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -144,7 +158,7 @@
     name: Apical Left Myocardium
     placeholder_text: Myocardium
     image_position_x: 7
-    image_position_y: 20
+    image_position_y: 12
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -155,7 +169,7 @@
     placeholder_text: Endocardium
     rankings: [1, 2, 3, 4, 5, 6]
     image_position_x: 73
-    image_position_y: 15
+    image_position_y: 7
 
 - model: image_quality.category
   pk: 14
@@ -164,7 +178,7 @@
     name: Apical Right Myocardium
     placeholder_text: Myocardium
     image_position_x: 73
-    image_position_y: 20
+    image_position_y: 12
     rankings: [1, 2, 3, 4, 5, 6]
 
 - model: image_quality.category
@@ -174,7 +188,7 @@
     name: Annulus Left
     rankings: [1, 2, 3, 4, 5, 6]
     image_position_x: 7
-    image_position_y: 61
+    image_position_y: 63
 
 - model: image_quality.category
   pk: 8
@@ -182,5 +196,85 @@
     iq_task: 1
     name: Annulus Right
     image_position_x: 73
-    image_position_y: 61
+    image_position_y: 63
     rankings: [1, 2, 3, 4, 5, 6]
+
+- model: image_quality.category
+  pk: 15
+  fields:
+    iq_task: 1
+    name: Basal Left Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 7
+    image_position_y: 55
+
+- model: image_quality.category
+  pk: 16
+  fields:
+    iq_task: 1
+    name: Basal Right Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 73
+    image_position_y: 55
+
+- model: image_quality.category
+  pk: 17
+  fields:
+    iq_task: 1
+    name: Annulus Left Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 7
+    image_position_y: 68
+
+- model: image_quality.category
+  pk: 18
+  fields:
+    iq_task: 1
+    name: Annulus Right Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 73
+    image_position_y: 68
+
+- model: image_quality.category
+  pk: 19
+  fields:
+    iq_task: 1
+    name: Mid Left Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 7
+    image_position_y: 36
+
+- model: image_quality.category
+  pk: 20
+  fields:
+    iq_task: 1
+    name: Mid Right Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 73
+    image_position_y: 36
+
+- model: image_quality.category
+  pk: 21
+  fields:
+    iq_task: 1
+    name: Apical Left Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 7
+    image_position_y: 17
+
+- model: image_quality.category
+  pk: 22
+  fields:
+    iq_task: 1
+    name: Apical Right Artifact
+    rankings: [7, 8]
+    default_rank: 7
+    image_position_x: 73
+    image_position_y: 17
