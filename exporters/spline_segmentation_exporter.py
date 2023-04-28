@@ -102,57 +102,8 @@ class SplineSegmentationExporter(Exporter):
         for label in labels:
             objects = ControlPoint.objects.filter(label=label, image=frame).only('object').distinct()
             for object in objects:
-                previous_x = None
-                previous_y = None
                 control_points = ControlPoint.objects.filter(label=label, image=frame, object=object.object).order_by('index')
-                max_index = len(control_points)
-                for i in range(max_index):
-                    if i == 0:
-                        first = max_index-1
-                    else:
-                        first = i-1
-                    a = control_points[first]
-                    b = control_points[i]
-                    c = control_points[(i+1) % max_index]
-                    d = control_points[(i+2) % max_index]
-                    length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
-                    # Not a very elegant solution ... could try to estimate the spline length instead
-                    # or draw straight lines between consecutive points instead
-                    step_size = min(0.01, 1.0 / (length*2))
-                    for t in np.arange(0, 1, step_size):
-                        x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
-                            (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
-                            (-2 * t * t * t + 3 * t * t) * c.x + \
-                            (1 - tension) * (t * t * t - t * t) * (d.x - b.x)
-                        y = (2 * t * t * t - 3 * t * t + 1) * b.y + \
-                            (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) + \
-                            (-2 * t * t * t + 3 * t * t) * c.y + \
-                            (1 - tension) * (t * t * t - t * t) * (d.y - b.y)
-
-                        # Round and snap to borders
-                        x = int(round(x))
-                        x = min(image_size[1]-1, max(0, x))
-                        y = int(round(y))
-                        y = min(image_size[0]-1, max(0, y))
-
-                        if previous_x is not None and (abs(previous_x - x) > 1 or abs(previous_y - y) > 1):
-                            # Draw a straight line between the points
-                            end_pos = np.array([x,y])
-                            start_pos = np.array([previous_x,previous_y])
-                            direction = end_pos - start_pos
-                            segment_length = np.linalg.norm(end_pos - start_pos)
-                            direction = direction / segment_length # Normalize
-                            for i in np.arange(0.0, np.ceil(segment_length), 0.5):
-                                current = start_pos + direction * (float(i)/np.ceil(segment_length))
-                                current = np.round(current).astype(np.int32)
-                                current[0] = min(image_size[1]-1, max(0, current[0]))
-                                current[1] = min(image_size[0]-1, max(0, current[1]))
-                                segmentation[current[1], current[0]] = counter
-
-                        previous_x = x
-                        previous_y = y
-
-                        segmentation[y, x] = counter
+                self.draw_segmentation(image_size, control_points, canvas=segmentation, label=counter)
 
             # Fill the hole
             segmentation[binary_fill_holes(segmentation == counter)] = counter
@@ -161,11 +112,98 @@ class SplineSegmentationExporter(Exporter):
 
         return segmentation
 
+    @staticmethod
+    def draw_segmentation(image_size, control_points, label: int = 1, canvas: np.ndarray = None, tension: float = 0.5):
+        if canvas is None:
+            canvas = np.zeros(image_size, dtype=np.uint8)
+
+        previous_x = None
+        previous_y = None
+
+        max_index = len(control_points)
+        for i in range(max_index):
+            if i == 0:
+                first = max_index - 1
+            else:
+                first = i - 1
+            a = control_points[first]
+            b = control_points[i]
+            c = control_points[(i + 1) % max_index]
+            d = control_points[(i + 2) % max_index]
+            length = sqrt((b.x - c.x) * (b.x - c.x) + (b.y - c.y) * (b.y - c.y))
+            # Not a very elegant solution ... could try to estimate the spline length instead
+            # or draw straight lines between consecutive points instead
+            step_size = min(0.01, 1.0 / (length * 2))
+            for t in np.arange(0, 1, step_size):
+                x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
+                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
+                    (-2 * t * t * t + 3 * t * t) * c.x + \
+                    (1 - tension) * (t * t * t - t * t) * (d.x - b.x)
+                y = (2 * t * t * t - 3 * t * t + 1) * b.y + \
+                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) + \
+                    (-2 * t * t * t + 3 * t * t) * c.y + \
+                    (1 - tension) * (t * t * t - t * t) * (d.y - b.y)
+
+                # Round and snap to borders
+                x = int(round(x))
+                x = min(image_size[1] - 1, max(0, x))
+                y = int(round(y))
+                y = min(image_size[0] - 1, max(0, y))
+
+                if previous_x is not None and (abs(previous_x - x) > 1 or abs(previous_y - y) > 1):
+                    # Draw a straight line between the points
+                    end_pos = np.array([x, y])
+                    start_pos = np.array([previous_x, previous_y])
+                    direction = end_pos - start_pos
+                    segment_length = np.linalg.norm(end_pos - start_pos)
+                    direction = direction / segment_length  # Normalize
+                    for i in np.arange(0.0, np.ceil(segment_length), 0.5):
+                        current = start_pos + direction * (float(i) / np.ceil(segment_length))
+                        current = np.round(current).astype(np.int32)
+                        current[0] = min(image_size[1] - 1, max(0, current[0]))
+                        current[1] = min(image_size[0] - 1, max(0, current[1]))
+                        canvas[current[1], current[0]] = label
+
+                previous_x = x
+                previous_y = y
+
+                canvas[y, x] = label
+
+        return canvas
+
+    @staticmethod
+    def compute_scaling(image_size, spacing):
+        if len(spacing) == 2:
+            aspect_ratio = image_size[0] / image_size[1]
+            new_aspect_ratio = image_size[0] * spacing[0] / (image_size[1] * spacing[1])
+            scale = new_aspect_ratio / aspect_ratio
+            pixel_scaling = np.divide(image_size, np.multiply(image_size, scale).astype(int))
+        else:
+            raise NotImplementedError('3D segmentations not implemented yet')
+        return pixel_scaling
+
     def save_segmentation(self, frame, image_size, filename, spacing):
         image_size = [image_size[1], image_size[0]]
 
-        # Create compounded segmentation object
-        segmentation = self.get_object_segmentation(image_size, frame)
+        if np.any(spacing != 1):
+            print('Anisotropic image detected')
+            segmentation = np.zeros(image_size, dtype=np.uint8)
+            labels = Label.objects.filter(task=frame.image_annotation.task).order_by('id')
+            scaling = self.compute_scaling(image_size, spacing)
+            # TODO: NotImplementedError will be triggered if we are dealing with 3D data
+            for label, label_id in enumerate(labels):
+                objects = ControlPoint.objects.filter(label=label_id, image=frame).only('object').distinct()
+                for object in objects:
+                    control_points = ControlPoint.objects.filter(label=label_id, image=frame, object=object.object).order_by('index')
+                    for point in control_points:
+                        point.x *= scaling[0]
+                    # Update segmentation
+                    object_segmentation = self.draw_segmentation(image_size, control_points)
+                    object_segmentation[binary_fill_holes(object_segmentation == 1)] = 1
+                    segmentation[object_segmentation == 1] = label + 1
+        else:
+            # Create compounded segmentation object
+            segmentation = self.get_object_segmentation(image_size, frame)
 
         segmentation_mhd = MetaImage(data=segmentation)
         segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
