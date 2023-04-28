@@ -77,6 +77,9 @@ class SplineSegmentationExporter(Exporter):
                 target_gt_name = os.path.splitext(target_name)[0]+"_gt.mhd"
 
                 filename = image_sequence.format.replace('#', str(frame.frame_nr))
+                image_metadata = None
+                if filename.endswith('mhd'):
+                    image_metadata = MetaImage(filename=filename)
                 new_filename = join(subject_subfolder, target_name)
                 copy_image(filename, new_filename)
 
@@ -89,7 +92,7 @@ class SplineSegmentationExporter(Exporter):
                     image_pil = PIL.Image.open(new_filename)
                     image_size = image_pil.size
                     spacing = [1, 1]
-                self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing)
+                self.save_segmentation(frame, image_size, join(subject_subfolder, target_gt_name), spacing, image_metadata)
 
         return True, path
 
@@ -182,7 +185,7 @@ class SplineSegmentationExporter(Exporter):
             raise NotImplementedError('3D segmentations not implemented yet')
         return pixel_scaling
 
-    def save_segmentation(self, frame, image_size, filename, spacing):
+    def save_segmentation(self, frame, image_size, filename, spacing, image_metadata: MetaImage = None):
         image_size = [image_size[1], image_size[0]]
 
         if np.any(spacing != 1):
@@ -206,7 +209,9 @@ class SplineSegmentationExporter(Exporter):
             segmentation = self.get_object_segmentation(image_size, frame)
 
         segmentation_mhd = MetaImage(data=segmentation)
-        segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
+        if image_metadata is not None:
+            segmentation_mhd.set_attribute('FrameType', image_metadata.get_metaimage_type())
+            segmentation_mhd.set_attribute('Offset', image_metadata.get_origin())
         segmentation_mhd.set_spacing(spacing)
         metadata = ImageMetadata.objects.filter(image=frame.image_annotation.image)
         for item in metadata:
