@@ -16,6 +16,9 @@
         <link rel="stylesheet" href="{% static 'annotationweb/jquery-ui.css' %}">
         <script src="{% static 'annotationweb/jquery-ui.min.js' %}"></script>
         <script src="{% static 'annotationweb/annotationweb.js' %}"></script>
+        {% for file in css_files %}
+            <link rel="stylesheet" type="text/css" href="{% static file %}">
+        {% endfor %}
         {% for file in javascript_files %}
         <script src="{% static file %}"></script>
         {% endfor %}

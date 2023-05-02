@@ -1,0 +1,166 @@
+{% extends 'annotationweb/two_column_layout.html' %}
+{% load static %}
+
+{% block javascript %}
+
+    initializeAnnotation({{ task.id }}, {{ image.id }});
+
+    {% if image_sequence %}
+        loadSequence(
+        {{ image_sequence.id }},
+        {{ image_sequence.start_frame_nr }},
+        {{ image_sequence.nr_of_frames }},
+        {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
+        {%  if task.user_frame_selection %}true{% else %}false{% endif %},
+        {%  if task.annotate_single_frame %}true{% else %}false{% endif %},
+        [ {% for frame_nr in frames %}{{ frame_nr }},{% endfor %}],
+        {{ task.frames_before }},
+        {{ task.frames_after }},
+        {% if task.auto_play %}true{% else %}false{% endif %}
+        );
+    {% endif %}
+
+    setupRanking({
+        {% for category in categories %}{{ category.id }}: '{{ category.default_rank.id }}',{% endfor %}
+    });
+
+    {% for ranking in rankings %}
+        if(!({{ ranking.annotation.frame_nr }} in g_rankings))
+            g_rankings[{{ ranking.annotation.frame_nr}}] = {};
+        g_rankings[{{ ranking.annotation.frame_nr }}][{{ ranking.category.id }}] = {{ ranking.selection.id }};
+    {% endfor %}
+
+    {% if return_url %}
+        setReturnURL('{{ return_url|safe }}');
+    {% endif %}
+
+{% endblock javascript %}
+
+{% block content_left %}
+
+    {% for message in messages %}
+        <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+    <div id="message"></div>
+
+    <h2>{{ task.name }}</h2>
+
+    {{ task.number_of_annotated_images }} of {{ task.total_number_of_images}} videos/images have been labeled ({{ task.percentage_finished }}%)
+
+    {% if image_sequence %}
+        <div id="progressbar"><div class="progress-label">Loading...</div></div>
+        <div id="sliderText">Drag the slider to view the other frames in the sequence. Current frame <span id="currentFrame"></span></div>
+        <div id="slider"></div>
+        <div class="actionButtons">
+            <button id="playButton" type="button"><i id="play" class="fa fa-play"></i></button>
+            {% if task.user_frame_selection %}
+                <button id="addFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
+                <button id="removeFrameButton" type="button" title="Remove selected frame from annotations"><i class="fa fa-minus"></i></button>
+            {% endif %}
+            <button id="copyAnnotation" type="button" title="Copy annotation from previous frame"><i class="fa fa-copy"></i></button>
+            <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>
+        </div>
+    {% endif %}
+     <div class="actionButtons">
+        {% if previous_image_id %}
+            <button onclick="javascript:changeImage('{% url 'annotate' task.id previous_image_id %}?{{ request.GET.urlencode }}');">Previous</button>
+        {% endif %}
+        {% if next_image_id %}
+            <button onclick="javascript:changeImage('{% url 'annotate' task.id next_image_id %}?{{ request.GET.urlencode }}');">Next</button>
+        {% endif %}
+        <button id="clearButton" title="Clear">Clear</button>
+        <button id="rejectButton" alt="By rejecting this image, it is removed from the dataset. You may write a comment below of why it was rejected." title="Save as rejected">Reject</button>
+        <button id="saveButton" title="Save">Save</button>
+        <button id="imageListButton" onclick="javascript:window.location.href='{% url 'task' task.id %}'" title="Image list">List</button>
+    </div>
+
+    <form>
+        <div id="rank">
+        <img src="{% static image_quality_task.image.url %}" style="max-width: 100%">
+        {% for category in categories %}
+            {% if category.image_position_x > 0 %}
+            <select style="position: absolute; top: {{category.image_position_y}}%; left: {{category.image_position_x}}%;" onchange="updateRanking({{ category.id }}, this);" class="rank-select" data-id="{{ category.id }}" alt="Reverberations etc.">
+                <option value="-1" data-color="gray" disabled>{{ category.placeholder_text }}</option>
+                {% for rank in category.rankings.all|dictsortreversed:'index' %}
+                <option value="{{ rank.id }}" data-color="{{ rank.color }}">{{ rank.name }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+        {% endfor %}
+        </div>
+        <div>
+        {% for category in categories %}
+            {% if category.image_position_x == 0 %}
+            <div>
+                <strong>{{  category.name }}</strong>
+                <select onchange="updateRanking({{ category.id }}, this);" class="rank-select" data-id="{{ category.id }}">
+                    <option value="-1" data-color="gray" disabled>{{ category.placeholder_text }}</option>
+                    {% for rank in category.rankings.all|dictsortreversed:'index' %}
+                        <option value="{{ rank.id }}" data-color="{{ rank.color }}">{{ rank.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </form>
+
+    <div id="dialogConfirm">
+        You have done changes to the annotation. <br>
+        Do you wish to save the changes before going to the next/previous image?
+    </div>
+
+    <br>
+    <div>
+        {% block task_instructions %}
+        {% endblock %}
+    </div>
+
+    <div>
+        <h3>Comments</h3>
+        <textarea id="comments" style="width: 100%; height: 100px">{{ comments }}</textarea>
+    </div>
+
+{% endblock content_left %}
+
+{% block content_right %}
+
+    <canvas id="canvas">Failed to show images. Canvas probably not supported in the browser.</canvas>
+
+    {% block task_content %}
+    {% endblock %}
+
+    <br>
+    <button onclick=showImageInfo() title="Image information" style="width: 7%">
+        <i class="fa fa-info"></i>
+    </button>
+    <div id="info">
+        <strong>Dataset:</strong> {{ image_sequence.subject.dataset.name }}
+        <strong>Subject:</strong> {{ image_sequence.subject.name }}<br>
+        <strong>Filename:</strong> {{ image_sequence.format }}<br>
+    </div>
+    <script>
+        function showImageInfo(){
+            var e = document.getElementById("info");
+            if (e.style.display === 'block'){
+                e.style.display = 'none';}
+            else{
+                e.style.display = 'block';}
+        }
+    </script>
+
+
+    {% if image.metadata_set.count > 0 %}
+        <h3>Image metadata</h3>
+        {% for metadata in image.metadata_set.all %}
+            <strong>{{ metadata.name }}:</strong> {{ metadata.value }}<br>
+        {% endfor %}
+    {% endif %}
+
+    {% if task.description|length > 0 %}
+        <h3>Task description</h3>
+
+        {{ task.description|safe }}
+    {% endif %}
+
+{% endblock content_right %}

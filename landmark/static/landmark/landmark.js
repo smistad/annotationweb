@@ -68,13 +68,19 @@ function setupLandmarkTask() {
 
 
     $("#clearButton").click(function() {
-        g_annotationHasChanged = true;
-        if(g_currentFrameNr in g_landmarks){
-            delete g_landmarks[g_currentFrameNr];
+        // Clear all annotations for the current label and frame
+
+        // Find label index
+        var labelText = $("#labelButton" + g_currentLabel).text();
+        if(confirm("Are you sure you wish to delete all landmarks of type " + labelText + " for ALL frames?")) {
+            g_annotationHasChanged = true;
+            for (var frame in g_landmarks) {
+                g_landmarks[frame] = g_landmarks[frame].filter(function (value, index, arr) {
+                    return value.label_id != g_currentLabel;
+                });
+            }
+            redrawSequence();
         }
-        g_landmarks[g_currentFrameNr] = [];
-        $('#slider').slider('value', g_frameNr); // Update slider
-        redrawSequence();
     });
 
     // Set first label active

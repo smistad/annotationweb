@@ -564,3 +564,18 @@ function changeImage(url) {
         window.location.href = url;
     }
 }
+
+function imageDataToCanvas(imagedata) {
+    var canvas = document.createElement('canvas');
+    canvas.width = imagedata.width;
+    canvas.height = imagedata.height;
+    var ctx = canvas.getContext('2d');
+    ctx.putImageData(imagedata, 0, 0);
+    return canvas;
+}
+
+function zoomAtMousePosition(mouseX, mouseY) {
+    // Have to convert imagedata to canvas for this to work
+    let background = g_context.getImageData(mouseX - 50, mouseY - 50, 100, 100);
+    g_context.drawImage(imageDataToCanvas(background), mouseX - 100, mouseY - 100, 200, 200);
+}
