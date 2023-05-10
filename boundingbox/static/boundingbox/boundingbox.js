@@ -259,21 +259,3 @@ function redrawSequence() {
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     redraw();
 }
-
-function copyToNext() {
-    // TODO: Check content of g_boxes[g_currentFrameNr+1] -> Is it empty/exist? Overwrite?
-    if (g_currentFrameNr < g_sequenceLength + 1) {
-        var boxes_to_copy = g_boxes[g_currentFrameNr];
-        for (var i = 0; i < boxes_to_copy.length; i++) {
-            addBox(g_currentFrameNr + 1, boxes_to_copy[i].x, boxes_to_copy[i].y,
-                boxes_to_copy[i].x + boxes_to_copy[i].width,
-                boxes_to_copy[i].y + boxes_to_copy[i].height,
-                boxes_to_copy[i].label_id);
-        }
-        //console.log(boxes_to_copy)
-        // Uncomment the next two lines if you want a confirmation message.
-        // Note that this message will stay until the site is refreshed
-        // var messageBox = document.getElementById("message");
-        // messageBox.innerHTML = '<span class="info">Content copied to the next frame!</span>';
-    }
-}

@@ -280,7 +280,6 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     }
     g_startFrame = start;
     g_sequenceLength = end-start;
-    console.log("Start frame = " + toString(g_startFrame) + ", sequence length = " + toString(g_sequenceLength));
 
     // Create slider
     $("#slider").slider(
