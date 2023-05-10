@@ -167,68 +167,6 @@ class SplineSegmentationExporter(Exporter):
                     'index')
                 segmentation, (coordinates, xy_new_temp) = self.draw_segmentation(image_size, control_points, counter,
                                                                                   segmentation, coordinates, xy_new_temp)
-                # previous_x = None
-                # previous_y = None
-                # xy = []
-                # control_points = ControlPoint.objects.filter(label=label, image=frame, object=object.object).order_by('index')
-                # max_index = len(control_points)
-                # for i in range(max_index):
-                #     if i == 0:
-                #         first = max_index-1
-                #     else:
-                #         first = i-1
-                #     a = control_points[first]
-                #     b = control_points[i]
-                #     c = control_points[(i+1) % max_index]
-                #     d = control_points[(i+2) % max_index]
-                #     length = sqrt((b.x - c.x)*(b.x - c.x) + (b.y - c.y)*(b.y - c.y))
-                #     # Not a very elegant solution ... could try to estimate the spline length instead
-                #     # or draw straight lines between consecutive points instead
-                #     step_size = min(0.01, 1.0 / (length*2))
-                #     for t in np.arange(0, 1, step_size):
-                #         x = (2 * t * t * t - 3 * t * t + 1) * b.x + \
-                #             (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) + \
-                #             (-2 * t * t * t + 3 * t * t) * c.x + \
-                #             (1 - tension) * (t * t * t - t * t) * (d.x - b.x)
-                #         y = (2 * t * t * t - 3 * t * t + 1) * b.y + \
-                #             (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) + \
-                #             (-2 * t * t * t + 3 * t * t) * c.y + \
-                #             (1 - tension) * (t * t * t - t * t) * (d.y - b.y)
-                #
-                #         # Round and snap to borders
-                #         x = int(round(x))
-                #         x = min(image_size[1]-1, max(0, x))
-                #         y = int(round(y))
-                #         y = min(image_size[0]-1, max(0, y))
-                #
-                #         if previous_x is not None and (abs(previous_x - x) > 1 or abs(previous_y - y) > 1):
-                #             # Draw a straight line between the points
-                #             end_pos = np.array([x,y])
-                #             start_pos = np.array([previous_x,previous_y])
-                #             direction = end_pos - start_pos
-                #             segment_length = np.linalg.norm(end_pos - start_pos)
-                #             direction = direction / segment_length # Normalize
-                #             for i in np.arange(0.0, np.ceil(segment_length), 0.5):
-                #                 current = start_pos + direction * (float(i)/np.ceil(segment_length))
-                #                 current = np.round(current).astype(np.int32)
-                #                 current[0] = min(image_size[1]-1, max(0, current[0]))
-                #                 current[1] = min(image_size[0]-1, max(0, current[1]))
-                #                 segmentation[current[1], current[0]] = counter
-                #
-                #         previous_x = x
-                #         previous_y = y
-                #
-                #         xy.append(previous_x)
-                #         xy.append(previous_y)
-                #
-                #         segmentation[y, x] = counter
-                #
-                #     xy_new = [xy[j:j + 2] for j in range(0, len(xy), 2)]
-                #
-                #     if i == max_index-1 and xy_new_temp != xy_new:
-                #         coordinates.append(xy_new)
-                #         coordinates.append(a.label)
-                #         xy_new_temp = xy_new
 
             # Fill the hole
             segmentation[binary_fill_holes(segmentation == counter)] = counter
@@ -366,7 +304,6 @@ class SplineSegmentationExporter(Exporter):
             segmentation_mhd = MetaImage(data=segmentation)
             segmentation_mhd.set_attribute('ImageQuality', frame.image_annotation.image_quality)
             if 'image_mhd' in locals():
-                segmentation_mhd.set_attribute('FrameType', image_mhd.get_metaimage_type())
                 segmentation_mhd.set_attribute('Offset', image_mhd.get_origin())
             segmentation_mhd.set_spacing(spacing)
             metadata = ImageMetadata.objects.filter(image=frame.image_annotation.image)
