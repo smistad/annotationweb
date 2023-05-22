@@ -16,6 +16,7 @@ class MetaImage:
         self.attributes = {}
         self.attributes['ElementSpacing'] = [1, 1, 1]
         self.attributes['ElementNumberOfChannels'] = 1
+        self.attributes['Offset'] = [0, 0]
         if filename is not None:
             self.read(filename)
         else:
@@ -48,6 +49,8 @@ class MetaImage:
                 self.attributes[parts[0].strip()] = parts[1].strip()
                 if parts[0].strip() == 'ElementSpacing':
                     self.attributes['ElementSpacing'] = [float(x) for x in self.attributes['ElementSpacing'].split()]
+                if parts[0].strip() == 'Offset':
+                    self.attributes['Offset'] = [float(x) for x in self.attributes['Offset'].split()]
 
         dims = self.attributes['DimSize'].split(' ')
         if len(dims) == 2:
@@ -73,7 +76,7 @@ class MetaImage:
             # Read uncompressed raw file (.raw)
             self.data = np.fromfile(os.path.join(base_path, self.attributes['ElementDataFile']), dtype=np.uint8)
 
-
+        # TODO: are L80-84 a duplicate of L55-59?
         dims = self.attributes['DimSize'].split(' ')
         if len(dims) == 2:
             self.dim_size = (int(dims[0]), int(dims[1]))
@@ -114,6 +117,14 @@ class MetaImage:
     def get_spacing(self):
         return self.attributes['ElementSpacing']
 
+    def set_origin(self, origin):
+        if len(origin) != 2 and len(origin) != 3:
+            raise ValueError('Origin must have 2 or 3 components')
+        self.attributes['Offset'] = origin
+
+    def get_origin(self):
+        return self.attributes['Offset']
+
     def get_metaimage_type(self):
         np_type = self.data.dtype
         if np_type == np.float32:
@@ -147,12 +158,13 @@ class MetaImage:
             f.write('ElementType = ' + self.get_metaimage_type() + '\n')
             f.write('ElementSpacing = ' + tuple_to_string(self.attributes['ElementSpacing']) + '\n')
             f.write('ElementNumberOfChannels = ' + str(self.attributes['ElementNumberOfChannels']) + '\n')
+            f.write('Offset = ' + tuple_to_string(self.attributes['Offset']) + '\n')
             if compress:
                 compressed_raw_data = zlib.compress(raw_data, compression_level)
                 f.write('CompressedData = True\n')
                 f.write('CompressedDataSize = ' + str(len(compressed_raw_data)) + '\n')
             for key, value in self.attributes.items():
-                if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize', 'ElementSpacing', 'ElementNumberOfChannels']:
+                if key not in ['NDims', 'DimSize', 'ElementType', 'ElementDataFile', 'CompressedData', 'CompressedDataSize', 'ElementSpacing', 'ElementNumberOfChannels', 'Offset']:
                     f.write(key + ' = ' + value + '\n')
             f.write('ElementDataFile = ' + raw_filename + '\n')
 
