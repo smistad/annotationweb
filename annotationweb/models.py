@@ -20,7 +20,7 @@ class Subject(models.Model):
         return self.dataset.name + ' - ' + self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ['dataset__name', 'name']
 
 
 class Label(models.Model):
