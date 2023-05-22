@@ -103,3 +103,11 @@ class ImageListForm(forms.Form):
                 widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
             )
 
+
+class CopyTaskForm(forms.Form):
+    name = forms.CharField(label='Task name', max_length=1000)
+    keep_image_quality = forms.BooleanField(label='Keep image quality', initial=False, required=False)
+
+    def __init__(self, task, data=None):
+        super().__init__(data=data)
+        self.fields['name'].initial = task.name + " Copy"
