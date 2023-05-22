@@ -1,8 +1,7 @@
 from django.contrib import messages
 from django.db import transaction
-from django.http import QueryDict
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import Http404
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
 from common.exporter import find_all_exporters
@@ -23,6 +22,7 @@ def get_task_statistics(tasks, user):
         # Check if user has processed any
         task.started = ImageAnnotation.objects.filter(task=task, user=user).count() > 0
         task.finished = task.number_of_annotated_images == task.total_number_of_images
+
 
 def index(request):
     context = {}
@@ -411,6 +411,7 @@ def subject_details(request, subject_id):
 
     return render(request, 'annotationweb/subject_details.html', {'subject': subject})
 
+
 @staff_member_required()
 def delete_sequence(request, sequence_id):
     try:
@@ -425,6 +426,7 @@ def delete_sequence(request, sequence_id):
         return redirect('subject_details', sequence.subject.id)
     else:
         return render(request, 'annotationweb/delete_sequence.html', {'sequence': sequence})
+
 
 def task_description(request, task_id):
     try:
@@ -656,45 +658,60 @@ def annotate_image(request, task_id, image_id):
     url = reverse(get_redirection(task), kwargs={'task_id': task.id, 'image_id': image_id})
     return redirect(url + '?' + request.GET.urlencode())
 
+
 @staff_member_required
 def copy_task(request, task_id):
     """This will only copy the task itself and key frames, not the annotations"""
     try:
         task = Task.objects.get(pk=task_id)
-        with transaction.atomic():
-            datasets = task.dataset.all() # Keep
-            labels = task.label.all() # Keep
-            task.pk = None # Set primary key to none to copy
-            task.name = task.name + ' Copy'
-            task.save()
-
-            # Must take care of relations here.. how?? Copy relations:
-            task.dataset.clear()
-            for dataset in datasets:
-                print(dataset)
-                task.dataset.add(dataset)
-            task.label.clear()
-            for label in labels:
-                print(label)
-                task.label.add(label)
-            task.user.clear() # Not keep
-            task.save()
-
-            # Copy all ImageAnnotation and KeyFrameAnnotations
-            for annotation in ImageAnnotation.objects.filter(task_id=task_id):
-                key_frames = KeyFrameAnnotation.objects.filter(image_annotation=annotation)
-                annotation.finished = False
-                annotation.pk = None # Set primary key to none to copy
-                annotation.task = task
-                annotation.save()
-                for key_frame in key_frames:
-                    key_frame.pk = None
-                    key_frame.image_annotation = annotation
-                    key_frame.save()
-        messages.success(request, 'Task copy complete')
-        return redirect('index')
     except Task.DoesNotExist:
-        return Http404('The Task does not exist')
-    except Exception as e:
-        messages.error(request, 'Error in copy: ' + str(e))
-        return redirect('index')
+        raise Http404('Task does not exist')
+
+    if request.method == 'POST':
+        form = CopyTaskForm(task=task, data=request.POST)
+        if form.is_valid():
+            print(form.cleaned_data)
+
+            with transaction.atomic():
+                datasets = task.dataset.all()  # Keep
+                labels = task.label.all()  # Keep
+                task.pk = None  # Set primary key to none to copy
+                task.name = form.cleaned_data['name']
+                task.save()
+
+                # Must take care of relations here.. how?? Copy relations:
+                task.dataset.clear()
+                for dataset in datasets:
+                    print(dataset)
+                    task.dataset.add(dataset)
+                task.label.clear()
+                for label in labels:
+                    print(label)
+                    task.label.add(label)
+                task.user.clear()  # Not keep
+                task.save()
+
+                # Copy all ImageAnnotation and KeyFrameAnnotations
+                for annotation in ImageAnnotation.objects.filter(task_id=task_id):
+                    key_frames = KeyFrameAnnotation.objects.filter(image_annotation=annotation)
+                    annotation.finished = False
+                    annotation.pk = None  # Set primary key to none to copy
+                    annotation.task = task
+
+                    if not form.cleaned_data['keep_image_quality']:
+                        annotation.image_quality = ""
+
+                    annotation.save()
+
+                    for key_frame in key_frames:
+                        key_frame.pk = None
+                        key_frame.image_annotation = annotation
+                        key_frame.save()
+            messages.success(request, 'Task copy complete')
+
+            return redirect('index')
+    else:
+        # Get unbound form
+        copy_task_form = CopyTaskForm(task=task)
+
+    return render(request, 'annotationweb/copy_task.html', {'form': copy_task_form, 'task': task})
