@@ -1,0 +1,11 @@
+{% extends 'annotationweb/one_column_layout.html' %}
+
+{% block content %}
+<form action="{% url 'copy_task' task.id %}" method="post">
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <input type="submit" value="Create" />
+</form>
+{% endblock %}
