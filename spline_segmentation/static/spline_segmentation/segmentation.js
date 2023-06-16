@@ -8,6 +8,12 @@ var g_labelToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
 var g_currentLabel = -1;
+let g_zoom = false;
+let g_mousePositionX;
+let g_mousePositionY;
+let g_zoomStatic = false;
+let g_mousePositionXStaticZoom;
+let g_mousePositionYStaticZoom;
 
 function getMaxObjectID() {
     var max = -1;
@@ -28,11 +34,18 @@ function setupSegmentation() {
             data = {label: g_labelButtons[g_currentLabel], control_points: []};
             g_controlPoints[g_currentFrameNr][g_currentObject] = data;
         }
-
-        var scale =  g_canvasWidth / $('#canvas').width();
+        console.log(g_zoom, g_canvasWidth, $('#canvas').width(), g_canvasHeight, $('#canvas').height())
+        var scale = g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
+
+        if(g_zoomStatic == true){
+            mouseX = g_mousePositionXStaticZoom - (g_mousePositionXStaticZoom - mouseX)/2;
+            mouseY = g_mousePositionYStaticZoom - (g_mousePositionYStaticZoom - mouseY)/2;
+        }
+
         var point = getClosestPoint(mouseX, mouseY);
+
         if(point !== false) {
             // Activate object of this point
             g_currentObject = point.object;
@@ -57,12 +70,35 @@ function setupSegmentation() {
         redrawSequence();
     });
 
+     $(document).keydown(function(e) {
+        console.log(String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = true;
+        }
+        if(String.fromCharCode(e.which) == 'S') {
+            if(g_zoomStatic == false) {
+                g_mousePositionXStaticZoom = g_mousePositionX;
+                g_mousePositionYStaticZoom = g_mousePositionY;
+            }
+            g_zoomStatic = true;
+        }
+    });
+    $(document).keyup(function(e) {
+        console.log('up', String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = false;
+        }
+        if(String.fromCharCode(e.which) == 'S') {
+            g_zoomStatic = false;
+        }
+    });
     $('#canvas').mousemove(function(e) {
         var scale =  g_canvasWidth / $('#canvas').width();
         var mouseX = (e.pageX - this.offsetLeft)*scale;
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var cursor = 'default';
-
+        g_mousePositionX = mouseX;
+        g_mousePositionY = mouseY;
 
         if(g_move) {
             cursor = 'move';
@@ -346,6 +382,15 @@ function redrawSequence() {
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     redraw();
+    if(g_zoom) {
+        // Zoom at mouse position when moving control points
+        zoomAtMousePosition(g_mousePositionX, g_mousePositionY);
+    }
+    if(g_zoomStatic) {
+        // Zoom at initial mouse position when moving control points
+        zoomAtMousePosition(g_mousePositionXStaticZoom, g_mousePositionYStaticZoom);
+    }
+
 }
 
 function getLabelIdxWithId(id) {
