@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.http import QueryDict
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import HttpResponseRedirect, HttpResponse, Http404, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
 from common.exporter import find_all_exporters
@@ -16,7 +16,7 @@ import os
 from .forms import *
 from .models import *
 from common.user import is_annotater
-
+import json
 
 def get_task_statistics(tasks, user):
     for task in tasks:
@@ -450,6 +450,8 @@ def task_description(request, task_id):
         url = reverse('spline_line_point:segment_image', args=[task_id])
     elif task.type == task.IMGAE_QUALITY:
         url = reverse('image_quality:rank_image', args=[task_id])
+    elif task.type == task.CALIPER:
+        url = reverse('caliper:measure_image', args=[task_id])
     else:
         raise NotImplementedError()
 
@@ -609,6 +611,8 @@ def get_redirection(task):
         return 'spline_line_point:segment_image'
     elif task.type == Task.IMAGE_QUALITY:
         return 'image_quality:rank_image'
+    elif task.type == Task.CALIPER:
+        return 'caliper:measure_image'
     else:
         raise NotImplementedError()
 
@@ -698,3 +702,13 @@ def copy_task(request, task_id):
     except Exception as e:
         messages.error(request, 'Error in copy: ' + str(e))
         return redirect('index')
+
+
+def get_ecg(request, image_sequence_id):
+    image = ImageSequence.objects.get(pk=image_sequence_id)
+    folder = os.path.dirname(image.format)
+    if os.path.exists(os.path.join(folder, 'ecg.json')):
+        with open(os.path.join(folder, 'ecg.json'), 'r') as f:
+            return JsonResponse(json.load(f))
+    else:
+        return HttpResponse('NO')

@@ -31,6 +31,7 @@ urlpatterns = [
     path('annotate/<int:task_id>/', views.annotate_next_image, name='annotate'),
     path('annotate/<int:task_id>/image/<int:image_id>/', views.annotate_image, name='annotate'),
     path('select-key-frames/<int:task_id>/image/<int:image_id>/', views.select_key_frames, name='select_key_frames'),
+    path('ecg/<int:image_sequence_id>/', views.get_ecg, name='get_ecg'),
 
     path('admin/', admin.site.urls),
     path('user/', include('user.urls')),
@@ -43,6 +44,7 @@ urlpatterns = [
     path('spline-segmentation/', include('spline_segmentation.urls')),
     path('spline-line-point/', include('spline_line_point.urls')),
     path('image-quality/', include('image_quality.urls')),
+    path('caliper/', include('caliper.urls')),
 ]
 
 # This is for making statics in a development environment
