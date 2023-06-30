@@ -146,8 +146,9 @@ class CaliperExporter(Exporter):
 
         json_dict = {
             'annotator': frame.image_annotation.user.username,
+            'date': frame.image_annotation.date,
             'image_quality': frame.image_annotation.image_quality,
             'objects': objects,
         }
         with open(filename, 'w') as f:
-            json.dump(json_dict, f, indent=4)
+            json.dump(json_dict, f, indent=4, default=str)

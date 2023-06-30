@@ -32,6 +32,7 @@ urlpatterns = [
     path('annotate/<int:task_id>/image/<int:image_id>/', views.annotate_image, name='annotate'),
     path('select-key-frames/<int:task_id>/image/<int:image_id>/', views.select_key_frames, name='select_key_frames'),
     path('ecg/<int:image_sequence_id>/', views.get_ecg, name='get_ecg'),
+    path('image-spacing/<int:image_sequence_id>/', views.get_spacing, name='get_spacing'),
 
     path('admin/', admin.site.urls),
     path('user/', include('user.urls')),

@@ -28,7 +28,7 @@ function setup() {
 
     // Define event callbacks
     $('#canvas').mousedown(function(e) {
-        if(e.ctrlKey && g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length >= 3) { // Create new object if ctrl key is held down AND current object has more than 2 points
+        if(e.ctrlKey && g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length >= 2) { // Create new object if ctrl key is held down AND current object has more than 1 points
             g_currentObject = getMaxObjectID()+1;
             data = {label: g_labelButtons[g_currentLabel], control_points: []};
             g_controlPoints[g_currentFrameNr][g_currentObject] = data;
@@ -49,11 +49,11 @@ function setup() {
             g_pointToMove = point.index;
             g_labelToMove = point.label_idx;
         } else {
-            var section = isPointOnSpline(mouseX, mouseY);
+            var section = isPointOnLine(mouseX, mouseY);
             if(section >= 0) {
                 // Insert point
                 insertControlPoint(mouseX, mouseY, g_labelButtons[g_currentLabel].id, section);
-            } else {
+            } else if(g_isPlaying === false) {
                 addControlPointsForNewFrame(g_currentFrameNr);
                 // Add point at end
                 addControlPoint(mouseX, mouseY, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
@@ -80,8 +80,8 @@ function setup() {
                 g_currentFrameNr in g_controlPoints &&
                 g_currentObject in g_controlPoints[g_currentFrameNr] &&
                 g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length > 0 &&
-                isPointOnSpline(mouseX, mouseY) < 0) {
-                // If mouse is not close to spline, draw dotted drawing line
+                isPointOnLine(mouseX, mouseY) < 0) {
+                // If mouse is not close to line, draw dotted drawing line
                 var line = {
                     x0: getControlPoint(-1, g_currentObject).x,
                     y0: getControlPoint(-1, g_currentObject).y,
@@ -145,7 +145,7 @@ function setup() {
     });
 
     $('#removeFrameButton').click(function() {
-        // Remove splines in this frame
+        // Remove lines in this frame
         if(g_currentFrameNr in g_controlPoints){
             delete g_controlPoints[g_currentFrameNr];
         }
@@ -174,6 +174,7 @@ function addControlPointsForNewFrame(frameNr) {
     if(frameNr in g_controlPoints) // Already exists
         return;
     g_controlPoints[frameNr] = {};
+    addKeyFrame(frameNr);
 }
 
 function loadSegmentationTask(image_sequence_id) {
@@ -183,13 +184,13 @@ function loadSegmentationTask(image_sequence_id) {
     g_backgroundImage.onload = function() {
         g_canvasWidth = this.width;
         g_canvasHeight = this.height;
-        $.get('/caliper/spacing/' + image_sequence_id + '/', function(data, status) {
-            console.log('spacing ajax:');
-            console.log(data);
-            parts = data.split(';')
-            //g_spacingX = parseFloat(parts[0]);
-            g_spacingY = parseFloat(parts[1]);
-            g_spacingX = g_spacingY; // Image is made isotropic before sent, see common/utility.py:get_image_as_http_response
+        $.get('/image-spacing/' + image_sequence_id + '/', function(data, status, xhr) {
+            if(xhr.status === 200) {
+                let parts = data.split(';')
+                //g_spacingX = parseFloat(parts[0]);
+                g_spacingY = parseFloat(parts[1]);
+                g_spacingX = g_spacingY; // Image is made isotropic before sent, see common/utility.py:get_image_as_http_response
+            }
         }).done(function() {
             setup();
         });
@@ -266,27 +267,21 @@ function setControlPoint(index, object, x, y) {
     g_controlPoints[g_currentFrameNr][object].control_points[index].y = y;
 }
 
-function isPointOnSpline(pointX, pointY) {
+function isPointOnLine(pointX, pointY) {
     for(var object in g_controlPoints[g_currentFrameNr]) {
-        for (var i = 0; i < g_controlPoints[g_currentFrameNr][object].control_points.length; ++i) {
-            var a = getControlPoint(max(0, i - 1), object);
-            var b = getControlPoint(i, object);
-            var c = getControlPoint(min(g_controlPoints[g_currentFrameNr][object].control_points.length - 1, i + 1), object);
-            var d = getControlPoint(min(g_controlPoints[g_currentFrameNr][object].control_points.length - 1, i + 2), object);
+        for (var i = 0; i < g_controlPoints[g_currentFrameNr][object].control_points.length-1; ++i) {
+            var a = g_controlPoints[g_currentFrameNr][object].control_points[i];
+            var b = g_controlPoints[g_currentFrameNr][object].control_points[i+1];
 
-            var step = 0.1;
-            var tension = 0.5;
-            for (var t = 0.0; t < 1; t += step) {
-                var x =
-                    (2 * t * t * t - 3 * t * t + 1) * b.x +
-                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) +
-                    (-2 * t * t * t + 3 * t * t) * c.x +
-                    (1 - tension) * (t * t * t - t * t) * (d.x - b.x);
-                var y =
-                    (2 * t * t * t - 3 * t * t + 1) * b.y +
-                    (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) +
-                    (-2 * t * t * t + 3 * t * t) * c.y +
-                    (1 - tension) * (t * t * t - t * t) * (d.y - b.y);
+            let distance = Math.sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y))
+            let directionX = (b.x - a.x) / distance;
+            let directionY = (b.y - a.y) / distance;
+
+
+            for (let t = 0.0; t < distance; t += 0.5) {
+                let x = a.x + directionX*t;
+                let y = a.y + directionY*t;
+
                 if (Math.sqrt((pointX - x) * (pointX - x) + (pointY - y) * (pointY - y)) < g_moveDistanceThreshold) {
                     return i;
                 }
@@ -389,37 +384,6 @@ function changeLabel(label_id) {
         }
     }
 }
-
-function drawSpline(pointList, step_size, tension){
-    var a = pointList[0];
-    var b = pointList[1];
-    var c = pointList[2];
-    var d = pointList[3];
-
-    prev_x = -1;
-    prev_y = -1;
-
-    for(var t = 0.0; t < 1; t += step_size) {
-        var x = (2 * t * t * t - 3 * t * t + 1) * b.x +
-                (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.x - a.x) +
-                (-2 * t * t * t + 3 * t * t) * c.x +
-                (1 - tension) * (t * t * t - t * t) * (d.x - b.x);
-        var y = (2 * t * t * t - 3 * t * t + 1) * b.y +
-                (1 - tension) * (t * t * t - 2.0 * t * t + t) * (c.y - a.y) +
-                (-2 * t * t * t + 3 * t * t) * c.y +
-                (1 - tension) * (t * t * t - t * t) * (d.y - b.y);
-
-        // Draw line
-        if(prev_x >= 0) {
-            g_context.moveTo(prev_x, prev_y);
-            g_context.lineTo(x, y);
-            g_context.stroke();
-        }
-        prev_x = x;
-        prev_y = y;
-    }
-}
-
 
 function sendDataForSave() {
     return $.ajax({

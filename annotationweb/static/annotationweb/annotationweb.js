@@ -423,6 +423,14 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             } else {
                 goToFrame(g_currentFrameNr + 1);
             }
+        } else if(event.which === 32) { // Space
+            if($("textarea").is(":focus")){
+                // Input and text area has focus, do nothing
+            } else {
+                setPlayButton(!g_isPlaying) ;
+                incrementFrame();
+                event.preventDefault();
+            }
         }
     });
 

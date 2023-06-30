@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect, HttpResponse, Http404, JsonRespons
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
 from common.exporter import find_all_exporters
+from common.metaimage import MetaImage
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
 from common.search_filters import SearchFilter
@@ -712,3 +713,12 @@ def get_ecg(request, image_sequence_id):
             return JsonResponse(json.load(f))
     else:
         return HttpResponse('NO')
+
+
+def get_spacing(request, image_sequence_id):
+    image = ImageSequence.objects.get(pk=image_sequence_id)
+    filename = image.format.replace('#', str(image.start_frame_nr))
+    if not filename.endswith('mhd'):
+        return Http404(f'Can only get spacing from mhd image')
+    metaimage = MetaImage(filename=filename)
+    return HttpResponse(f'{metaimage.get_spacing()[0]};{metaimage.get_spacing()[1]}', content_type="text/plain")

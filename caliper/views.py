@@ -38,10 +38,6 @@ def measure_image(request, task_id, image_id):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
-def show(request):
-    ...
-
-
 def save(request):
     error_messages = ''
 
@@ -85,12 +81,3 @@ def save(request):
 
     return JsonResponse(response)
 
-
-def get_spacing(request, image_sequence_id):
-    print('Getting spacing!!')
-    image = ImageSequence.objects.get(pk=image_sequence_id)
-    filename = image.format.replace('#', str(image.start_frame_nr))
-    if not filename.endswith('mhd'):
-        raise RuntimeError('Can only get spacing from mhd image')
-    metaimage = MetaImage(filename=filename)
-    return HttpResponse(f'{metaimage.get_spacing()[0]};{metaimage.get_spacing()[1]}', content_type="text/plain")
