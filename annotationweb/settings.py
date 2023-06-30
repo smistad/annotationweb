@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'cardiac_parasternal_long_axis',
     'cardiac_apical_long_axis',
     'image_quality',
+    'caliper',
     'django_otp',
     'django_otp.plugins.otp_totp',
 ]
