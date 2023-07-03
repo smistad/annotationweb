@@ -85,9 +85,9 @@ function goToFrame(frameNr) {
                 // Draw current frame line on ECG
                 ctx.beginPath();
                 ctx.strokeStyle = 'red';
-                ctx.lineWidth = 5;
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, ctx.canvas.height);
+                ctx.lineWidth = 2;
+                ctx.moveTo((i/g_ecgData.length)*ctx.canvas.width, 0);
+                ctx.lineTo((i/g_ecgData.length)*ctx.canvas.width, ctx.canvas.height);
                 ctx.stroke();
                 break;
             }
@@ -265,16 +265,17 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
                 if(g_ecgData[i]['value'] > g_ecgMax)
                     g_ecgMax = g_ecgData[i]['value'];
             }
-            console.log(g_ecgMin, g_ecgMax)
 
             // Create ECG plot
             // Create canvas
             var sequenceDiv = document.getElementById('slider');
             var canvas = document.createElement('canvas');
             sequenceDiv.before(canvas);
-            canvas.setAttribute('width', g_ecgData.length);
-            canvas.setAttribute('height', g_ecgMax - g_ecgMin);
-            canvas.setAttribute('style', 'width: 100%; height: 100px;');
+            let canvasHeight = 100;
+            canvas.setAttribute('width', $('#contentLeft').width());
+            canvas.setAttribute('height', canvasHeight);
+            canvas.setAttribute('id', 'ecgCanvas');
+            canvas.setAttribute('style', 'width: 100%; height: ' + canvasHeight + 'px;');
             // IE stuff
             if (typeof G_vmlCanvasManager != 'undefined') {
                 canvas = G_vmlCanvasManager.initElement(canvas);
@@ -622,15 +623,17 @@ function zoomAtMousePosition(mouseX, mouseY) {
 
 function drawECG() {
     let ctx = g_ecgContext;
+    ctx.canvas.setAttribute('width', $('#ecgCanvas').width());
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     ctx.beginPath();
     ctx.strokeStyle = 'lightgreen';
-    ctx.lineWidth = 5;
-    ctx.moveTo(0, ctx.canvas.height - g_ecgData[0]['value'] + g_ecgMin);
+    ctx.lineWidth = 2;
+    let pad = (g_ecgMax-g_ecgMin)*0.05;
+    ctx.lineTo(0, (1.0-(g_ecgData[0]['value'] - g_ecgMin+pad)/(g_ecgMax - g_ecgMin + 2*pad))*ctx.canvas.height);
     for (let i = 1; i < g_ecgData.length; ++i) {
-        ctx.lineTo(i, ctx.canvas.height - g_ecgData[i]['value'] + g_ecgMin);
+        ctx.lineTo((i/g_ecgData.length)*ctx.canvas.width, (1.0-(g_ecgData[i]['value'] - g_ecgMin+pad)/(g_ecgMax - g_ecgMin + 2*pad))*ctx.canvas.height);
     }
     ctx.stroke();
 }
