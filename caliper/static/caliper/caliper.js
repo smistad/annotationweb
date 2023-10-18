@@ -8,9 +8,6 @@ var g_labelToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
 var g_currentLabel = -1;
-var g_zoom = false;
-let g_mousePositionX;
-let g_mousePositionY;
 let g_spacingX = 1;
 let g_spacingY = 1;
 
@@ -68,9 +65,6 @@ function setup() {
         var mouseY = (e.pageY - this.offsetTop)*scale;
         var cursor = 'default';
 
-        g_mousePositionX = mouseX;
-        g_mousePositionY = mouseY;
-
         if(g_move) {
             cursor = 'move';
             setControlPoint(g_pointToMove, g_currentObject, mouseX, mouseY);
@@ -106,19 +100,6 @@ function setup() {
     $('#canvas').mouseleave(function(e) {
         g_drawLine = false;
         redrawSequence();
-    });
-
-    $(document).keydown(function(e) {
-        console.log(String.fromCharCode(e.which));
-        if(String.fromCharCode(e.which) == 'Z') {
-            g_zoom = true;
-        }
-    });
-    $(document).keyup(function(e) {
-        console.log('up', String.fromCharCode(e.which));
-        if(String.fromCharCode(e.which) == 'Z') {
-            g_zoom = false;
-        }
     });
 
     $('#canvas').dblclick(function(e) {

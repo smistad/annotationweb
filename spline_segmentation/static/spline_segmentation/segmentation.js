@@ -346,6 +346,10 @@ function redrawSequence() {
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     redraw();
+   if(g_zoom) {
+        // Zoom at mouse position when moving control points
+        zoomAtMousePosition(g_mousePositionX, g_mousePositionY);
+    }
 }
 
 function getLabelIdxWithId(id) {

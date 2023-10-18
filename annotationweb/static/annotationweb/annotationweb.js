@@ -26,6 +26,7 @@ var g_ecgData;
 var g_ecgMin;
 var g_ecgMax;
 var g_ecgContext;
+var g_zoom = false;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -407,6 +408,28 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
             }
         }
         event.preventDefault();
+    });
+
+    $(document).keydown(function(e) {
+        console.log(String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = true;
+        }
+    });
+    $(document).keyup(function(e) {
+        console.log('up', String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = false;
+        }
+    });
+
+    $('#canvas').mousemove(function(e) {
+        var scale = g_canvasWidth / $('#canvas').width();
+        var mouseX = (e.pageX - this.offsetLeft) * scale;
+        var mouseY = (e.pageY - this.offsetTop) * scale;
+
+        g_mousePositionX = mouseX;
+        g_mousePositionY = mouseY;
     });
 
     // Arrow key pressed
