@@ -449,7 +449,7 @@ def task_description(request, task_id):
         url = reverse('cardiac_apical_long_axis:segment_image', args=[task_id])
     elif task.type == task.SPLINE_LINE_POINT:
         url = reverse('spline_line_point:segment_image', args=[task_id])
-    elif task.type == task.IMGAE_QUALITY:
+    elif task.type == task.IMAGE_QUALITY:
         url = reverse('image_quality:rank_image', args=[task_id])
     elif task.type == task.CALIPER:
         url = reverse('caliper:measure_image', args=[task_id])
