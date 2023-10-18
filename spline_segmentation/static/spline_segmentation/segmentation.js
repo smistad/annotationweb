@@ -48,10 +48,12 @@ function setupSegmentation() {
             if(section >= 0) {
                 // Insert point
                 insertControlPoint(mouseX, mouseY, g_labelButtons[g_currentLabel].id, section);
-            } else {
-                addControlPointsForNewFrame(g_currentFrameNr);
-                // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
+            } else if(g_isPlaying === false) {
+                if(g_targetFrames.includes(g_currentFrameNr)) {
+                    addControlPointsForNewFrame(g_currentFrameNr);
+                    // Add point at end
+                    addControlPoint(mouseX, mouseY, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
+                }
             }
         }
         redrawSequence();
