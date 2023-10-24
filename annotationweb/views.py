@@ -1,10 +1,12 @@
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import render, redirect
-from django.http import Http404
+
+from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
 from common.exporter import find_all_exporters
+from common.metaimage import MetaImage
 from common.utility import get_image_as_http_response
 from common.importer import find_all_importers
 from common.search_filters import SearchFilter
@@ -15,6 +17,7 @@ import os
 from .forms import *
 from .models import *
 from common.user import is_annotater
+import json
 
 
 def get_task_statistics(tasks, user):
@@ -450,8 +453,10 @@ def task_description(request, task_id):
         url = reverse('cardiac_apical_long_axis:segment_image', args=[task_id])
     elif task.type == task.SPLINE_LINE_POINT:
         url = reverse('spline_line_point:segment_image', args=[task_id])
-    elif task.type == task.IMGAE_QUALITY:
+    elif task.type == task.IMAGE_QUALITY:
         url = reverse('image_quality:rank_image', args=[task_id])
+    elif task.type == task.CALIPER:
+        url = reverse('caliper:measure_image', args=[task_id])
     else:
         raise NotImplementedError()
 
@@ -611,6 +616,8 @@ def get_redirection(task):
         return 'spline_line_point:segment_image'
     elif task.type == Task.IMAGE_QUALITY:
         return 'image_quality:rank_image'
+    elif task.type == Task.CALIPER:
+        return 'caliper:measure_image'
     else:
         raise NotImplementedError()
 
@@ -664,54 +671,73 @@ def copy_task(request, task_id):
     """This will only copy the task itself and key frames, not the annotations"""
     try:
         task = Task.objects.get(pk=task_id)
+
+        if request.method == 'POST':
+            form = CopyTaskForm(task=task, data=request.POST)
+            if form.is_valid():
+                with transaction.atomic():
+                    datasets = task.dataset.all()  # Keep
+                    labels = task.label.all()  # Keep
+                    task.pk = None  # Set primary key to none to copy
+                    task.name = form.cleaned_data['name']
+                    task.save()
+
+                    # Must take care of relations here.. how?? Copy relations:
+                    task.dataset.clear()
+                    for dataset in datasets:
+                        print(dataset)
+                        task.dataset.add(dataset)
+                    task.label.clear()
+                    for label in labels:
+                        print(label)
+                        task.label.add(label)
+                    task.user.clear()  # Not keep
+                    task.save()
+
+                    # Copy all ImageAnnotation and KeyFrameAnnotations
+                    for annotation in ImageAnnotation.objects.filter(task_id=task_id):
+                        key_frames = KeyFrameAnnotation.objects.filter(image_annotation=annotation)
+                        annotation.finished = False
+                        annotation.pk = None  # Set primary key to none to copy
+                        annotation.task = task
+
+                        if not form.cleaned_data['keep_image_quality']:
+                            annotation.image_quality = ""
+
+                        annotation.save()
+
+                        for key_frame in key_frames:
+                            key_frame.pk = None
+                            key_frame.image_annotation = annotation
+                            key_frame.save()
+                messages.success(request, 'Task copy complete')
+                return redirect('index')
+        else:
+            # Get unbound form
+            copy_task_form = CopyTaskForm(task=task)
+
+        return render(request, 'annotationweb/copy_task.html', {'form': copy_task_form, 'task': task})
     except Task.DoesNotExist:
         raise Http404('Task does not exist')
+    except Exception as e:
+        messages.error(request, 'Error in copy: ' + str(e))
+        return redirect('index')
 
-    if request.method == 'POST':
-        form = CopyTaskForm(task=task, data=request.POST)
-        if form.is_valid():
-            print(form.cleaned_data)
 
-            with transaction.atomic():
-                datasets = task.dataset.all()  # Keep
-                labels = task.label.all()  # Keep
-                task.pk = None  # Set primary key to none to copy
-                task.name = form.cleaned_data['name']
-                task.save()
-
-                # Must take care of relations here.. how?? Copy relations:
-                task.dataset.clear()
-                for dataset in datasets:
-                    print(dataset)
-                    task.dataset.add(dataset)
-                task.label.clear()
-                for label in labels:
-                    print(label)
-                    task.label.add(label)
-                task.user.clear()  # Not keep
-                task.save()
-
-                # Copy all ImageAnnotation and KeyFrameAnnotations
-                for annotation in ImageAnnotation.objects.filter(task_id=task_id):
-                    key_frames = KeyFrameAnnotation.objects.filter(image_annotation=annotation)
-                    annotation.finished = False
-                    annotation.pk = None  # Set primary key to none to copy
-                    annotation.task = task
-
-                    if not form.cleaned_data['keep_image_quality']:
-                        annotation.image_quality = ""
-
-                    annotation.save()
-
-                    for key_frame in key_frames:
-                        key_frame.pk = None
-                        key_frame.image_annotation = annotation
-                        key_frame.save()
-            messages.success(request, 'Task copy complete')
-
-            return redirect('index')
+def get_ecg(request, image_sequence_id):
+    image = ImageSequence.objects.get(pk=image_sequence_id)
+    folder = os.path.dirname(image.format)
+    if os.path.exists(os.path.join(folder, 'ecg.json')):
+        with open(os.path.join(folder, 'ecg.json'), 'r') as f:
+            return JsonResponse(json.load(f))
     else:
-        # Get unbound form
-        copy_task_form = CopyTaskForm(task=task)
+        return HttpResponse('NO')
 
-    return render(request, 'annotationweb/copy_task.html', {'form': copy_task_form, 'task': task})
+
+def get_spacing(request, image_sequence_id):
+    image = ImageSequence.objects.get(pk=image_sequence_id)
+    filename = image.format.replace('#', str(image.start_frame_nr))
+    if not filename.endswith('mhd'):
+        return Http404(f'Can only get spacing from mhd image')
+    metaimage = MetaImage(filename=filename)
+    return HttpResponse(f'{metaimage.get_spacing()[0]};{metaimage.get_spacing()[1]}', content_type="text/plain")

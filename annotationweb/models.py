@@ -47,6 +47,7 @@ class Task(models.Model):
     IMAGE_QUALITY = 'image_quality'
     SPLINE_SEGMENTATION = 'spline_segmentation'
     SPLINE_LINE_POINT = 'spline_line_point'
+    CALIPER = 'caliper'
     TASK_TYPES = (
         (CLASSIFICATION, 'Classification'),
         (BOUNDING_BOX, 'Bounding box'),
@@ -57,6 +58,7 @@ class Task(models.Model):
         (SPLINE_SEGMENTATION, 'Spline segmentation'),
         (SPLINE_LINE_POINT, 'Splines, lines & point segmentation'),
         (IMAGE_QUALITY, 'Image Quality'),
+        (CALIPER, 'Caliper'),
     )
 
     name = models.CharField(max_length=200)

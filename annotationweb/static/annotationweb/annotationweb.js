@@ -22,6 +22,11 @@ var g_targetFrames = []; // Frames to annotate
 var g_currentTargetFrameIndex = -1; // Index of current target frame (g_targetFrames), -1 if not on target frame
 var g_shiftKeyPressed = false;
 var g_userFrameSelection = false;
+var g_ecgData;
+var g_ecgMin;
+var g_ecgMax;
+var g_ecgContext;
+var g_zoom = false;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -44,16 +49,8 @@ function mousePos(e, canvas) {
 function incrementFrame() {
     if(!g_isPlaying) // If this is set to false, stop playing
         return;
-    g_currentFrameNr = ((g_currentFrameNr-g_startFrame) + 1) % g_framesLoaded + g_startFrame;
-    var marker_index = g_targetFrames.findIndex(index => index === g_currentFrameNr);
-    if(marker_index) {
-        g_currentTargetFrameIndex = g_currentFrameNr;
-    } else {
-        g_currentTargetFrameIndex = -1;
-    }
-    $('#slider').slider('value', g_currentFrameNr); // Update slider
-    $('#currentFrame').text(g_currentFrameNr);
-    redrawSequence();
+    goToFrame(((g_currentFrameNr-g_startFrame) + 1) % g_framesLoaded + g_startFrame);
+    setPlayButton(true);
     window.setTimeout(incrementFrame, 50);
 }
 
@@ -80,6 +77,23 @@ function goToFrame(frameNr) {
         g_currentTargetFrameIndex = -1;
     }
     redrawSequence();
+    // Update ECG if present
+    if(g_ecgData !== undefined) {
+        drawECG();
+        let ctx = g_ecgContext;
+        for(let i = 0; i < g_ecgData.length; ++i) {
+            if(parseInt(g_ecgData[i]['frame']) === g_currentFrameNr) {
+                // Draw current frame line on ECG
+                ctx.beginPath();
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.moveTo((i/g_ecgData.length)*ctx.canvas.width, 0);
+                ctx.lineTo((i/g_ecgData.length)*ctx.canvas.width, ctx.canvas.height);
+                ctx.stroke();
+                break;
+            }
+        }
+    }
 }
 
 function save() {
@@ -240,6 +254,38 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     }
     g_userFrameSelection = user_frame_selection;
 
+    // Check for ECG
+    $.get('/ecg/' + image_sequence_id + '/', function(data, status) {
+        if(data !== 'NO') {
+            g_ecgData = data['ecg'];
+            g_ecgMin = Number.MAX_VALUE;
+            g_ecgMax = -Number.MAX_VALUE;
+            for(let i = 0; i < g_ecgData.length; ++i) {
+                if(g_ecgData[i]['value'] < g_ecgMin)
+                    g_ecgMin = g_ecgData[i]['value'];
+                if(g_ecgData[i]['value'] > g_ecgMax)
+                    g_ecgMax = g_ecgData[i]['value'];
+            }
+
+            // Create ECG plot
+            // Create canvas
+            var sequenceDiv = document.getElementById('slider');
+            var canvas = document.createElement('canvas');
+            sequenceDiv.before(canvas);
+            let canvasHeight = 100;
+            canvas.setAttribute('width', $('#contentLeft').width());
+            canvas.setAttribute('height', canvasHeight);
+            canvas.setAttribute('id', 'ecgCanvas');
+            canvas.setAttribute('style', 'width: 100%; height: ' + canvasHeight + 'px;');
+            // IE stuff
+            if (typeof G_vmlCanvasManager != 'undefined') {
+                canvas = G_vmlCanvasManager.initElement(canvas);
+            }
+            g_ecgContext = canvas.getContext("2d");
+
+            drawECG();
+        }
+    });
 
     console.log('In load sequence');
     // Create play/pause button
@@ -290,12 +336,9 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
                 step: 1,
                 value: g_currentFrameNr,
             slide: function(event, ui) {
-                g_currentFrameNr = ui.value;
-                $('#currentFrame').text(g_currentFrameNr);
-                setPlayButton(false);
-                redrawSequence();
+                goToFrame(ui.value);
             }
-            }
+        }
     );
 
     // Create progress bar
@@ -367,6 +410,28 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         event.preventDefault();
     });
 
+    $(document).keydown(function(e) {
+        console.log(String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = true;
+        }
+    });
+    $(document).keyup(function(e) {
+        console.log('up', String.fromCharCode(e.which));
+        if(String.fromCharCode(e.which) == 'Z') {
+            g_zoom = false;
+        }
+    });
+
+    $('#canvas').mousemove(function(e) {
+        var scale = g_canvasWidth / $('#canvas').width();
+        var mouseX = (e.pageX - this.offsetLeft) * scale;
+        var mouseY = (e.pageY - this.offsetTop) * scale;
+
+        g_mousePositionX = mouseX;
+        g_mousePositionY = mouseY;
+    });
+
     // Arrow key pressed
     $(document).keydown(function(event){
         g_shiftKeyPressed = event.shiftKey;
@@ -381,6 +446,14 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
                 goToNextKeyFrame();
             } else {
                 goToFrame(g_currentFrameNr + 1);
+            }
+        } else if(event.which === 32) { // Space
+            if($("textarea").is(":focus")){
+                // Input and text area has focus, do nothing
+            } else {
+                setPlayButton(!g_isPlaying) ;
+                incrementFrame();
+                event.preventDefault();
             }
         }
     });
@@ -569,4 +642,21 @@ function zoomAtMousePosition(mouseX, mouseY) {
     // Have to convert imagedata to canvas for this to work
     let background = g_context.getImageData(mouseX - 50, mouseY - 50, 100, 100);
     g_context.drawImage(imageDataToCanvas(background), mouseX - 100, mouseY - 100, 200, 200);
+}
+
+function drawECG() {
+    let ctx = g_ecgContext;
+    ctx.canvas.setAttribute('width', $('#ecgCanvas').width());
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    ctx.beginPath();
+    ctx.strokeStyle = 'lightgreen';
+    ctx.lineWidth = 2;
+    let pad = (g_ecgMax-g_ecgMin)*0.05;
+    ctx.lineTo(0, (1.0-(g_ecgData[0]['value'] - g_ecgMin+pad)/(g_ecgMax - g_ecgMin + 2*pad))*ctx.canvas.height);
+    for (let i = 1; i < g_ecgData.length; ++i) {
+        ctx.lineTo((i/g_ecgData.length)*ctx.canvas.width, (1.0-(g_ecgData[i]['value'] - g_ecgMin+pad)/(g_ecgMax - g_ecgMin + 2*pad))*ctx.canvas.height);
+    }
+    ctx.stroke();
 }
