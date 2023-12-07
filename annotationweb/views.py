@@ -554,7 +554,7 @@ def task(request, task_id):
                 imageannotation__task=task,
                 imageannotation__finished=True,
                 imageannotation__user__in=users_selected,
-                imageannotation__keyframeannotation__imagelabel__in=labels_selected,
+                imageannotation__keyframeannotation__imagelabel__label__in=labels_selected,
                 subject__in=subjects_selected,
             )
         else:
