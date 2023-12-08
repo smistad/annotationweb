@@ -28,6 +28,12 @@ def label_image(request, task_id, image_id):
             print('Not found..')
             pass
 
+        classification_type = 'whole_sequence'  # TODO: How to store this??
+        if classification_type not in ('single_frame', 'whole_sequence', 'subsequence'):
+            print(f'Classification type "{classification_type}" not found.')
+        else:
+            context['classification_type'] = classification_type
+
         return render(request, 'classification/label_image.html', context)
     except common.task.NoMoreImages:
         messages.info(request, 'This task is finished, no more images to annotate.')
