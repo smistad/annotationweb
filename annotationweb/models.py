@@ -91,6 +91,7 @@ class Task(models.Model):
         if self.user_frame_selection:
             return ImageSequence.objects.filter(subject__dataset__task=self).count()
         else:
+            # TODO: Fix - annotated/total frames not correctly estimated for classification without user_frame_selection!!
             return ImageSequence.objects.filter(imageannotation__task=self).count()
 
     @property
