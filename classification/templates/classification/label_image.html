@@ -62,11 +62,13 @@ setReturnURL('{{ return_url|safe }}');
 <div id="slider"></div>
 <div class="actionButtons">
     <button id="playButton" type="button"><i id="play" class="fa fa-play"></i></button>
-    {% if task.user_frame_selection %}
-        <button id="addFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
-        <button id="removeFrameButton" type="button" title="Remove selected frame from annotations"><i class="fa fa-minus"></i></button>
+    {% if classification_type != 'whole_sequence' %}
+        {% if task.user_frame_selection %}
+            <button id="addFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
+            <button id="removeFrameButton" type="button" title="Remove selected frame from annotations"><i class="fa fa-minus"></i></button>
+        {% endif %}
+        <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>
     {% endif %}
-    <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>
 </div>
 {% endif %}
 <h3>Actions</h3>
