@@ -65,7 +65,6 @@ class ClassificationExporter(Exporter):
             except:
                 return False, 'Path does not exist: ' + path
 
-
         # Create label file
         label_file = open(os.path.join(path, 'labels.txt'), 'w')
         labels = Label.objects.filter(task=self.task)
@@ -79,19 +78,22 @@ class ClassificationExporter(Exporter):
 
         # Create file_list.txt file
         file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets, rejected=False)
+        labeled_images = KeyFrameAnnotation.objects.filter(image_annotation__task=self.task,
+                                                           image_annotation__task__dataset__in=datasets,
+                                                           image_annotation__rejected=False)
         for labeled_image in labeled_images:
-            name = labeled_image.image.filename
-            dataset_path = os.path.join(path, labeled_image.image.dataset.name)
+            image_sequence = ImageSequence.objects.get(id=labeled_image.image_annotation.image_id)
+            filepath = image_sequence.format.replace('#', str(image_sequence.id))
+            dataset_path = os.path.join(path, labeled_image.image_annotation.task.dataset.get().name)
             try:
                 os.mkdir(dataset_path) # Make dataset path if doesn't exist
             except:
                 pass
 
-            image_id = labeled_image.image.id
+            image_id = labeled_image.image_annotation.image_id
             new_extension = form.cleaned_data['output_image_format']
             new_filename = os.path.join(dataset_path, str(image_id) + '.' + new_extension)
-            copy_image(name, new_filename)
+            copy_image(filepath, new_filename)
 
             # Get image label
             label = ImageLabel.objects.get(image=labeled_image)
