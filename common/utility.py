@@ -47,7 +47,7 @@ def get_image_as_http_response(filename, post_processing_method=''):
     return HttpResponse(buffer.getvalue(), content_type="image/png")
 
 
-def copy_image(filename, new_filename):
+def copy_image(filename, new_filename, label=None):
     _, original_extension = os.path.splitext(filename)
     _, new_extension = os.path.splitext(new_filename)
 
@@ -55,6 +55,10 @@ def copy_image(filename, new_filename):
     if original_extension.lower() == '.mhd':
         metaimage = MetaImage(filename=filename)
         if new_extension.lower() == '.mhd':
+            if label is not None:
+                # TODO: Try to add Label field
+                metaimage.set_attribute('LabelId', label.id)
+                metaimage.set_attribute('LabelName', label.name)
             metaimage.write(new_filename)
         elif new_extension.lower() == '.png':
             pil_image = metaimage.get_image()
@@ -65,6 +69,11 @@ def copy_image(filename, new_filename):
         if new_extension.lower() == '.mhd':
             pil_image = PIL.Image.open(filename)
             metaimage = MetaImage(data=np.asarray(pil_image))
+            if label is not None:
+                # TODO: Try to add Label field
+                metaimage.set_attribute('LabelId', label.id)
+                metaimage.set_attribute('LabelName', label.name)
+                pass
             metaimage.write(new_filename)
         elif new_extension.lower() == '.png':
             copyfile(filename, new_filename)
