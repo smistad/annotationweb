@@ -23,7 +23,11 @@
     {% for task in tasks %}
     <tr>
         <td>{{ task.name }}</td>
-        <td align="center">{{ task.type }}</td>
+        {% if task.type == 'classification' %}
+            <td align="center">{{ task.type }} ({{ task.classification_type.capitalize }})</td>
+        {% else %}
+            <td align="center">{{ task.type }}</td>
+        {% endif %}
         <td align="center">{{task.total_number_of_images}}</td>
         <td align="center">{{task.percentage_finished}}%</td>
         <td align="center"><a href="{% url 'task' task.id %}">Image list</a></td>
