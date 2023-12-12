@@ -71,7 +71,7 @@ class ClassificationExporter(Exporter):
         labelDict = {}
         counter = 0
         for label in labels:
-            label_file.write(label.id + '' + label.name + '\n')  # TODO: Add label_id --> "label_id label_name"
+            label_file.write(str(counter) + ' ' + label.name + '\n')
             labelDict[label.name] = counter
             counter += 1
         label_file.close()
@@ -90,13 +90,13 @@ class ClassificationExporter(Exporter):
             except:
                 pass
 
+            # Get image label
+            label = ImageLabel.objects.get(image=labeled_image)
+
             image_id = labeled_image.image_annotation.image_id
             new_extension = form.cleaned_data['output_image_format']
             new_filename = os.path.join(dataset_path, str(image_id) + '.' + new_extension)
-            copy_image(filepath, new_filename)
-
-            # Get image label
-            label = ImageLabel.objects.get(image=labeled_image)
+            copy_image(filepath, new_filename, label={'id': str(labelDict[label.label.name]), 'name': label.label.name})
 
             file_list.write(new_filename + ' ' + str(labelDict[label.label.name]) + '\n')
 

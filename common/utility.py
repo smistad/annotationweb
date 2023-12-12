@@ -56,9 +56,8 @@ def copy_image(filename, new_filename, label=None):
         metaimage = MetaImage(filename=filename)
         if new_extension.lower() == '.mhd':
             if label is not None:
-                # TODO: Try to add Label field
-                metaimage.set_attribute('LabelId', label.id)
-                metaimage.set_attribute('LabelName', label.name)
+                metaimage.set_attribute('LabelId', label['id'])
+                metaimage.set_attribute('LabelName', label['name'])
             metaimage.write(new_filename)
         elif new_extension.lower() == '.png':
             pil_image = metaimage.get_image()
@@ -70,9 +69,8 @@ def copy_image(filename, new_filename, label=None):
             pil_image = PIL.Image.open(filename)
             metaimage = MetaImage(data=np.asarray(pil_image))
             if label is not None:
-                # TODO: Try to add Label field
-                metaimage.set_attribute('LabelId', label.id)
-                metaimage.set_attribute('LabelName', label.name)
+                metaimage.set_attribute('LabelId', label['id'])
+                metaimage.set_attribute('LabelName', label['name'])
                 pass
             metaimage.write(new_filename)
         elif new_extension.lower() == '.png':
