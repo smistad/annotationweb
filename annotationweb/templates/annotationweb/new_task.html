@@ -25,4 +25,40 @@ $(window).blur(function() {
     </table>
     <input type="submit" value="Submit" />
 </form>
+
+<script>
+    function set_classification_type_enabled() {
+        let classification_type_input = $("#id_classification_type");
+        classification_type_input.prop('disabled', false);
+
+        // Format label
+        let label = $('label[for="' + classification_type_input.selector.slice(1) + '"]')[0];
+        label.style.color = "#000000";
+    }
+
+    function set_classification_type_disabled() {
+        let classification_type_input = $("#id_classification_type");
+        classification_type_input.prop('disabled', true);
+        // Format label
+        let label = $('label[for="' + classification_type_input.selector.slice(1) + '"]')[0];
+        label.style.color = "#aaaaaa";
+    }
+
+    $(document).ready(function(e) {
+        set_classification_type_disabled();
+    })
+
+    $("#id_type").change(function () {
+        let taskType = $(this).val();  // get the selected task type from the HTML input
+        if (taskType === 'classification') {
+            set_classification_type_enabled();
+        } else {
+            // Reset classification_type choice to default value
+            $('select[name="classification_type"] option').attr("selected", false);
+            $('select[name="classification_type"] option[value=""]').attr("selected", true);
+            set_classification_type_disabled();
+        }
+    });
+</script>
+
 {% endblock %}

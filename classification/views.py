@@ -28,11 +28,10 @@ def label_image(request, task_id, image_id):
             print('Not found..')
             pass
 
-        classification_type = 'whole_sequence'  # TODO: How to store this??
-        if classification_type not in ('single_frame', 'whole_sequence', 'subsequence'):
-            print(f'Classification type "{classification_type}" not found.')
+        if context['task'].classification_type not in ('single_frame', 'whole_sequence'):   # TODO: Add 'subsequence' when implemented
+            print(f'Classification type "{context["task"].classification_type}" not found.')
         else:
-            context['classification_type'] = classification_type
+            context['classification_type'] = context['task'].classification_type
 
         return render(request, 'classification/label_image.html', context)
     except common.task.NoMoreImages:

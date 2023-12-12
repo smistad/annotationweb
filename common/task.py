@@ -256,7 +256,7 @@ def setup_task_context(request, task_id, type, image_id):
         if 'return_to_url' in request.session:
             context['return_url'] = request.session['return_to_url']
 
-    if not task.user_frame_selection:
+    if task.user_frame_selection_valid() and not task.user_frame_selection:
         # Check if image has key frames for this task
         if KeyFrameAnnotation.objects.filter(image_annotation__task=task, image_annotation__image=image).count() == 0:
             raise RuntimeError('This image sequence has no key frames. An admin must select key frames before annotating.')
