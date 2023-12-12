@@ -99,18 +99,16 @@ class Task(models.Model):
 
     @property
     def total_number_of_images(self):
-        if self.user_frame_selection:
+        if self.user_frame_selection_valid():
+            return ImageSequence.objects.filter(subject__dataset__task=self).count()
+        elif (self.type == Task.CLASSIFICATION
+              and (self.classification_type == Task.CLASSIFICATION_WHOLE_SEQUENCE
+                   # or self.classification_type == Task.CLASSIFICATION_SUBSEQUENCE
+                   or (self.classification_type == Task.CLASSIFICATION_SINGLE_FRAME and not self.user_frame_selection))
+              ):
             return ImageSequence.objects.filter(subject__dataset__task=self).count()
         else:
-            # TODO: Fix - annotated/total frames not correctly estimated for classification without user_frame_selection!!
-            if (self.type == Task.CLASSIFICATION
-                and (self.classification_type == Task.CLASSIFICATION_WHOLE_SEQUENCE
-                     # or self.classification_type == Task.CLASSIFICATION_SUBSEQUENCE
-                     or (self.classification_type == Task.CLASSIFICATION_SINGLE_FRAME and not self.user_frame_selection))
-            ):
-                return ImageSequence.objects.filter(subject__dataset__task=self).count()    #ImageSequence.objects.filter(imageannotation__task=self).count()
-            else:
-                return ImageSequence.objects.filter(imageannotation__task=self).count()
+            return ImageSequence.objects.filter(imageannotation__task=self).count()
 
     @property
     def number_of_annotated_images(self):
@@ -127,7 +125,7 @@ class Task(models.Model):
         if (self.type == Task.CLASSIFICATION
             and (self.classification_type == Task.CLASSIFICATION_WHOLE_SEQUENCE
                  # or self.classification_type == Task.CLASSIFICATION_SUBSEQUENCE
-                )):
+                 )):
             return False
 
         return True
