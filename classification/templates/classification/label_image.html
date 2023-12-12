@@ -13,7 +13,6 @@ loadClassificationSequence(
     {%  if task.show_entire_sequence %}true{% else %}false{% endif %},
     {%  if task.user_frame_selection %}true{% else %}false{% endif %},
     {%  if task.annotate_single_frame %}true{% else %}false{% endif %},
-    <!-- TODO: If classification of whole sequence, add last frame as keyframe by default? -->
     [ {% for frame_nr in frames %}{{ frame_nr }},{% endfor %}],
     {{ task.frames_before }},
     {{ task.frames_after }},
