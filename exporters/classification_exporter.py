@@ -71,7 +71,7 @@ class ClassificationExporter(Exporter):
         labelDict = {}
         counter = 0
         for label in labels:
-            label_file.write(label.name + '\n')
+            label_file.write(label.id + '' + label.name + '\n')  # TODO: Add label_id --> "label_id label_name"
             labelDict[label.name] = counter
             counter += 1
         label_file.close()
