@@ -1,4 +1,6 @@
 from django import forms
+from django.core.exceptions import ValidationError
+
 from .models import *
 
 
@@ -16,11 +18,37 @@ class TaskForm(forms.ModelForm):
                   'user_frame_selection', 'annotate_single_frame', 'shuffle_videos',
                   'label', 'user', 'description']
 
+    def clean_classification_type(self):
+        data = self.cleaned_data['classification_type']
+        if self.cleaned_data['type'] == 'classification':
+            if data == '':
+                raise ValidationError(
+                    "You chose the task type classification, but have forgotten to choose classification type",
+                    code='invalid'
+                )
+            else:
+                pass
+        else:
+            data = None
 
-    # def clean(self):
-    #     cleaned_data = super(TaskForm, self).clean()
+        # Always return a value to use as the new cleaned data, even if
+        # this method didn't change it.
+        return data
+
+    def clean(self):
+        cleaned_data = super(TaskForm, self).clean()
     #     user_frame_selection = cleaned_data.get('user_frame_selection')
     #     annotate_single_frame = cleaned_data.get('annotate_single_frame')
+
+        task_type = cleaned_data.get('type')
+        classification_type = cleaned_data.get('classification_type')
+
+        if task_type == 'classification':
+            if classification_type == '':
+                raise ValidationError(
+                    "No classification type was chosen, but task type is Classification",
+                    code='invalid'
+                )
 
 
 class DatasetForm(forms.ModelForm):

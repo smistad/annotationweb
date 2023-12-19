@@ -27,36 +27,58 @@ $(window).blur(function() {
 </form>
 
 <script>
-    function set_classification_type_enabled() {
-        let classification_type_input = $("#id_classification_type");
-        classification_type_input.prop('disabled', false);
-
+    function enable_field(field_id) {
+        let input = $("#" + field_id);
+        input.prop('disabled', false);
         // Format label
-        let label = $('label[for="' + classification_type_input.selector.slice(1) + '"]')[0];
+        let label = $('label[for="' + input.selector.slice(1) + '"]')[0];
         label.style.color = "#000000";
     }
 
-    function set_classification_type_disabled() {
-        let classification_type_input = $("#id_classification_type");
-        classification_type_input.prop('disabled', true);
+    function disable_field(field_id) {
+        let input = $("#" + field_id);
+        input.prop('disabled', true);
         // Format label
-        let label = $('label[for="' + classification_type_input.selector.slice(1) + '"]')[0];
+        let label = $('label[for="' + input.selector.slice(1) + '"]')[0];
         label.style.color = "#aaaaaa";
     }
 
     $(document).ready(function(e) {
-        set_classification_type_disabled();
+        if ($("#id_type").val() === 'classification') {
+            enable_field("id_classification_type");
+            disable_field("id_annotate_single_frame");
+        } else {
+            disable_field("id_classification_type");
+        }
     })
 
     $("#id_type").change(function () {
         let taskType = $(this).val();  // get the selected task type from the HTML input
         if (taskType === 'classification') {
-            set_classification_type_enabled();
+            enable_field("id_classification_type");
+            disable_field("id_annotate_single_frame");
         } else {
             // Reset classification_type choice to default value
             $('select[name="classification_type"] option').attr("selected", false);
             $('select[name="classification_type"] option[value=""]').attr("selected", true);
-            set_classification_type_disabled();
+            disable_field("id_classification_type");
+            enable_field("id_annotate_single_frame");
+        }
+    });
+
+    $("#id_classification_type").change(function () {
+        // This field is only enabled and can change when task type is set to 'classification'
+        let classificationType = $(this).val();
+
+        if (classificationType === 'whole_sequence') {
+            disable_field("id_user_frame_selection");
+            disable_field("id_annotate_single_frame");
+        } else if (classificationType === 'single_frame') {
+            enable_field("id_user_frame_selection");
+            disable_field("id_annotate_single_frame");
+        } else {
+            disable_field("id_user_frame_selection");
+            //enable_field("id_annotate_single_frame");
         }
     });
 </script>
