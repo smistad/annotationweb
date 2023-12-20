@@ -25,4 +25,62 @@ $(window).blur(function() {
     </table>
     <input type="submit" value="Submit" />
 </form>
+
+<script>
+    function enable_field(field_id) {
+        let input = $("#" + field_id);
+        input.prop('disabled', false);
+        // Format label
+        let label = $('label[for="' + input.selector.slice(1) + '"]')[0];
+        label.style.color = "#000000";
+    }
+
+    function disable_field(field_id) {
+        let input = $("#" + field_id);
+        input.prop('disabled', true);
+        // Format label
+        let label = $('label[for="' + input.selector.slice(1) + '"]')[0];
+        label.style.color = "#aaaaaa";
+    }
+
+    $(document).ready(function(e) {
+        if ($("#id_type").val() === 'classification') {
+            enable_field("id_classification_type");
+            disable_field("id_annotate_single_frame");
+        } else {
+            disable_field("id_classification_type");
+        }
+    })
+
+    $("#id_type").change(function () {
+        let taskType = $(this).val();  // get the selected task type from the HTML input
+        if (taskType === 'classification') {
+            enable_field("id_classification_type");
+            disable_field("id_annotate_single_frame");
+        } else {
+            // Reset classification_type choice to default value
+            $('select[name="classification_type"] option').attr("selected", false);
+            $('select[name="classification_type"] option[value=""]').attr("selected", true);
+            disable_field("id_classification_type");
+            enable_field("id_annotate_single_frame");
+        }
+    });
+
+    $("#id_classification_type").change(function () {
+        // This field is only enabled and can change when task type is set to 'classification'
+        let classificationType = $(this).val();
+
+        if (classificationType === 'whole_sequence') {
+            disable_field("id_user_frame_selection");
+            disable_field("id_annotate_single_frame");
+        } else if (classificationType === 'single_frame') {
+            enable_field("id_user_frame_selection");
+            disable_field("id_annotate_single_frame");
+        } else {
+            disable_field("id_user_frame_selection");
+            //enable_field("id_annotate_single_frame");
+        }
+    });
+</script>
+
 {% endblock %}

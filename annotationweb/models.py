@@ -61,6 +61,15 @@ class Task(models.Model):
         (CALIPER, 'Caliper'),
     )
 
+    CLASSIFICATION_WHOLE_SEQUENCE = 'whole_sequence'
+    CLASSIFICATION_SINGLE_FRAME = 'single_frame'
+    # CLASSIFICATION_SUBSEQUENCE = 'subsequence'
+    CLASSIFICATION_TYPES = (
+        (CLASSIFICATION_WHOLE_SEQUENCE, 'Whole sequence'),
+        (CLASSIFICATION_SINGLE_FRAME, 'Single frame'),
+        # (CLASSIFICATION_SUBSEQUENCE, 'Subsequence'),
+    )
+
     name = models.CharField(max_length=200)
     dataset = models.ManyToManyField(Dataset)
     show_entire_sequence = models.BooleanField(help_text='Allow user to see entire sequence.', default=False)
@@ -80,6 +89,8 @@ class Task(models.Model):
     large_image_layout = models.BooleanField(default=False, help_text='Use a large image layout for annotation')
     post_processing_method = models.CharField(default='', help_text='Name of post processing method to use', max_length=255, blank=True)
 
+    classification_type = models.CharField(max_length=50, blank=True, choices=CLASSIFICATION_TYPES)
+
     def __str__(self):
         return self.name
 
@@ -88,7 +99,13 @@ class Task(models.Model):
 
     @property
     def total_number_of_images(self):
-        if self.user_frame_selection:
+        if self.user_frame_selection_valid():
+            return ImageSequence.objects.filter(subject__dataset__task=self).count()
+        elif (self.type == Task.CLASSIFICATION
+              and (self.classification_type == Task.CLASSIFICATION_WHOLE_SEQUENCE
+                   # or self.classification_type == Task.CLASSIFICATION_SUBSEQUENCE
+                   or (self.classification_type == Task.CLASSIFICATION_SINGLE_FRAME and not self.user_frame_selection))
+              ):
             return ImageSequence.objects.filter(subject__dataset__task=self).count()
         else:
             return ImageSequence.objects.filter(imageannotation__task=self).count()
@@ -104,6 +121,14 @@ class Task(models.Model):
         else:
             return round(self.number_of_annotated_images*100 / self.total_number_of_images, 1)
 
+    def user_frame_selection_valid(self):
+        if (self.type == Task.CLASSIFICATION
+            and (self.classification_type == Task.CLASSIFICATION_WHOLE_SEQUENCE
+                 # or self.classification_type == Task.CLASSIFICATION_SUBSEQUENCE
+                 )):
+            return False
+
+        return True
 
 
 class ImageSequence(models.Model):

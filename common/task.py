@@ -24,7 +24,7 @@ def get_next_unprocessed_image(task):
     queryset = ImageSequence.objects.filter(subject__dataset__task=task) # Get all sequences for this task
     # Exclude does that are marked as finished, or not opened at all
     queryset = queryset.exclude(imageannotation__in=ImageAnnotation.objects.filter(task=task, finished=True))
-    if not task.user_frame_selection:
+    if task.user_frame_selection_valid() and not task.user_frame_selection:
         # If user cannot select their own key frames, skip those without a key frame
         queryset = queryset.exclude(imageannotation__keyframeannotation__isnull=True)
 
@@ -256,7 +256,7 @@ def setup_task_context(request, task_id, type, image_id):
         if 'return_to_url' in request.session:
             context['return_url'] = request.session['return_to_url']
 
-    if not task.user_frame_selection:
+    if task.user_frame_selection_valid() and not task.user_frame_selection:
         # Check if image has key frames for this task
         if KeyFrameAnnotation.objects.filter(image_annotation__task=task, image_annotation__image=image).count() == 0:
             raise RuntimeError('This image sequence has no key frames. An admin must select key frames before annotating.')

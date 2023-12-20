@@ -65,36 +65,38 @@ class ClassificationExporter(Exporter):
             except:
                 return False, 'Path does not exist: ' + path
 
-
         # Create label file
         label_file = open(os.path.join(path, 'labels.txt'), 'w')
         labels = Label.objects.filter(task=self.task)
         labelDict = {}
         counter = 0
         for label in labels:
-            label_file.write(label.name + '\n')
+            label_file.write(str(counter) + ' ' + label.name + '\n')
             labelDict[label.name] = counter
             counter += 1
         label_file.close()
 
         # Create file_list.txt file
         file_list = open(os.path.join(path, 'file_list.txt'), 'w')
-        labeled_images = ProcessedImage.objects.filter(task=self.task, image__dataset__in=datasets, rejected=False)
+        labeled_images = KeyFrameAnnotation.objects.filter(image_annotation__task=self.task,
+                                                           image_annotation__task__dataset__in=datasets,
+                                                           image_annotation__rejected=False)
         for labeled_image in labeled_images:
-            name = labeled_image.image.filename
-            dataset_path = os.path.join(path, labeled_image.image.dataset.name)
+            image_sequence = ImageSequence.objects.get(id=labeled_image.image_annotation.image_id)
+            filepath = image_sequence.format.replace('#', str(image_sequence.id))
+            dataset_path = os.path.join(path, labeled_image.image_annotation.task.dataset.get().name)
             try:
                 os.mkdir(dataset_path) # Make dataset path if doesn't exist
             except:
                 pass
 
-            image_id = labeled_image.image.id
-            new_extension = form.cleaned_data['output_image_format']
-            new_filename = os.path.join(dataset_path, str(image_id) + '.' + new_extension)
-            copy_image(name, new_filename)
-
             # Get image label
             label = ImageLabel.objects.get(image=labeled_image)
+
+            image_id = labeled_image.image_annotation.image_id
+            new_extension = form.cleaned_data['output_image_format']
+            new_filename = os.path.join(dataset_path, str(image_id) + '.' + new_extension)
+            copy_image(filepath, new_filename, label={'id': str(labelDict[label.label.name]), 'name': label.label.name})
 
             file_list.write(new_filename + ' ' + str(labelDict[label.label.name]) + '\n')
 
