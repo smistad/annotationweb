@@ -1,10 +1,13 @@
 from django.contrib import messages
+from django.core import serializers
 from django.db import transaction
+from django.db.models import Max
 from django.http import QueryDict
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.template.defaulttags import register
+from django.apps import apps
 from common.exporter import find_all_exporters
 from common.metaimage import MetaImage
 from common.utility import get_image_as_http_response
@@ -722,3 +725,54 @@ def get_spacing(request, image_sequence_id):
         return Http404(f'Can only get spacing from mhd image')
     metaimage = MetaImage(filename=filename)
     return HttpResponse(f'{metaimage.get_spacing()[0]};{metaimage.get_spacing()[1]}', content_type="text/plain")
+
+
+@staff_member_required
+def import_task(request):
+    def find_all(string, sub_string):
+        # Find positions of all occurrences of sub_string in string
+        start = 0
+        while True:
+            start = string.find(sub_string, start)
+            if start == -1:
+                return
+            yield start
+            start += len(sub_string)
+
+    if request.method == 'POST':
+        form = ImportTaskForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['file']
+            contents = file.read().decode('utf-8')
+
+            to_replace = []
+            with transaction.atomic():
+                for pos in find_all(contents, 'pk: $'):
+                    line = contents[pos:contents.find('\n', pos)]
+                    parts = line.split('$')
+                    app_name = parts[1]
+                    model_name = parts[2]
+                    id = int(parts[3])
+                    if id < 1 or id != id:
+                        raise ValueError('ID in ' + line + ' has to be an integer > 0')
+
+                    # Get current max to create new keys
+                    model = apps.get_model(app_name, model_name)
+                    objects = model.objects.select_for_update().all() # select_for_update will lock the rows until transaction is done.
+                    new_id = (objects.aggregate(Max('id'))['id__max'] if objects else 0) + id
+
+                    to_replace.append((f'${app_name}${model_name}${id}$', str(new_id)))
+
+                # This might not be so efficient for large contents strings:
+                for original, to in to_replace:
+                    contents = contents.replace(original, to)
+                #print(contents)
+                for obj in serializers.deserialize('yaml', contents):
+                    obj.save()
+            return redirect('index')
+    else:
+        form = ImportTaskForm()
+    context = {'form': form}
+
+    return render(request, 'annotationweb/import_task.html', context)
+
