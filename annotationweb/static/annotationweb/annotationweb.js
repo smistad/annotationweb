@@ -37,13 +37,31 @@ function min(a, b) {
 }
 
 function mousePos(e, canvas) {
-    var scale =  g_canvasWidth / $('#canvas').width();
-    var mouseX = (e.pageX - canvas.offsetLeft)*scale;
-    var mouseY = (e.pageY - canvas.offsetTop)*scale;
+    // Get original dimension of the image being annotated (set in loadLandmarkTask)
+    const imgWidth = g_canvasWidth;
+    const imgHeight = g_canvasHeight;
+
+    // Get displayed dimensions (after CSS)
+    const displayedWidth = $('#canvas').width();
+    const displayedHeight = $('#canvas').height();
+
+    // Calculate scaling between original and displayed dimensions
+    const scale = Math.min(displayedWidth / imgWidth, displayedHeight / imgHeight);
+    const scaledWidth = imgWidth * scale;
+    const scaledHeight = imgHeight * scale;
+
+    // Scaling while keeping aspect ratio will create padding on the smallest side
+    const paddingX = (displayedWidth - scaledWidth) / 2;
+    const paddingY = (displayedHeight - scaledHeight) / 2;
+
+    // Adjust mouse coordinates so they match the image display
+    const mouseX = (e.offsetX - paddingX) / scale;
+    const mouseY = (e.offsetY - paddingY) / scale;
+
     return {
         x: mouseX,
-        y: mouseY,
-    }
+        y: mouseY
+    };
 }
 
 function incrementFrame() {
