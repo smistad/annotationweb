@@ -26,10 +26,12 @@ function setupLandmarkTask() {
                 console.log("adding landmark..");
                 // Check if already exists
                 let exists = false;
-                for(let i = 0; i < g_landmarks[g_currentFrameNr].length; ++i) {
-                    let landmark = g_landmarks[g_currentFrameNr][i];
-                    if(landmark.label_id === g_currentLabel && Math.abs(pos.x - landmark.x) < 6 && Math.abs(pos.y - landmark.y) < 6) {
-                        exists = true;
+                if(Object.keys(g_landmarks).length > 0) {
+                    for (let i = 0; i < g_landmarks[g_currentFrameNr].length; ++i) {
+                        let landmark = g_landmarks[g_currentFrameNr][i];
+                        if (landmark.label_id === g_currentLabel && Math.abs(pos.x - landmark.x) < 6 && Math.abs(pos.y - landmark.y) < 6) {
+                            exists = true;
+                        }
                     }
                 }
                 if(!exists)
