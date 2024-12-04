@@ -71,6 +71,7 @@ function setupSegmentation() {
             return;
         g_paint = false;
         g_annotationHasChanged = true;
+        addKeyFrame(g_currentFrameNr);
         addBox(g_currentFrameNr, g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
         console.log('finished BB on ' + g_BBx + ' ' + g_BBy);
     });
@@ -78,6 +79,7 @@ function setupSegmentation() {
     $('#canvas').mouseleave(function(e){
         if(g_paint) {
             g_annotationHasChanged = true;
+            addKeyFrame(g_currentFrameNr);
             addBox(g_currentFrameNr, g_BBx, g_BBy, g_BBx2, g_BBy2, g_currentLabel);
             redrawSequence();
             g_paint = false;
