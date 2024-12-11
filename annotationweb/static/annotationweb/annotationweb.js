@@ -37,26 +37,30 @@ function min(a, b) {
 }
 
 function mousePos(e, canvas) {
-    // Get original dimension of the image being annotated (set in loadLandmarkTask)
+    // Get original dimensions of the image
     const imgWidth = g_canvasWidth;
     const imgHeight = g_canvasHeight;
 
-    // Get displayed dimensions (after CSS)
-    const displayedWidth = $('#canvas').width();
-    const displayedHeight = $('#canvas').height();
+    // Get canvas dimension
+    const canvasWidth = $('#canvas').width();
+    const canvasHeight = $('#canvas').height();
 
-    // Calculate scaling between original and displayed dimensions
-    const scale = Math.min(displayedWidth / imgWidth, displayedHeight / imgHeight);
+    // Calculate the scale ratio of the image once fitted within the canvas
+    const scale = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight);
     const scaledWidth = imgWidth * scale;
     const scaledHeight = imgHeight * scale;
 
-    // Scaling while keeping aspect ratio will create padding on the smallest side
-    const paddingX = (displayedWidth - scaledWidth) / 2;
-    const paddingY = (displayedHeight - scaledHeight) / 2;
+    // Padding on 1 side is half of total difference between image and canvas
+    const paddingX = (canvasWidth - scaledWidth) / 2;
+    const paddingY = (canvasHeight - scaledHeight) / 2;
 
-    // Adjust mouse coordinates so they match the image display
-    const mouseX = (e.offsetX - paddingX) / scale;
-    const mouseY = (e.offsetY - paddingY) / scale;
+    // Adjust mouse coordinates
+    let mouseX = (e.offsetX - paddingX) / scale;
+    let mouseY = (e.offsetY - paddingY) / scale;
+
+    // If you click on the canvas but outside the image, reposition on the closest edge of the image
+    mouseX = Math.max(0, Math.min(mouseX, imgWidth - 1));
+    mouseY = Math.max(0, Math.min(mouseY, imgHeight - 1));
 
     return {
         x: mouseX,
