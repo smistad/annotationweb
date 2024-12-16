@@ -76,16 +76,20 @@ class LandmarkExporter(Exporter):
                     f.write((annotation.comments).encode('ascii', 'ignore').decode('ascii').replace('\n', '<br>') + '\n') # Encoding fix
                     # Get aspect ratio to correct x landmarks, because they are stored with isotropic spacing, while images
                     # are often not stored in isotropic spacing
-                    metaimage = MetaImage(filename=annotation.image.format.replace('#', str(0)))
-                    spacingX = metaimage.get_spacing()[0]
-                    spacingY = metaimage.get_spacing()[1]
-                    aspect = (spacingY / spacingX)
+                    if annotation.image.format.endswith('.mhd'):
+                        metaimage = MetaImage(filename=annotation.image.format.replace('#', str(0)))
+                        spacingX = metaimage.get_spacing()[0]
+                        spacingY = metaimage.get_spacing()[1]
+                        aspect = (spacingY / spacingX)
+                    else:
+                        aspect = 1
+
                     for frame in frames:
                         # Write bounding boxes txt file
                         landmarks = Landmark.objects.filter(image=frame)
                         for landmark in landmarks:
                             label = label_dict[landmark.label.id]
-                            f.write(f'{frame.frame_nr} {label} {int(round(landmark.x*aspect))} {landmark.y}\n')
+                            f.write(f'{frame.frame_nr} {label} {int(round(landmark.x * aspect))} {landmark.y}\n')
 
         return True, path
 
