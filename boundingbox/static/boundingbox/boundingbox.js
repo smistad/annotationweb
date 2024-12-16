@@ -98,6 +98,16 @@ function setupSegmentation() {
         redrawSequence();
     });
 
+    // Define right-click callback for deleting bboxes
+    $('#canvas').on('contextmenu', function(e) {
+        e.preventDefault(); // Prevent the default context menu
+        var pos = mousePos(e, this);
+        insideBox = isInsideBox(pos.x, pos.y);
+        if(insideBox.isInside)
+            removeBox(insideBox.boxNr);
+    });
+
+
     // Set first label active
     changeLabel(g_labelButtons[0].id);
     redrawSequence();
