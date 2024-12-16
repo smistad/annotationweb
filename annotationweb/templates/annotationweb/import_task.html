@@ -1,0 +1,40 @@
+{% extends 'annotationweb/one_column_layout.html' %}
+
+{% block content %}
+    <h2>Import task tasks & datasets</h2>
+
+    <p>
+        Please upload a YAML file describing all objects to be imported.
+        Instead of using fixed primary keys and foreign keys you can use the following placeholder
+        which will create new keys:<br><br>
+
+        <pre>$app_name$model_name$integer_id$</pre><br>
+
+        Using this will avoid replacing existing objects in the database.
+        The integer_id should start at 1 and be incremented with 1 for every instance.
+        Example:
+        <pre>
+- model: annotationweb.dataset
+  pk: $annotationweb$dataset$1$
+  fields:
+    name: Import dataset test
+
+- model: annotationweb.task
+  pk: $annotationweb$task$1$
+  fields:
+    name: Import test task
+    type: Landmark
+    description: Testy test!
+      dataset:
+        - $annotationweb$dataset$1$
+        </pre>
+    </p>
+
+    <form action="{% url 'import_task' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <table>
+            {{ form.as_table }}
+        </table>
+        <input type="submit" value="Submit" />
+    </form>
+{% endblock %}

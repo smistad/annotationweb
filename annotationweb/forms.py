@@ -103,3 +103,7 @@ class ImageListForm(forms.Form):
                 widget=forms.SelectMultiple(attrs={'onchange': 'this.form.submit();'})
             )
 
+
+class ImportTaskForm(forms.Form):
+    file = forms.FileField()
+
