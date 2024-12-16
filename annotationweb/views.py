@@ -767,8 +767,11 @@ def import_task(request):
                 for original, to in to_replace:
                     contents = contents.replace(original, to)
                 #print(contents)
+                counter = 0
                 for obj in serializers.deserialize('yaml', contents):
                     obj.save()
+                    counter += 1
+            messages.success(request, f'{counter} objects imported into the database.')
             return redirect('index')
     else:
         form = ImportTaskForm()
