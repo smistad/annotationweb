@@ -36,22 +36,23 @@ function setupLandmarkTask() {
                     addLandmark(pos.x, pos.y, g_currentLabel, g_currentFrameNr);
             }
         } else {
-            console.log("deleting landmark..");
             let frameNr = g_currentFrameNr;
-            if(frameNr in g_landmarks) {
-                for(let i = 0; i < g_landmarks[frameNr].length; ++i) {
-                    let landmark = g_landmarks[frameNr][i];
-                    console.log('Testing..');
-                    if(Math.abs(pos.x - landmark.x) < 8 && Math.abs(pos.y - landmark.y) < 8) {
-                        console.log('Deleting landmark..');
-                        // Delete it
-                        g_landmarks[frameNr].splice(i, 1);
-                        break;
-                    }
-                }
-            }
+            console.log("deleting landmark from shift + click");
+            deleteLandmark(pos, frameNr);
         }
         redrawSequence();
+    });
+
+    // Define right-click callback for deleting landmarks
+    $('#canvas').on('contextmenu', function(e) {
+        e.preventDefault(); // Prevent the default context menu
+        var pos = mousePos(e, this);
+        let frameNr = g_currentFrameNr;
+
+        // Call the deleteLandmark function for right-click
+        console.log("deleting landmark from right-click...");
+        deleteLandmark(pos, frameNr);
+        return false;
     });
 
     $("#addFrameButton").click(function() {
@@ -113,6 +114,20 @@ function addLandmark(x, y, label, frameNr) {
         g_landmarks[frameNr].push(landmark);
     } else {
         g_landmarks[frameNr] = [landmark];
+    }
+}
+
+function deleteLandmark(pos, frameNr) {
+    if (frameNr in g_landmarks) {
+        for (let i = 0; i < g_landmarks[frameNr].length; ++i) {
+            let landmark = g_landmarks[frameNr][i];
+            if (Math.abs(pos.x - landmark.x) < 8 && Math.abs(pos.y - landmark.y) < 8) {
+                console.log('Deleting landmark...');
+                g_landmarks[frameNr].splice(i, 1);
+                redrawSequence();
+                break;
+            }
+        }
     }
 }
 
