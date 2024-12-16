@@ -98,6 +98,16 @@ function setupSegmentation() {
         redrawSequence();
     });
 
+    // Define right-click callback for deleting bboxes
+    $('#canvas').on('contextmenu', function(e) {
+        e.preventDefault(); // Prevent the default context menu
+        var pos = mousePos(e, this);
+        insideBox = isInsideBox(pos.x, pos.y);
+        if(insideBox.isInside)
+            removeBox(insideBox.boxNr);
+    });
+
+
     // Set first label active
     changeLabel(g_labelButtons[0].id);
     redrawSequence();
@@ -138,20 +148,24 @@ function removeBox(boxNr)
 
 function moveBox(boxNr, xDiff, yDiff)
 {
-    box = g_boxes[g_currentFrameNr][boxNr];
-    box.x += xDiff;
-    box.y += yDiff;
-    redrawSequence();
+    if(g_boxes[g_currentFrameNr].includes(boxNr)) {
+        box = g_boxes[g_currentFrameNr][boxNr];
+        box.x += xDiff;
+        box.y += yDiff;
+        redrawSequence();
+    }
 }
 
 function resizeBox(boxNr, xDiff, yDiff)
 {
-    box = g_boxes[g_currentFrameNr][boxNr];
-    if(box.width > (-xDiff + g_minimumSize))
-        box.width += xDiff;
-    if(box.height > (-yDiff + g_minimumSize))
-    box.height += yDiff;
-    redrawSequence();
+    if(g_boxes[g_currentFrameNr].includes(boxNr)) {
+        box = g_boxes[g_currentFrameNr][boxNr];
+        if (box.width > (-xDiff + g_minimumSize))
+            box.width += xDiff;
+        if (box.height > (-yDiff + g_minimumSize))
+            box.height += yDiff;
+        redrawSequence();
+    }
 }
 
 function createBox(x, y, x2, y2, label) {
