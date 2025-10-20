@@ -26,7 +26,7 @@ def get_image_as_http_response(filename, post_processing_method=''):
             new_width = int(pil_image.width*(real_aspect / current_aspect))
             new_height = pil_image.height
             pil_image = pil_image.resize((new_width, new_height))
-    elif extension.lower() == '.png':
+    elif extension.lower() == '.png' or extension.lower() == '.jpg' or extension.lower() == '.jpeg':
         pil_image = PIL.Image.open(filename)
         source = pil_image
     else:
