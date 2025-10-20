@@ -75,9 +75,10 @@
         <div class="actionButtons">
             <button id="playButton" type="button"><i id="play" class="fa fa-play"></i></button></button>
             {% if task.user_frame_selection %}
-                <button id="addEDFrameButton" type="button" style="background-color: #CC3434">Mark ED</button>
-                <button id="addESFrameButton" type="button" style="background-color: #0077b3">Mark ES</button>
+                <button id="addEDFrameButton" type="button" style="background-color: #CC3434">ED</button>
+                <button id="addESFrameButton" type="button" style="background-color: #0077b3">ES</button>
                 <button id="addNormalFrameButton" type="button" title="Select frame for annotation"><i class="fa fa-plus"></i></button>
+                <button id="removeFrameButton" type="button" title="Remove current frame for annotation"><i class="fa fa-minus"></i></button>
             {% endif %}
             <button id="copyAnnotation" type="button" title="Copy annotation from previous frame"><i class="fa fa-copy"></i></button>
             <button id="nextFrameButton" type="button" title="Next annotation frame"><i class="fa fa-step-forward"></i></button>

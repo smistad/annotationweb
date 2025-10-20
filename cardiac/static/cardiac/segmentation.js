@@ -147,7 +147,7 @@ function setupSegmentation() {
 
     $("#clearButton").click(function() {
         g_annotationHasChanged = true;
-        // TODO fix
+        delete g_controlPoints[g_currentFrameNr];
         redrawSequence();
     });
 
@@ -181,16 +181,31 @@ function setupSegmentation() {
         g_currentTargetFrameIndex = g_targetFrames.length-1;
     });
 
+
+    $('#removeFrameButton').click(function() {
+        delete g_controlPoints[g_currentFrameNr];
+        delete g_targetFrameTypes[g_currentFrameNr];
+        redrawSequence();
+    });
+
+
     $('#copyAnnotation').click(function() {
         // Verify that we are on a target frame;
         if(g_targetFrames.indexOf(g_currentFrameNr) < 0 || g_targetFrames.length === 1)
             return;
 
-        // Find previous frame
-        var frame_index = g_targetFrames.findIndex(index => index === g_currentFrameNr);
-        var copy_index = frame_index - 1;
-        if(copy_index < 0)
-            return;
+        // Find closest frame
+        let frame_index = g_targetFrames.findIndex(index => index === g_currentFrameNr);
+        let left_index = frame_index - 1;
+        let right_index = frame_index + 1;
+        let distance_left = Infinity;
+        let distance_right = Infinity;
+        if(left_index >= 0)
+            distance_left = g_targetFrames[frame_index] - g_targetFrames[left_index];
+        if(right_index < g_targetFrames.length)
+            distance_right = g_targetFrames[right_index] - g_targetFrames[frame_index];
+
+        let copy_index = (distance_left < distance_right) ? left_index : right_index;
 
         // Copy and potentially replace previous segmentation
         g_controlPoints[g_currentFrameNr] = JSON.parse(JSON.stringify(g_controlPoints[g_targetFrames[copy_index]])); // Hack for doing deep copy
