@@ -246,6 +246,62 @@ function goToPreviousKeyFrame() {
     g_currentTargetFrameIndex = i;
     goToFrame(g_targetFrames[i]);
 }
+
+async function getImageFrame(image_sequence_id, frame_nr, task_id) {
+
+    // This is required due to djangos CSRF protection
+    var csrftoken = getCookie('csrftoken');
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+        return await $.ajax({
+                url: '/show_frame/' + image_sequence_id + '/' + frame_nr + '/' + task_id + '/',
+                type: 'POST',
+                cache: false,
+                data: {'x': Math.random()},
+                xhr: function() {
+                    var xhrOverride = new XMLHttpRequest();
+                    xhrOverride.responseType = 'arraybuffer'; // Set the response type to arraybuffer
+                    return xhrOverride;
+                }
+            }).then(function (response) {
+            if (typeof ImageDecoder !== 'undefined') {
+                console.log('ImageDecoder is available.')
+                // Decode image data with ImageDecoder
+                let init = {
+                    type: "image/png",
+                    data: response
+                };
+                let imageDecoder = new ImageDecoder(init);
+                return imageDecoder.decode({frameIndex: 0});
+            } else {
+                console.log('ImageDecoder unavailable.')
+                let image = UPNG.decode(response);
+                const width = image.width;
+                const height = image.height;
+                let convertedData;
+                if (image.data.buffer.byteLength !== width * height * 4) {
+                    convertedData = new Uint8ClampedArray(width * height * 4);
+                    for (let i = 0; i < image.data.length; ++i) {
+                        convertedData[i * 4] = image.data[i];
+                        convertedData[i * 4 + 1] = image.data[i];
+                        convertedData[i * 4 + 2] = image.data[i];
+                        convertedData[i * 4 + 3] = 255
+                    }
+                } else {
+                    convertedData = new Uint8ClampedArray(image.data);
+                }
+                let imageData = new ImageData(convertedData, width, height);
+
+                return window.createImageBitmap(imageData);
+            }
+        });
+}
+
 function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_sequence, user_frame_selection, annotate_single_frame, frames_to_annotate, images_to_load_before, images_to_load_after, auto_play) {
     // If user cannot select frame, and there are no target frames, select last frame as target frame
     if(!user_frame_selection && annotate_single_frame && frames_to_annotate.length === 0) {
@@ -462,25 +518,28 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
         g_shiftKeyPressed = event.shiftKey;
     });
 
-
     // Load images
     g_framesLoaded = 0;
-    //console.log('start: ' + start + ' end: ' + end)
-    //console.log('target_frame: ' + target_frame)
-    for(var i = start; i <= end; i++) {
-        var image = new Image();
-        image.src = '/show_frame/' + image_sequence_id + '/' + i + '/' + g_taskID + '/';
-        image.onload = function() {
-            g_canvasWidth = this.width;
-            g_canvasHeight = this.height;
-            canvas.setAttribute('width', g_canvasWidth);
-            canvas.setAttribute('height', g_canvasHeight);
+    g_sequence = new Array(end-start);
+    for(let i = start; i <= end; i++) {
+        getImageFrame(image_sequence_id, i, g_taskID).then(image => {
+              if(image instanceof ImageBitmap) {
+                  g_canvasWidth = image.width;
+                  g_canvasHeight = image.height;
+                  g_sequence[i] = image;
+              } else {
+                  // We have a video frame
+                  g_canvasWidth = image.image.codedWidth;
+                  g_canvasHeight = image.image.codedHeight;
+                  g_sequence[i] = image.image;
+              }
+              canvas.setAttribute('width', g_canvasWidth);
+              canvas.setAttribute('height', g_canvasHeight);
 
-            // Update progressbar
-            g_framesLoaded++;
-            g_progressbar.progressbar( "value", g_framesLoaded*100/totalToLoad);
-        };
-        g_sequence.push(image);
+              // Update progressbar
+              g_framesLoaded++;
+              g_progressbar.progressbar("value", g_framesLoaded * 100 / totalToLoad);
+        });
     }
 }
 

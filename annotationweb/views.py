@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.core import serializers
 from django.db import transaction
 from django.db.models import Max
-from django.http import QueryDict
+from django.http import QueryDict, HttpResponseServerError
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, HttpResponse, Http404, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
@@ -345,6 +345,9 @@ def select_key_frames(request, task_id, image_id):
 
 
 def show_frame(request, image_sequence_id, frame_nr, task_id):
+    if request.method != 'POST':
+        return HttpResponseServerError()
+
     # Get image sequence the key frame belongs to
     try:
         task = Task.objects.get(pk=task_id)

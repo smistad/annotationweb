@@ -44,7 +44,7 @@ def get_image_as_http_response(filename, post_processing_method=''):
     pil_image.save(buffer, "PNG", compress_level=1)  # TODO This function is very slow due to PNG compression
     #print('Image loading time with save to buffer', time.time() - start, 'seconds')
 
-    return HttpResponse(buffer.getvalue(), content_type="image/png")
+    return HttpResponse(buffer.getvalue(), content_type='application/octet-stream')
 
 
 def copy_image(filename, new_filename):

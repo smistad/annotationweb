@@ -37,7 +37,30 @@
     {% endif %}
 
     <div style="float: left; width: 25%; box-sizing: border-box; padding: 10px;">
-        <img src="{% url 'show_image' image.id task.id %}" width="100%">
+        <canvas id="canvas_{{ image.id }}" style="width:100%;"></canvas><br>
+        <script>
+            $(document).ready(function() {
+                // Load image into canvas
+                getImageFrame({{ image.id }}, Math.floor({{ image.nr_of_frames }}/2), {{ task.id }})
+                    .then(image => {
+                        console.log('Got image');
+                        let canvas = document.getElementById('canvas_{{ image.id }}');
+                        let scale;
+                        let data;
+                        if(image instanceof ImageBitmap) {
+                            scale = image.height / image.width;
+                            data = image;
+                        } else {
+                            scale = image.image.codedHeight / image.image.codedWidth;
+                            data = image.image;
+                        }
+
+                        let height = canvas.offsetWidth * scale;
+                        canvas.setAttribute('height', height);
+                        canvas.getContext('2d').drawImage(data, 0, 0, canvas.offsetWidth, height);
+                    });
+            });
+        </script>
         {{ image.format }}<br>
 
         {% if image.annotation.finished %}
