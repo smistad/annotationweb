@@ -43,21 +43,12 @@
                 // Load image into canvas
                 getImageFrame({{ image.id }}, Math.floor({{ image.nr_of_frames }}/2), {{ task.id }})
                     .then(image => {
-                        console.log('Got image');
                         let canvas = document.getElementById('canvas_{{ image.id }}');
-                        let scale;
-                        let data;
-                        if(image instanceof ImageBitmap) {
-                            scale = image.height / image.width;
-                            data = image;
-                        } else {
-                            scale = image.image.codedHeight / image.image.codedWidth;
-                            data = image.image;
-                        }
-
-                        let height = canvas.offsetWidth * scale;
+                        let scale = canvas.offsetWidth / image.width;
+                        let height = Math.round(image.height * scale);
+                        canvas.setAttribute('width', canvas.offsetWidth);
                         canvas.setAttribute('height', height);
-                        canvas.getContext('2d').drawImage(data, 0, 0, canvas.offsetWidth, height);
+                        canvas.getContext('2d').drawImage(image, 0, 0, canvas.offsetWidth, height);
                     });
             });
         </script>
