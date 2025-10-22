@@ -317,35 +317,41 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     g_userFrameSelection = user_frame_selection;
 
     // Check for ECG
-    $.get('/ecg/' + image_sequence_id + '/', function(data, status) {
-        if(data !== 'NO') {
-            g_ecgData = data['ecg'];
-            g_ecgMin = Number.MAX_VALUE;
-            g_ecgMax = -Number.MAX_VALUE;
-            for(let i = 0; i < g_ecgData.length; ++i) {
-                if(g_ecgData[i]['value'] < g_ecgMin)
-                    g_ecgMin = g_ecgData[i]['value'];
-                if(g_ecgData[i]['value'] > g_ecgMax)
-                    g_ecgMax = g_ecgData[i]['value'];
-            }
+    $.ajax({
+        url: '/ecg/' + image_sequence_id + '/',
+        method: 'POST',
+        data: {'x': Math.random()},
+        cache: false,
+        success: function(data, status) {
+            if(data !== 'NO') {
+                g_ecgData = data['ecg'];
+                g_ecgMin = Number.MAX_VALUE;
+                g_ecgMax = -Number.MAX_VALUE;
+                for(let i = 0; i < g_ecgData.length; ++i) {
+                    if(g_ecgData[i]['value'] < g_ecgMin)
+                        g_ecgMin = g_ecgData[i]['value'];
+                    if(g_ecgData[i]['value'] > g_ecgMax)
+                        g_ecgMax = g_ecgData[i]['value'];
+                }
 
-            // Create ECG plot
-            // Create canvas
-            var sequenceDiv = document.getElementById('slider');
-            var canvas = document.createElement('canvas');
-            sequenceDiv.before(canvas);
-            let canvasHeight = 100;
-            canvas.setAttribute('width', $('#contentLeft').width());
-            canvas.setAttribute('height', canvasHeight);
-            canvas.setAttribute('id', 'ecgCanvas');
-            canvas.setAttribute('style', 'width: 100%; height: ' + canvasHeight + 'px;');
-            // IE stuff
-            if (typeof G_vmlCanvasManager != 'undefined') {
-                canvas = G_vmlCanvasManager.initElement(canvas);
-            }
-            g_ecgContext = canvas.getContext("2d");
+                // Create ECG plot
+                // Create canvas
+                var sequenceDiv = document.getElementById('slider');
+                var canvas = document.createElement('canvas');
+                sequenceDiv.before(canvas);
+                let canvasHeight = 100;
+                canvas.setAttribute('width', $('#contentLeft').width());
+                canvas.setAttribute('height', canvasHeight);
+                canvas.setAttribute('id', 'ecgCanvas');
+                canvas.setAttribute('style', 'width: 100%; height: ' + canvasHeight + 'px;');
+                // IE stuff
+                if (typeof G_vmlCanvasManager != 'undefined') {
+                    canvas = G_vmlCanvasManager.initElement(canvas);
+                }
+                g_ecgContext = canvas.getContext("2d");
 
-            drawECG();
+                drawECG();
+            }
         }
     });
 
