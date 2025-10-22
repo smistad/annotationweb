@@ -149,7 +149,9 @@ th, td {
 }
 
 #canvas {
-    width: 100%;
+    height: 85vh;
+    max-width: 100%;
+    object-fit: contain;
 }
 
 #imageFilter form p {
