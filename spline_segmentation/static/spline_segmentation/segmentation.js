@@ -158,14 +158,12 @@ function addControlPointsForNewFrame(frameNr) {
 }
 
 function loadSegmentationTask(image_sequence_id) {
-
-    g_backgroundImage = new Image();
-    g_backgroundImage.src = '/show_frame/' + image_sequence_id + '/' + 0 + '/' + g_taskID + '/';
-    g_backgroundImage.onload = function() {
-        g_canvasWidth = this.width;
-        g_canvasHeight = this.height;
+    getImageFrame(image_sequence_id, 0, g_taskID).then(image => {
+        g_canvasWidth = image.width;
+        g_canvasHeight = image.height;
+        g_backgroundImage = image;
         setupSegmentation();
-    };
+    });
 }
 
 function getClosestPoint(x, y) {

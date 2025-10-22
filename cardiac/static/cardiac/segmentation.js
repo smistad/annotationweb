@@ -219,20 +219,12 @@ function setupSegmentation() {
 }
 
 function loadSegmentationTask(image_sequence_id) {
-      getImageFrame(image_sequence_id, 0, g_taskID).then(image => {
-              if(image instanceof ImageBitmap) {
-                  g_canvasWidth = image.width;
-                  g_canvasHeight = image.height;
-                  g_backgroundImage = image;
-              } else {
-                  // We have a video frame
-                  g_canvasWidth = image.image.codedWidth;
-                  g_canvasHeight = image.image.codedHeight;
-                  g_backgroundImage = image.image;
-                  console.log('canvas size', g_canvasWidth, g_canvasHeight);
-              }
-              setupSegmentation();
-        });
+  getImageFrame(image_sequence_id, 0, g_taskID).then(image => {
+          g_canvasWidth = image.width;
+          g_canvasHeight = image.height;
+          g_backgroundImage = image;
+          setupSegmentation();
+    });
 }
 
 function createMotionModeCanvas() {

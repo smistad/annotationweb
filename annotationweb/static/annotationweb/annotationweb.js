@@ -258,26 +258,32 @@ async function getImageFrame(image_sequence_id, frame_nr, task_id) {
             }
         }
     });
-        return await $.ajax({
-                url: '/show_frame/' + image_sequence_id + '/' + frame_nr + '/' + task_id + '/',
-                type: 'POST',
-                cache: false,
-                data: {'x': Math.random()},
-                xhr: function() {
-                    var xhrOverride = new XMLHttpRequest();
-                    xhrOverride.responseType = 'arraybuffer'; // Set the response type to arraybuffer
-                    return xhrOverride;
-                }
-            }).then(function (response) {
-            if (typeof ImageDecoder !== 'undefined') {
+
+    return await $.ajax({
+            url: '/show_frame/' + image_sequence_id + '/' + frame_nr + '/' + task_id + '/',
+            type: 'POST',
+            cache: false,
+            data: {'x': Math.random()},
+            xhr: function() {
+                var xhrOverride = new XMLHttpRequest();
+                xhrOverride.responseType = 'arraybuffer'; // Set the response type to arraybuffer
+                return xhrOverride;
+            }
+        }).then(function (response) {
+            // Check if ImageDecoder is available; Safari does not support it yet
+            if(typeof ImageDecoder !== 'undefined') {
                 console.log('ImageDecoder is available.')
                 // Decode image data with ImageDecoder
-                let init = {
-                    type: "image/png",
-                    data: response
+                let func = async function(data) {
+                    let init = {
+                        type: "image/png",
+                        data: data
+                    };
+                    let imageDecoder = new ImageDecoder(init);
+                    let videoFrame = await imageDecoder.decode({frameIndex: 0})
+                    return window.createImageBitmap(videoFrame.image);
                 };
-                let imageDecoder = new ImageDecoder(init);
-                return imageDecoder.decode({frameIndex: 0});
+                return func(response);
             } else {
                 console.log('ImageDecoder unavailable.')
                 let image = UPNG.decode(response);
@@ -523,16 +529,9 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     g_sequence = new Array(end-start);
     for(let i = start; i <= end; i++) {
         getImageFrame(image_sequence_id, i, g_taskID).then(image => {
-              if(image instanceof ImageBitmap) {
-                  g_canvasWidth = image.width;
-                  g_canvasHeight = image.height;
-                  g_sequence[i] = image;
-              } else {
-                  // We have a video frame
-                  g_canvasWidth = image.image.codedWidth;
-                  g_canvasHeight = image.image.codedHeight;
-                  g_sequence[i] = image.image;
-              }
+              g_canvasWidth = image.width;
+              g_canvasHeight = image.height;
+              g_sequence[i] = image;
               canvas.setAttribute('width', g_canvasWidth);
               canvas.setAttribute('height', g_canvasHeight);
 
