@@ -10,6 +10,7 @@ body {
     margin-bottom: 3px;
     margin-top: 3px;
     color: #000000;
+    white-space: pre-wrap;
 }
 .success {
     background-color: #CCFF99;
@@ -18,6 +19,7 @@ body {
     margin-bottom: 3px;
     margin-top: 3px;
     color: #000000;
+    white-space: pre-wrap;
 }
 .error {
     background-color: #FFFFCC;
@@ -26,6 +28,7 @@ body {
     margin-bottom: 3px;
     margin-top: 3px;
     color: #000000;
+    white-space: pre-wrap;
 }
 
 .message {
@@ -35,6 +38,7 @@ body {
     margin-bottom: 3px;
     margin-top: 3px;
     color: #000000;
+    white-space: pre-wrap;
 }
 
 a:link, a:visited {

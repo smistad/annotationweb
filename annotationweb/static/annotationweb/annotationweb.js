@@ -104,7 +104,7 @@ function save() {
         console.log(data);
         var messageBox = document.getElementById("message");
         if(data.success == "true") {
-            messageBox.innerHTML = '<span class="success">Image was saved</span>';
+            messageBox.innerHTML = '<span class="success">'+data.message+'</span>';
             if(g_returnURL != '') {
                 window.location = g_returnURL;
             } else {
