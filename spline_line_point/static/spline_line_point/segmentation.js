@@ -1,4 +1,8 @@
+var g_backgroundImageData;
+var g_imageData;
+var g_image;
 var g_backgroundImage;
+var g_frameNr;
 var g_currentColor = null;
 var g_controlPoints = {}; // control point dictionary [key_frame_nr] contains a dictionary/map of objects with a dictionary with label: label data, control_points: list
 var g_currentObject = 0; // Which index in g_controlPoints[key_frame_nr] list we are in
@@ -7,6 +11,14 @@ var g_pointToMove = -1;
 var g_labelToMove = -1;
 var g_moveDistanceThreshold = 8;
 var g_drawLine = false;
+var g_currentSegmentationLabel = 0;
+var g_motionModeData;
+var g_motionModeImage;
+var g_motionModeContext;
+var g_createMotionModeImage = 0;
+var g_motionModeLine = -1;
+var g_moveMotionModeLIne = false;
+var g_targetFrameTypes = {};
 var g_currentLabel = -1;
 
 function getMaxObjectID() {
@@ -124,6 +136,66 @@ function setupSegmentation() {
         redrawSequence();
     });
 
+
+    $("#clearButton").click(function() {
+        g_annotationHasChanged = true;
+        // TODO fix
+        redrawSequence();
+    });
+
+
+    $("#addNormalFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
+            return;
+        addKeyFrame(g_currentFrameNr, '#555555');
+        g_targetFrameTypes[g_currentFrameNr] = 'Normal';
+        g_currentTargetFrameIndex = g_targetFrames.length-1;
+    });
+
+    $("#addEDFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
+            return;
+        addKeyFrame(g_currentFrameNr, '#CC3434');
+        g_targetFrameTypes[g_currentFrameNr] = 'ED';
+        g_currentTargetFrameIndex = g_targetFrames.length-1;
+    });
+
+    $("#addESFrameButton").click(function() {
+        setPlayButton(false);
+        if(g_targetFrames.includes(g_currentFrameNr)) // Already exists
+            return;
+        addKeyFrame(g_currentFrameNr, '#0077b3');
+        g_targetFrameTypes[g_currentFrameNr] = 'ES';
+        g_currentTargetFrameIndex = g_targetFrames.length-1;
+    });
+
+    $('#copyAnnotation').click(function() {
+        // Verify that we are on a target frame;
+        if(g_targetFrames.indexOf(g_currentFrameNr) < 0 || g_targetFrames.length === 1)
+            return;
+
+        // Find closest frame
+        let frame_index = g_targetFrames.findIndex(index => index === g_currentFrameNr);
+        let left_index = frame_index - 1;
+        let right_index = frame_index + 1;
+        let distance_left = Infinity;
+        let distance_right = Infinity;
+        if(left_index >= 0)
+            distance_left = g_targetFrames[frame_index] - g_targetFrames[left_index];
+        if(right_index < g_targetFrames.length)
+            distance_right = g_targetFrames[right_index] - g_targetFrames[frame_index];
+
+        let copy_index = (distance_left < distance_right) ? left_index : right_index;
+
+        // Copy and potentially replace previous segmentation
+        g_controlPoints[g_currentFrameNr] = JSON.parse(JSON.stringify(g_controlPoints[g_targetFrames[copy_index]])); // Hack for doing deep copy
+        redrawSequence();
+    });
+
+
+
     $('#removeFrameButton').click(function() {
         // Remove splines in this frame
         if(g_currentFrameNr in g_controlPoints){
@@ -137,10 +209,6 @@ function setupSegmentation() {
            g_drawLine = false;
            redrawSequence();
        }
-    });
-
-    $('#addFrameButton').click(function() {
-        addControlPointsForNewFrame(g_currentFrameNr);
     });
 
     // Set first label active
@@ -157,14 +225,73 @@ function addControlPointsForNewFrame(frameNr) {
     g_controlPoints[frameNr] = {};
 }
 
+
 function loadSegmentationTask(image_sequence_id) {
-    getImageFrame(image_sequence_id, 0, g_taskID).then(image => {
-        g_canvasWidth = image.width;
-        g_canvasHeight = image.height;
-        g_backgroundImage = image;
-        setupSegmentation();
+  getImageFrame(image_sequence_id, 0, g_taskID).then(image => {
+          g_canvasWidth = image.width;
+          g_canvasHeight = image.height;
+          g_backgroundImage = image;
+          setupSegmentation();
     });
 }
+
+function createMotionModeCanvas() {
+    if(g_motionModeLine == -1) {
+        g_motionModeLine = g_canvasWidth / 2;
+    }
+    // Create canvas
+    var canvas = document.getElementById('m-mode-canvas');
+    canvas.setAttribute('width', g_framesLoaded);
+    canvas.setAttribute('height', g_canvasHeight);
+    // IE stuff
+    if(typeof G_vmlCanvasManager != 'undefined') {
+        canvas = G_vmlCanvasManager.initElement(canvas);
+    }
+    g_motionModeContext = canvas.getContext("2d");
+    var width = g_framesLoaded;
+    g_motionModeContext.clearRect(0, 0, g_motionModeContext.canvas.width, g_motionModeContext.canvas.height); // Clears the canvas
+
+    if(g_createMotionModeImage != g_framesLoaded) {
+        g_motionModeImage = g_motionModeContext.getImageData(0, 0, width, g_canvasHeight);
+        g_motionModeData = g_motionModeImage.data;
+        console.log('Frames: ' + g_framesLoaded)
+        console.log('Width: ' + g_canvasWidth)
+        console.log('Height: ' + g_canvasHeight)
+        // Go through entire sequence
+        for (var t = 0; t < g_framesLoaded; t++) {
+            var frame = g_sequence[t];
+            var dummyCanvas = document.createElement('canvas');
+            dummyCanvas.setAttribute('width', g_canvasWidth);
+            dummyCanvas.setAttribute('height', g_canvasHeight);
+            var dummyContext = dummyCanvas.getContext('2d');
+            dummyContext.drawImage(frame, 0, 0);
+            var pixels = dummyContext.getImageData(g_motionModeLine, 0, 1, g_canvasHeight).data;
+            for (var y = 0; y < g_canvasHeight; y++) {
+                var value = pixels[y*4]
+                //console.log(value)
+                g_motionModeData[(t + y * width) * 4 + 0] = value;
+                g_motionModeData[(t + y * width) * 4 + 1] = value;
+                g_motionModeData[(t + y * width) * 4 + 2] = value;
+                g_motionModeData[(t + y * width) * 4 + 3] = 255;
+            }
+        }
+        g_createMotionModeImage = g_framesLoaded;
+        console.log('Finished creating m-mode')
+    }
+    g_motionModeContext.putImageData(g_motionModeImage, 0, 0);
+
+    // Draw line
+    g_motionModeContext.lineWidth = 1;
+    g_motionModeContext.beginPath();
+    g_motionModeContext.strokeStyle = colorToHexString(0, 255, 0);
+    g_motionModeContext.moveTo(g_currentFrameNr, 0);
+    g_motionModeContext.lineTo(g_currentFrameNr, g_canvasHeight);
+    g_motionModeContext.stroke();
+
+    $('#m-mode-canvas').css('width', '100%');
+    $('#m-mode-canvas').css('height', '200px');
+}
+
 
 function getClosestPoint(x, y) {
     var minDistance = g_canvasWidth*g_canvasHeight;
@@ -351,9 +478,14 @@ function redraw(){
 
 // Override redraw sequence in sequence.js
 function redrawSequence() {
+    createMotionModeCanvas();
     var index = g_currentFrameNr - g_startFrame;
     g_context.drawImage(g_sequence[index], 0, 0, g_canvasWidth, g_canvasHeight);
     redraw();
+    if(g_zoom) {
+        // Zoom at mouse position when moving control points
+        zoomAtMousePosition(g_mousePositionX, g_mousePositionY);
+    }
 }
 
 function getLabelIdxWithId(id) {
@@ -428,7 +560,8 @@ function sendDataForSave() {
         data: {
             control_points: JSON.stringify(g_controlPoints),
             target_frames: JSON.stringify(g_targetFrames),
-            n_labels: g_labelButtons.length,
+            target_frame_types: JSON.stringify(g_targetFrameTypes),
+            motion_mode_line: g_motionModeLine,
             width: g_canvasWidth,
             height: g_canvasHeight,
             image_id: g_imageID,
