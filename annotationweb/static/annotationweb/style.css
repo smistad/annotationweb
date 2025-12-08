@@ -46,7 +46,7 @@ body {
       width: 100%;
 }
 
-#menuWrapper {
+header {
     width: 100%;
     background-color: #333;
 }
@@ -167,4 +167,16 @@ ul{
 
 #info {
     display: none;
+}
+
+#siteWrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+main {
+    flex-grow: 1;
+}
+footer {
+    text-align: center;
 }

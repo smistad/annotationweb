@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <title>
-            Annotation Web {% block title %}{% endblock %}
+            {{ SITE_NAME }}
         </title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -31,23 +31,30 @@
         </script>
     </head>
     <body>
-        <div id="menuWrapper">
-            <div id="menu">
-            <ul>
-                <li><h1>Annotation Web</h1></li>
-                {% if user.is_authenticated %}
-                <li><a href="{%  url 'index' %}">Task list</a></li>
-                {% if user.is_staff %}
-                <li><a href="{% url 'datasets' %}">Datasets</a></li>
-                <li><a href="{% url 'admin:index' %}">Admin</a></li>
-                {% endif %}
-                <li><a href="{% url 'user:logout' %}">Logout</a></li>
-                <li id="loggedIn">Logged in as {{ user }}</li>
-                {% endif %}
-            </ul>
-            </div>
+        <div id="siteWrapper">
+            <header>
+                <div id="menu">
+                <ul>
+                    <li><h1>{{ SITE_NAME }}</h1></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{%  url 'index' %}">Task list</a></li>
+                    {% if user.is_staff %}
+                    <li><a href="{% url 'datasets' %}">Datasets</a></li>
+                    <li><a href="{% url 'admin:index' %}">Admin</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'user:logout' %}">Logout</a></li>
+                    <li id="loggedIn">Logged in as {{ user }}</li>
+                    {% endif %}
+                </ul>
+                </div>
+            </header>
+            <main>
+                {% block page_content %}
+                {% endblock %}
+            </main>
+            <footer>
+                Annotation Web Version: {{ VERSION }}
+            </footer>
         </div>
-            {% block page_content %}
-            {% endblock %}
     </body>
 </html>
