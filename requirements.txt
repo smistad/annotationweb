@@ -1,7 +1,7 @@
-Django==2.2.*
+Django==3.2.*
 h5py==3.*
 numpy==1.19.*
-Pillow==7.1.*
+Pillow==10.*
 scipy>=1.5.0,<2.0
 django-otp==0.7.*
 qrcode==6.*

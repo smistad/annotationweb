@@ -147,11 +147,12 @@ STATIC_FILEFINDERS = [
 
 LOGIN_URL = '/user/login/'
 LOGIN_REDIRECT_URL = '/'
-LOGIN_EXEMPT_URLS = (
- r'^about\.html$',
- r'^legal/', # allow any URL under /legal/*
-)
+LOGIN_EXEMPT_URLS = ()
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 OTP_TOTP_ISSUER = 'Annotationweb'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

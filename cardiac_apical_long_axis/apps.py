@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class CardiacParasternalLongAxisConfig(AppConfig):
-    name = 'cardiac_parasternal_long_axis'
+class CardiacApicalLongAxisConfig(AppConfig):
+    name = 'cardiac_apical_long_axis'

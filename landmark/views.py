@@ -28,7 +28,7 @@ def process_image(request, task_id, image_id):
         return redirect('index')
     except RuntimeError as e:
         messages.error(request, str(e))
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        return HttpResponseRedirect(request.headers.get('referer'))
 
 
 def save(request):
