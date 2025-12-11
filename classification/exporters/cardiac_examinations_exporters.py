@@ -35,7 +35,6 @@ class CardiacExaminationsExporter(Exporter):
     A folder is created for each dataset with the actual images
     """
 
-    task_type = Task.CLASSIFICATION
     name = 'Cardiac examinations classification exporter'
 
     def get_form(self, data=None):
@@ -157,7 +156,6 @@ class CardiacHDFExaminationsExporter(Exporter):
     A labels.txt file is also created.
     """
 
-    task_type = Task.CLASSIFICATION
     name = 'Cardiac examinations classification exporter (HDF5)'
 
     def get_form(self, data=None):

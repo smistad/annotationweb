@@ -1,8 +1,8 @@
 /.idea
 /environment
+/env
 /venv
-/segmentations
-*.sqlite3
+*.sqlite3*
 *.log
 *.pot
 *.pyc

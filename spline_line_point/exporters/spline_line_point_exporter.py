@@ -25,11 +25,6 @@ class SplineLinePointExporterForm(forms.Form):
 
 
 class SplineLinePointExporter(Exporter):
-    """
-    asdads
-    """
-
-    task_type = Task.SPLINE_LINE_POINT
     name = 'Splines, lines & point segmentation exporter'
 
     def get_form(self, data=None):

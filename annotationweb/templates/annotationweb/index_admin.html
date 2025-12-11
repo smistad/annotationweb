@@ -27,7 +27,7 @@
     {% for task in tasks %}
     <tr>
         <td>{{ task.name }}</td>
-        <td align="center">{{ task.type }}</td>
+        <td align="center">{{ task.type_name }}</td>
         <td align="center">{{task.total_number_of_images}}</td>
         <td align="center">{{task.percentage_finished}}%</td>
         <td align="center"><a href="{% url 'task' task.id %}">Image list</a></td>

@@ -23,11 +23,6 @@ class CardiacSegmentationExporterForm(forms.Form):
 
 
 class CardiacSegmentationExporter(Exporter):
-    """
-    asdads
-    """
-
-    task_type = Task.CARDIAC_SEGMENTATION
     name = 'Default cardiac segmentation exporter'
 
     def get_form(self, data=None):

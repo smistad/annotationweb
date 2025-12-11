@@ -1,0 +1,4 @@
+{# Get all labels if task is classification task #}
+{% for frame in image.annotation_frames %}
+    {% complete_label frame.imagelabel.label %}<br>
+{% endfor %}

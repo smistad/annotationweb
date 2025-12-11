@@ -12,7 +12,7 @@ class SearchFilter:
         # Get task labels if classification
         self.labels = None
         labels_selected = None
-        if task.type == Task.CLASSIFICATION:
+        if task.type == 'classification':
             # Get all labels, including sublabels
             self.labels = get_all_labels(task)
             labels_selected = [label['id'] for label in self.labels]

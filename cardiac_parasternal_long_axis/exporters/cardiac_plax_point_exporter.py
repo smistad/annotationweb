@@ -23,7 +23,6 @@ class CardiacPLAXPointExporterForm(forms.Form):
 
 
 class CardiacPLAXPointExporter(Exporter):
-    task_type = Task.CARDIAC_PLAX_SEGMENTATION
     name = 'Cardiac PLAX point exporter'
 
     def get_form(self, data=None):

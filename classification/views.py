@@ -14,7 +14,7 @@ def label_next_image(request, task_id):
 
 def label_image(request, task_id, image_id):
     try:
-        context = common.task.setup_task_context(request, task_id, Task.CLASSIFICATION, image_id)
+        context = common.task.setup_task_context(request, task_id, image_id)
         context['javascript_files'] = ['classification/classification.js']
 
         # Load labels

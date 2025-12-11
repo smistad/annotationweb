@@ -17,7 +17,7 @@ def process_next_image(request, task_id):
 
 def process_image(request, task_id, image_id):
     try:
-        context = common.task.setup_task_context(request, task_id, Task.BOUNDING_BOX, image_id)
+        context = common.task.setup_task_context(request, task_id, image_id)
         context['javascript_files'] = ['boundingbox/boundingbox.js']
 
         # Load boxes if they exist

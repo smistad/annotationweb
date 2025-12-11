@@ -33,7 +33,6 @@ class ClassificationExporter(Exporter):
     A folder is created for each dataset with the actual images
     """
 
-    task_type = Task.CLASSIFICATION
     name = 'Default image classification exporter'
 
     def get_form(self, data=None):

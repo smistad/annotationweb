@@ -82,7 +82,7 @@ def get_previous_image(request, task, image):
             # Get current annotated image
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
-                if task.type != Task.CLASSIFICATION:
+                if task.type != 'classification':
                     queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
@@ -101,7 +101,7 @@ def get_previous_image(request, task, image):
                     )
                 return queryset.order_by('processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
-                if task.type != Task.CLASSIFICATION:
+                if task.type != 'classification':
                     queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
@@ -164,7 +164,7 @@ def get_next_image(request, task, image):
             # Get current annotated image
             annotated_image = ProcessedImage.objects.get(task=task, image=image)
             if sort_by == ImageListForm.SORT_DATE_DESC:
-                if task.type != Task.CLASSIFICATION:
+                if task.type != 'classification':
                     queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__lt=annotated_image.date,
@@ -183,7 +183,7 @@ def get_next_image(request, task, image):
                     )
                 return queryset.order_by('-processedimage__date')[0].id
             elif sort_by == ImageListForm.SORT_DATE_ASC:
-                if task.type != Task.CLASSIFICATION:
+                if task.type != 'classification':
                     queryset = queryset.filter(
                         processedimage__task=task,
                         processedimage__date__gt=annotated_image.date,
@@ -205,11 +205,11 @@ def get_next_image(request, task, image):
         return None
 
 
-def setup_task_context(request, task_id, type, image_id):
+def setup_task_context(request, task_id, image_id):
     context = {}
     context['dark_style'] = 'yes'
     try:
-        task = Task.objects.get(pk=task_id, type=type)
+        task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
         raise Http404("Task does not exist")
 

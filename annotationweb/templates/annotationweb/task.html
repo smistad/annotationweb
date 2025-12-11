@@ -1,4 +1,5 @@
 {% extends 'annotationweb/one_column_layout.html' %}
+{% load include_if_exists %}
 
 {% block content %}
 
@@ -36,7 +37,7 @@
     <div style="clear: both">
     {% endif %}
 
-    <div style="float: left; width: 25%; box-sizing: border-box; padding: 10px;">
+    <div style="float: left; width: 25%; box-sizing: border-box; padding: 10px; overflow: hidden;">
         <canvas id="canvas_{{ image.id }}" style="width:100%;"></canvas><br>
         <script>
             $(document).ready(function() {
@@ -59,21 +60,12 @@
             <span style="color: darkred; font-weight: bold;">REJECTED</span><br>
         {% endif %}
         {% if task.annotate_single_frame %}
-        Date: {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
-        User: {{ image.annotation.user.username }}<br>
-        Image quality: {{ image.annotation.image_quality }}<br>
+            <strong>Date:</strong> {{ image.annotation.date|date:"d-m-Y H:i" }}<br>
+            <strong>User:</strong> {{ image.annotation.user.username }}<br>
+            <strong>Image quality:</strong> {{ image.annotation.image_quality }}<br>
 
-        {% if task.type == 'classification' %}
-            {# Get all labels if task is classification task #}
-            {% for frame in image.annotation_frames %}
-                {% complete_label frame.imagelabel.label %}<br>
-            {% endfor %}
-        {% elif task.type == 'boundingbox' %}
-            Boxes added {{ image.annotation.boundingbox_set.count }}<br>
-        {% elif task.type == 'segmentation' %}
-        {% elif task.type == 'landmark' %}
-            Landmarks added {{ image.annotation.landmark_set.count }}<br>
-        {% endif %}
+            {% include_if_exists task.type|add:'/annotation_overview.html' %}
+
         {% else %}
             Annotated frames: {{ image.annotation_frames|length }}<br>
             User: {{ image.annotation.user.username }}<br>

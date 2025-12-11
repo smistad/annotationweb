@@ -83,11 +83,6 @@ def create_json(coord, image_size, filename, image_data):
 
 
 class SplineSegmentationExporter(Exporter):
-    """
-    asdads
-    """
-
-    task_type = Task.SPLINE_SEGMENTATION
     name = 'Spline segmentation exporter'
 
     def get_form(self, data=None):

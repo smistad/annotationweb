@@ -14,7 +14,7 @@ def rank_next_image(request, task_id):
 
 def rank_image(request, task_id, image_id):
     try:
-        context = common.task.setup_task_context(request, task_id, Task.IMAGE_QUALITY, image_id)
+        context = common.task.setup_task_context(request, task_id, image_id)
         context['javascript_files'] = ['image_quality/rank.js']
         context['css_files'] = ['image_quality/style.css']
         context['image_quality_task'] = ImageQualityTask.objects.get(task=task_id)
@@ -72,7 +72,3 @@ def save(request):
         }
 
     return JsonResponse(response)
-
-
-def show(request, task_id, image_id):
-    pass

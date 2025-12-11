@@ -58,6 +58,8 @@ class ImageSequenceImporter(Importer):
                 subject.name = file
                 subject.dataset = self.dataset
                 subject.save()
+            except UnicodeDecodeError:
+                continue
 
             for file2 in os.listdir(subject_dir):
                 image_sequence_dir = join(subject_dir, file2)

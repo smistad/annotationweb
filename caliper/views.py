@@ -17,7 +17,7 @@ def next_image(request, task_id):
 
 def measure_image(request, task_id, image_id):
     try:
-        context = common.task.setup_task_context(request, task_id, Task.CALIPER, image_id)
+        context = common.task.setup_task_context(request, task_id, image_id)
         context['javascript_files'] = ['caliper/caliper.js']
 
         # Check if image is already segmented, if so get data and pass to template

@@ -24,7 +24,6 @@ class CaliperExporterForm(forms.Form):
 
 
 class CaliperExporter(Exporter):
-    task_type = Task.CALIPER
     name = 'Caliper json exporter'
 
     def get_form(self, data=None):

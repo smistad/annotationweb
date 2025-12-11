@@ -20,11 +20,6 @@ class BoundingBoxExporterForm(forms.Form):
 
 
 class BoundingBoxExporter(Exporter):
-    """
-    asdads
-    """
-
-    task_type = Task.BOUNDING_BOX
     name = 'Default bounding box exporter'
 
     def get_form(self, data=None):

@@ -30,16 +30,13 @@ class Exporter(metaclass=MetaExporter):
 def find_all_exporters(task_type):
     result = []
 
-    modules = glob.glob(os.path.join(BASE_DIR, 'exporters') + '/*.py')
+    modules = glob.glob(os.path.join(BASE_DIR, task_type, 'exporters') + '/*.py')
     for module in modules:
         print('Importing..')
         exporters.clear()
         module_name = basename(module)[:-3]
         foo = importlib.machinery.SourceFileLoader(module_name, module).load_module()
         for exporter in exporters:
-            if exporter.task_type == task_type:
-                result.append(exporter)
-            else:
-                print('Exporter not correct type')
+            result.append(exporter)
 
     return result

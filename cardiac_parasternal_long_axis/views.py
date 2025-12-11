@@ -58,7 +58,7 @@ def segment_image(request, task_id, image_id):
     add_default_labels(task_id)
 
     try:
-        context = common.task.setup_task_context(request, task_id, Task.CARDIAC_PLAX_SEGMENTATION, image_id)
+        context = common.task.setup_task_context(request, task_id, image_id)
         image_id = context['image'].id  # Because image_id can initially be None
         context['javascript_files'] = ['cardiac_parasternal_long_axis/segmentation.js']
 
@@ -148,7 +148,3 @@ def save_segmentation(request):
             }
 
     return JsonResponse(response)
-
-
-def show_segmentation(request, task_id, image_id):
-    pass

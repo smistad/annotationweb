@@ -16,7 +16,7 @@ def process_next_image(request, task_id):
 
 def process_image(request, task_id, image_id):
     try:
-        context = common.task.setup_task_context(request, task_id, Task.LANDMARK, image_id)
+        context = common.task.setup_task_context(request, task_id, image_id)
         context['javascript_files'] = ['landmark/landmark.js']
 
         # Load landmarks if they exist

@@ -14,7 +14,7 @@ def segment_next_image(request, task_id):
 
 def segment_image(request, task_id, image_id):
     try:
-        context = common.task.setup_task_context(request, task_id, Task.SPLINE_SEGMENTATION, image_id)
+        context = common.task.setup_task_context(request, task_id, image_id)
         context['javascript_files'] = ['spline_segmentation/segmentation.js']
 
         # Check if image is already segmented, if so get data and pass to template
@@ -77,7 +77,3 @@ def save_segmentation(request):
         raise e
 
     return JsonResponse(response)
-
-
-def show_segmentation(request, task_id, image_id):
-    pass

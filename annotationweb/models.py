@@ -36,30 +36,18 @@ class Label(models.Model):
     def __str__(self):
         return self.name
 
+from django.apps import apps
+from common.config import TaskConfig
+def get_all_task_choices():
+    tasks = []
+    for app in apps.get_app_configs():
+        if isinstance(app, TaskConfig):
+            tasks.append((app.task_id, app.task_name))
+    return tasks
+
 
 class Task(models.Model):
-    CLASSIFICATION = 'classification'
-    BOUNDING_BOX = 'boundingbox'
-    LANDMARK = 'landmark'
-    CARDIAC_SEGMENTATION = 'cardiac_segmentation'
-    CARDIAC_PLAX_SEGMENTATION = 'cardiac_plax_segmentation'
-    CARDIAC_ALAX_SEGMENTATION = 'cardiac_alax_segmentation'
-    IMAGE_QUALITY = 'image_quality'
-    SPLINE_SEGMENTATION = 'spline_segmentation'
-    SPLINE_LINE_POINT = 'spline_line_point'
-    CALIPER = 'caliper'
-    TASK_TYPES = (
-        (CLASSIFICATION, 'Classification'),
-        (BOUNDING_BOX, 'Bounding box'),
-        (LANDMARK, 'Landmark'),
-        (CARDIAC_SEGMENTATION, 'Cardiac apical segmentation'),
-        (CARDIAC_PLAX_SEGMENTATION, 'Cardiac PLAX segmentation'),
-        (CARDIAC_ALAX_SEGMENTATION, 'Cardiac ALAX segmentation'),
-        (SPLINE_SEGMENTATION, 'Spline segmentation'),
-        (SPLINE_LINE_POINT, 'Splines, lines & point segmentation'),
-        (IMAGE_QUALITY, 'Image Quality'),
-        (CALIPER, 'Caliper'),
-    )
+    TASK_TYPES = get_all_task_choices()
 
     name = models.CharField(max_length=200)
     dataset = models.ManyToManyField(Dataset)
@@ -82,6 +70,12 @@ class Task(models.Model):
 
     def __str__(self):
         return self.name
+
+    def type_name(self):
+        for (id, name) in self.TASK_TYPES:
+            if id == self.type:
+                return name
+
 
     class Meta:
         ordering = ['name']

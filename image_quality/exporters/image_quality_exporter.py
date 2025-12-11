@@ -24,7 +24,6 @@ class ImageQualityExporterForm(forms.Form):
 
 
 class ImageQualityExporter(Exporter):
-    task_type = Task.IMAGE_QUALITY
     name = 'Default Image Quality Exporter'
 
     def get_form(self, data=None):

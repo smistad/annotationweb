@@ -20,11 +20,6 @@ class LandmarkExporterForm(forms.Form):
 
 
 class LandmarkExporter(Exporter):
-    """
-    asdads
-    """
-
-    task_type = Task.LANDMARK
     name = 'Default landmark exporter'
 
     def get_form(self, data=None):
