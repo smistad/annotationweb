@@ -113,3 +113,7 @@ class ExportTaskForm(forms.Form):
     export_datasets = forms.BooleanField(initial=True, required=False, help_text='Also export the datasets linked to the task')
     export_key_frames = forms.BooleanField(initial=False, required=False, help_text='Export key frames and set annotation.finished to False. This requires Export datasets to be true')
     export_all_annotation_data = forms.BooleanField(initial=False, required=False, help_text='Export all annotation data as it is stored in the database. This will override the two previous options.')
+
+
+class ExportDatasetForm(forms.Form):
+    filename = forms.CharField(initial='annotation_web_exported_dataset.yaml')

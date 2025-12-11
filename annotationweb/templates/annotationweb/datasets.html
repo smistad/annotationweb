@@ -15,6 +15,7 @@
         <th>Name</th>
         <th>Details</th>
         <th>Import</th>
+        <th>Export</th>
         <th>Delete</th>
     </tr>
     {% for dataset in datasets %}
@@ -22,6 +23,7 @@
         <td>{{ dataset.name }}</td>
         <td><a href="{%  url 'dataset_details' dataset.id %}">Details</a></td>
         <td><a href="{% url 'import' dataset.id %}">Import data</a></td>
+        <td><a href="{% url 'export_dataset' dataset.id %}">Export dataset</a></td>
         <td><a href="{% url 'delete_dataset' dataset.id %}">Delete</a></td>
     </tr>
     {% endfor %}

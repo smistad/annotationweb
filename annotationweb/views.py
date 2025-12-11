@@ -97,6 +97,34 @@ def export_options(request, task_id, exporter_index):
 
 
 @staff_member_required
+def export_dataset(request, dataset_id):
+    try:
+        dataset = Dataset.objects.get(pk=dataset_id)
+    except Dataset.DoesNotExist:
+        raise Http404('Dataset does not exist')
+
+    if request.method == 'POST':
+        form = ExportDatasetForm(request.POST)
+        if form.is_valid():
+            serialization = export.Serialization()
+            export_dataset = export.Dataset(serialization, dataset.name)
+            for subject in dataset.subject_set.all():
+                export_subject = export_dataset.add_subject(subject.name)
+                for sequence in subject.imagesequence_set.all():
+                    export_subject.add_image_sequence(sequence.format, sequence.nr_of_frames,
+                                                                              sequence.start_frame_nr)
+            # Save
+            serialization.save(form.cleaned_data['filename'])
+
+            messages.success(request, f'Task was exported to file {form.cleaned_data["filename"]}')
+        return redirect('datasets')
+    else:
+        form = ExportDatasetForm()
+
+    return render(request, 'annotationweb/export_dataset.html', {'form': form, 'dataset': dataset})
+
+
+@staff_member_required
 def export_task(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)

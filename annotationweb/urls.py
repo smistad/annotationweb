@@ -27,6 +27,7 @@ urlpatterns = [
     path('task-description/<int:task_id>/', views.task_description, name='task_description'),
     path('export-annotations/<int:task_id>/', views.export_annotations, name='export_annotations'),
     path('export-task/<int:task_id>/', views.export_task, name='export_task'),
+    path('export-dataset/<int:dataset_id>/', views.export_dataset, name='export_dataset'),
     path('export-options/<int:task_id>/<int:exporter_index>/', views.export_options, name='export_options'),
     path('import/<int:dataset_id>/', views.import_data, name='import'),
     path('import-options/<int:dataset_id>/<int:importer_index>/', views.import_options, name='import_options'),
