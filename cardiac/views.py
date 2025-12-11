@@ -82,13 +82,13 @@ def save_segmentation(request):
     control_points = json.loads(request.POST['control_points'])
     target_frames = json.loads(request.POST['target_frames'])
     target_frame_types = json.loads(request.POST['target_frame_types'])
-    print(control_points)
     objects = ('Endocardium', 'Epicardium', 'Left atrium')
 
     rejected = request.POST['rejected'] == 'true'
 
     if not rejected:
         for frame_nr in target_frames:
+            frame_nr = str(frame_nr)
             for i in range(len(objects)):
                 if frame_nr not in control_points or (str(i) in control_points[frame_nr] and \
                         len(control_points[frame_nr][str(i)]['control_points']) < 1):
