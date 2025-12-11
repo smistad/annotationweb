@@ -7,6 +7,8 @@ import sys
 class Serialization():
     def __init__(self):
         self.data = []
+        # Reset counters:
+        SerializationObject.reset()
 
     def add(self, data:dict):
         self.data.append(data)
@@ -20,17 +22,27 @@ class Serialization():
 
 
 class SerializationObject():
-    def __init__(self, serialization:Serialization, id:int):
+    OBJECTS_SEEN = set()
+
+    def __init__(self, serialization:Serialization, cls):
         self.serialization = serialization
-        self.id = id
+        if cls not in SerializationObject.OBJECTS_SEEN:
+            # Reset counter to 1
+            cls.counter = 1
+            SerializationObject.OBJECTS_SEEN.add(cls)
+        else:
+            cls.counter += 1
+        print(SerializationObject.OBJECTS_SEEN, cls.counter)
+        self.id = cls.counter
+
+    @classmethod
+    def reset(cls):
+        cls.OBJECTS_SEEN.clear()
 
 
 class ImageSequence(SerializationObject):
-    counter = 1
-
     def __init__(self, serialization: Serialization, format:str, nr_of_frames:int, start_frame_nr:int, subject):
-        super().__init__(serialization, ImageSequence.counter)
-        ImageSequence.counter += 1
+        super().__init__(serialization, ImageSequence)
         serialization.add({
             'model': 'annotationweb.imagesequence',
             'pk': f'$annotationweb$imagesequence${self.id}$',
@@ -47,8 +59,7 @@ class Subject(SerializationObject):
     counter = 1
 
     def __init__(self, serialization: Serialization, name, dataset):
-        super().__init__(serialization, Subject.counter)
-        Subject.counter += 1
+        super().__init__(serialization, Subject)
         serialization.add({
             'model': 'annotationweb.subject',
             'pk': f'$annotationweb$subject${self.id}$',
@@ -66,8 +77,7 @@ class Dataset(SerializationObject):
     counter = 1
 
     def __init__(self, serialization: Serialization, name: str):
-        super().__init__(serialization, Dataset.counter)
-        Dataset.counter += 1
+        super().__init__(serialization, Dataset)
         serialization.add({
             'model': 'annotationweb.dataset',
             'pk': f'$annotationweb$dataset${self.id}$',
@@ -82,8 +92,7 @@ class Label(SerializationObject):
     counter = 1
 
     def __init__(self, serialization: Serialization, name: str, color_red:int, color_green:int, color_blue:int):
-        super().__init__(serialization, Label.counter)
-        Label.counter += 1
+        super().__init__(serialization, Label)
         serialization.add({
             'model': 'annotationweb.label',
             'pk': f'$annotationweb$label${self.id}$',
@@ -116,8 +125,7 @@ class Task(SerializationObject):
                  large_image_layout:bool = False,
                  post_processing_method:str = '',
              ):
-        super().__init__(serialization, Task.counter)
-        Task.counter += 1
+        super().__init__(serialization, Task)
         label_ids = []
         for label in labels:
             label_ids.append(f'$annotationweb$label${label.id}$')
@@ -171,8 +179,7 @@ class ImageAnnotation(SerializationObject):
                  rejected:bool,
                  task:Task
                  ):
-        super().__init__(serialization, ImageAnnotation.counter)
-        ImageAnnotation.counter += 1
+        super().__init__(serialization, ImageAnnotation)
         serialization.add({
             'model': 'annotationweb.imageannotation',
             'pk': f'$annotationweb$imageannotation${self.id}$',
@@ -196,8 +203,7 @@ class KeyFrameAnnotation(SerializationObject):
     counter = 1
 
     def __init__(self, serialization: Serialization, frame_nr:int, frame_metadata:str, annotation:ImageAnnotation):
-        super().__init__(serialization, KeyFrameAnnotation.counter)
-        KeyFrameAnnotation.counter += 1
+        super().__init__(serialization, KeyFrameAnnotation)
         serialization.add({
             'model': 'annotationweb.keyframeannotation',
             'pk': f'$annotationweb$keyframeannotation${self.id}$',

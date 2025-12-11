@@ -15,8 +15,7 @@ class SplineSegmentationControlPoint(SerializationObject):
     counter = 1
 
     def __init__(self, serialization:Serialization, x:float, y:float, index:int, object:int, uncertain:bool, label:Label, image:KeyFrameAnnotation):
-        super().__init__(serialization, SplineSegmentationControlPoint.counter)
-        SplineSegmentationControlPoint.counter += 1
+        super().__init__(serialization, SplineSegmentationControlPoint)
         serialization.add({
             'model': 'spline_segmentation.controlpoint',
             'pk': f'$spline_segmentation$controlpoint${self.id}$',

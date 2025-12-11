@@ -1,4 +1,5 @@
 import importlib
+from datetime import datetime
 from django.contrib import messages
 from django.core import serializers
 from django.db import transaction
@@ -169,7 +170,10 @@ def export_task(request, task_id):
                     finished = annotation.finished
                     if not form.cleaned_data['export_all_annotation_data']:
                         finished = False
-                    export_image_annotation = export_task.add_image_annotation(image_sequence_mapping[annotation.image_id], annotation.image_quality, annotation.comments, finished=finished)
+                    date = datetime.now()
+                    if form.cleaned_data['export_all_annotation_data']:
+                        date = annotation.date
+                    export_image_annotation = export_task.add_image_annotation(image_sequence_mapping[annotation.image_id], annotation.image_quality, annotation.comments, date=date, finished=finished)
                     for key_frame in annotation.keyframeannotation_set.all():
                         export_key_frame_annotation = export_image_annotation.add_key_frame_annotation(key_frame.frame_nr, key_frame.frame_metadata)
                         if form.cleaned_data['export_all_annotation_data']:

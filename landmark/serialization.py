@@ -15,8 +15,7 @@ class Landmark(SerializationObject):
     counter = 1
 
     def __init__(self, serialization:Serialization, x:float, y:float, label:Label, image:KeyFrameAnnotation):
-        super().__init__(serialization, Landmark.counter)
-        Landmark.counter += 1
+        super().__init__(serialization, Landmark)
         serialization.add({
             'model': 'landmark.landmark',
             'pk': f'$landmark$landmark${self.id}$',

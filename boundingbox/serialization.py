@@ -15,8 +15,7 @@ class BoundingBox(SerializationObject):
     counter = 1
 
     def __init__(self, serialization:Serialization, x:int, y:int, width:int, height:int, label:Label, image:KeyFrameAnnotation):
-        super().__init__(serialization, BoundingBox.counter)
-        BoundingBox.counter += 1
+        super().__init__(serialization, BoundingBox)
         serialization.add({
             'model': 'boundingbox.boundingbox',
             'pk': f'$boundingbox$boundingbox${self.id}$',
