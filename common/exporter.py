@@ -12,7 +12,7 @@ class MetaExporter(type):
 
     def __new__(cls, name, bases, namespace, **kwds):
         result = type.__new__(cls, name, bases, dict(namespace))
-        if name is not 'Exporter':
+        if name != 'Exporter':
             print('Found the exporter class', name)
             exporters.append(result)
         return result

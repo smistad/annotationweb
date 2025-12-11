@@ -32,7 +32,7 @@ def get_image_as_http_response(filename, post_processing_method=''):
     else:
         raise Exception('Unknown output image extension ' + extension)
 
-    if post_processing_method is not '':
+    if post_processing_method != '':
         post_processing = post_processing_register.get(post_processing_method)
         new_image = post_processing.post_process(np.asarray(pil_image), source, filename)
         if len(new_image.shape) > 2 and new_image.shape[2] == 3:

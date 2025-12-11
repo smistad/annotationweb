@@ -11,7 +11,7 @@ class MetaImporter(type):
 
     def __new__(cls, name, bases, namespace, **kwds):
         result = type.__new__(cls, name, bases, dict(namespace))
-        if name is not 'Importer':
+        if name != 'Importer':
             print('Found the importer class', name)
             importers.append(result)
         return result
