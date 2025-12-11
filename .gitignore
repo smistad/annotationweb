@@ -6,5 +6,6 @@
 *.log
 *.pot
 *.pyc
+*.yaml*
 __pycache__/
 /static

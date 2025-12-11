@@ -51,12 +51,12 @@ class Task(models.Model):
 
     name = models.CharField(max_length=200)
     dataset = models.ManyToManyField(Dataset)
-    show_entire_sequence = models.BooleanField(help_text='Allow user to see entire sequence.', default=False)
+    show_entire_sequence = models.BooleanField(help_text='Allow user to see entire sequence.', default=True)
     frames_before = models.PositiveIntegerField(help_text='How many frames to allow user to see before a key frame', default=0)
     frames_after = models.PositiveIntegerField(help_text='How many frames to allow user to see after a key frame', default=0)
     auto_play = models.BooleanField(help_text='Auto play image sequences', default=True)
     shuffle_videos = models.BooleanField(help_text='Shuffle videos for annotation task', default=True)
-    user_frame_selection = models.BooleanField(help_text='Annotaters can select which frames to annotate in a video', default=False)
+    user_frame_selection = models.BooleanField(help_text='Annotaters can select which frames to annotate in a video', default=True)
     annotate_single_frame = models.BooleanField(help_text='Annotate a single frame at a time in videos', default=True)
     type = models.CharField(max_length=50, choices=TASK_TYPES)
     label = models.ManyToManyField(Label,
@@ -119,7 +119,7 @@ class ImageAnnotation(models.Model):
     image = models.ForeignKey(ImageSequence, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
     QUALITY_POOR = 'poor'
     QUALITY_OK = 'ok'

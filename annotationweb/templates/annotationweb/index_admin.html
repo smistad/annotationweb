@@ -20,7 +20,8 @@
         <th>Progress</th>
         <th>Image list</th>
         <th>Annotate</th>
-        <th>Export</th>
+        <th>Export annotations</th>
+        <th>Export task</th>
         <th>Copy Task</th>
         <th>Delete</th>
     </tr>
@@ -38,7 +39,8 @@
             <a href="{% url 'annotate' task.id %}">Continue annotation</a>
             {% endif %}
         </td>
-        <td align="center"><a href="{% url 'export' task.id %}">Export</a>
+        <td align="center"><a href="{% url 'export_annotations' task.id %}">Export annotations</a>
+        <td align="center"><a href="{% url 'export_task' task.id %}">Export task</a>
         <td align="center"><a href="{% url 'copy_task' task.id %}">Copy Task</a>
         <td align="center"><a href="{% url 'delete_task' task.id %}">Delete</a></td>
     </tr>

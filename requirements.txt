@@ -5,3 +5,4 @@ Pillow==10.*
 scipy>=1.10,<2.0
 django-otp==1.*
 qrcode==7.*
+pyyaml==6.*

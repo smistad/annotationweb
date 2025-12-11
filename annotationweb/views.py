@@ -1,3 +1,4 @@
+import importlib
 from django.contrib import messages
 from django.core import serializers
 from django.db import transaction
@@ -21,6 +22,7 @@ from .forms import *
 from .models import *
 from common.user import is_annotater
 import json
+from . import serialization as export
 
 def get_task_statistics(tasks, user):
     for task in tasks:
@@ -48,7 +50,7 @@ def index(request):
 
 
 @staff_member_required
-def export(request, task_id):
+def export_annotations(request, task_id):
     try:
         task = Task.objects.get(pk=task_id)
     except Task.DoesNotExist:
@@ -92,6 +94,69 @@ def export_options(request, task_id, exporter_index):
         form = exporter.get_form()
 
     return render(request, 'annotationweb/export_options.html', {'form': form, 'exporter_index': exporter_index, 'task': task})
+
+
+@staff_member_required
+def export_task(request, task_id):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        raise Http404('Task does not exist')
+
+    if request.method == 'POST':
+        form = ExportTaskForm(request.POST)
+        if form.is_valid():
+            serialization = export.Serialization()
+            export_datasets = []
+            if form.cleaned_data['export_all_annotation_data'] or form.cleaned_data['export_datasets']:
+                image_sequence_mapping = {}
+                for dataset in task.dataset.all():
+                    export_dataset = export.Dataset(serialization, dataset.name)
+                    export_datasets.append(export_dataset)
+                    for subject in dataset.subject_set.all():
+                        export_subject = export_dataset.add_subject(subject.name)
+                        for sequence in subject.imagesequence_set.all():
+                            image_sequence_export = export_subject.add_image_sequence(sequence.format, sequence.nr_of_frames, sequence.start_frame_nr)
+                            image_sequence_mapping[sequence.id] = image_sequence_export
+
+            # Save labels
+            export_labels = []
+            label_mapping = {}
+            for label in task.label.all():
+                export_labels.append(export.Label(serialization, label.name, label.color_red, label.color_green, label.color_blue))
+                label_mapping[label.id] = export_labels[-1]
+
+            task_specific_serialization = None
+            if form.cleaned_data['export_all_annotation_data']:
+                # Load task specific serialization routine if it exist
+                try:
+                    module = importlib.import_module(task.type + '.serialization')
+                    task_specific_serialization = getattr(module, 'serialize', None)
+                except:
+                    pass
+            # Save task
+            export_task = export.Task(serialization, task.name, task.type, export_labels, export_datasets, task.description)
+            if form.cleaned_data['export_all_annotation_data'] or (form.cleaned_data['export_datasets'] and form.cleaned_data['export_key_frames']):
+                for annotation in task.imageannotation_set.all():
+                    finished = annotation.finished
+                    if not form.cleaned_data['export_all_annotation_data']:
+                        finished = False
+                    export_image_annotation = export_task.add_image_annotation(image_sequence_mapping[annotation.image_id], annotation.image_quality, annotation.comments, finished=finished)
+                    for key_frame in annotation.keyframeannotation_set.all():
+                        export_key_frame_annotation = export_image_annotation.add_key_frame_annotation(key_frame.frame_nr, key_frame.frame_metadata)
+                        if form.cleaned_data['export_all_annotation_data']:
+                            if task_specific_serialization is not None:
+                                task_specific_serialization(serialization, key_frame, export_key_frame_annotation, label_mapping)
+
+            # Save
+            serialization.save(form.cleaned_data['filename'])
+
+            messages.success(request, f'Task was exported to file {form.cleaned_data["filename"]}')
+            return redirect('index')
+    else:
+        form = ExportTaskForm()
+
+    return render(request, 'annotationweb/export_task.html', {'form': form, 'task': task})
 
 
 @staff_member_required

@@ -1,4 +1,4 @@
-Copyright (c) 2021 - Norwegian University of Science and Technology (NTNU) and SINTEF Medical Technology.
+Copyright (c) 2025 - Norwegian University of Science and Technology (NTNU) and SINTEF Digital.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
