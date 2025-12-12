@@ -3,6 +3,9 @@
 {% block content %}
 <h1>Please log in</h1>
 
+{% for message in messages %}
+    <div{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</div>
+{% endfor %}
 {% if form.errors %}
 <div class="error">Your login failed. Please try again.</div>
 {% endif %}

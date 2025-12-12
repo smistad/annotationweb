@@ -139,7 +139,10 @@ LOGIN_EXEMPT_URLS = ()
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
-OTP_TOTP_ISSUER = 'Annotationweb'
+OTP_TOTP_ISSUER = 'AnnotationWeb'
+
+# If set to to True, all users must have 2FA enabled
+REQUIRE_2FA_FOR_ALL_USERS = False
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

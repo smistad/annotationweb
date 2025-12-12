@@ -1,6 +1,9 @@
 from django.http import HttpResponseRedirect
 from django.conf import settings
 from re import compile
+from django.contrib.auth import logout
+from django.contrib import messages
+from django_otp import devices_for_user
 
 EXEMPT_URLS = [compile(settings.LOGIN_URL.lstrip('/'))]
 if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
@@ -24,3 +27,10 @@ class LoginRequiredMiddleware(MiddlewareMixin):
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in EXEMPT_URLS):
                 return HttpResponseRedirect(settings.LOGIN_URL)
+        else:
+            if settings.REQUIRE_2FA_FOR_ALL_USERS:
+                nr_of_devices = len(list(devices_for_user(request.user)))
+                if nr_of_devices == 0:
+                    messages.error(request, 'This site requires 2FA. You have no 2FA configured.')
+                    logout(request)
+                    return HttpResponseRedirect('')
