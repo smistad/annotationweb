@@ -41,10 +41,8 @@ function setupSegmentation() {
             g_controlPoints[g_currentFrameNr][g_currentObject] = data;
         }
 
-        var scale =  g_canvasWidth / $('#canvas').width();
-        var mouseX = (e.pageX - this.offsetLeft)*scale;
-        var mouseY = (e.pageY - this.offsetTop)*scale;
-        var point = getClosestPoint(mouseX, mouseY);
+        const pos = getMousePos(e);
+        var point = getClosestPoint(pos.x, pos.y);
         if(point !== false) {
             // Activate object of this point
             g_currentObject = point.object;
@@ -56,42 +54,38 @@ function setupSegmentation() {
             g_pointToMove = point.index;
             g_labelToMove = point.label_idx;
         } else {
-            var section = isPointOnSpline(mouseX, mouseY);
+            var section = isPointOnSpline(pos.x, pos.y);
             if(section >= 0) {
                 // Insert point
-                insertControlPoint(mouseX, mouseY, g_labelButtons[g_currentLabel].id, section);
+                insertControlPoint(pos.x, pos.y, g_labelButtons[g_currentLabel].id, section);
             } else {
                 addControlPointsForNewFrame(g_currentFrameNr);
                 // Add point at end
-                addControlPoint(mouseX, mouseY, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
+                addControlPoint(pos.x, pos.y, g_currentFrameNr, g_currentObject, g_labelButtons[g_currentLabel].id, g_shiftKeyPressed);
             }
         }
         redrawSequence();
     });
 
     $('#canvas').mousemove(function(e) {
-        var scale =  g_canvasWidth / $('#canvas').width();
-        var mouseX = (e.pageX - this.offsetLeft)*scale;
-        var mouseY = (e.pageY - this.offsetTop)*scale;
+        const pos = getMousePos(e);
         var cursor = 'default';
-
-
         if(g_move) {
             cursor = 'move';
-            setControlPoint(g_pointToMove, g_currentObject, mouseX, mouseY);
+            setControlPoint(g_pointToMove, g_currentObject, pos.x, pos.y);
             redrawSequence();
         } else {
             if(!e.ctrlKey &&
                 g_currentFrameNr in g_controlPoints &&
                 g_currentObject in g_controlPoints[g_currentFrameNr] &&
                 g_controlPoints[g_currentFrameNr][g_currentObject].control_points.length > 0 &&
-                isPointOnSpline(mouseX, mouseY) < 0) {
+                isPointOnSpline(pos.x, pos.y) < 0) {
                 // If mouse is not close to spline, draw dotted drawing line
                 var line = {
                     x0: getControlPoint(-1, g_currentObject).x,
                     y0: getControlPoint(-1, g_currentObject).y,
-                    x1: mouseX,
-                    y1: mouseY
+                    x1: pos.x,
+                    y1: pos.y
                 };
                 g_drawLine = line;
             } else {
@@ -116,10 +110,8 @@ function setupSegmentation() {
     $('#canvas').dblclick(function(e) {
         if(g_move)
             return;
-        var scale =  g_canvasWidth / $('#canvas').width();
-        var mouseX = (e.pageX - this.offsetLeft)*scale;
-        var mouseY = (e.pageY - this.offsetTop)*scale;
-        var point = getClosestPoint(mouseX, mouseY);
+        const pos = getMousePos(e);
+        var point = getClosestPoint(pos.x, pos.y);
         if(point !== false) {
             g_controlPoints[g_currentFrameNr][g_currentObject].control_points.splice(point.index, 1);
             //if(g_controlPoints[g_currentFrameNr[g_currentObject]].control_points.length == 0) {

@@ -27,6 +27,8 @@ var g_ecgMin;
 var g_ecgMax;
 var g_ecgContext;
 var g_zoom = false;
+let g_mousePositionX;
+let g_mousePositionY;
 
 function max(a, b) {
     return a > b ? a : b;
@@ -34,16 +36,6 @@ function max(a, b) {
 
 function min(a, b) {
     return a < b ? a : b;
-}
-
-function mousePos(e, canvas) {
-    var scale =  g_canvasWidth / $('#canvas').width();
-    var mouseX = (e.pageX - canvas.offsetLeft)*scale;
-    var mouseY = (e.pageY - canvas.offsetTop)*scale;
-    return {
-        x: mouseX,
-        y: mouseY,
-    }
 }
 
 function incrementFrame() {
@@ -492,12 +484,9 @@ function loadSequence(image_sequence_id, start_frame, nrOfFrames, show_entire_se
     });
 
     $('#canvas').mousemove(function(e) {
-        var scale = g_canvasWidth / $('#canvas').width();
-        var mouseX = (e.pageX - this.offsetLeft) * scale;
-        var mouseY = (e.pageY - this.offsetTop) * scale;
-
-        g_mousePositionX = mouseX;
-        g_mousePositionY = mouseY;
+        const pos = getMousePos(e)
+        g_mousePositionX = pos.x;
+        g_mousePositionY = pos.y;
     });
 
     // Arrow key pressed
@@ -723,4 +712,28 @@ function drawECG() {
         ctx.lineTo((i/g_ecgData.length)*ctx.canvas.width, (1.0-(g_ecgData[i]['value'] - g_ecgMin+pad)/(g_ecgMax - g_ecgMin + 2*pad))*ctx.canvas.height);
     }
     ctx.stroke();
+}
+
+function getMousePos(e) {
+    const imgWidth = g_canvasWidth;
+    const imgHeight = g_canvasHeight;
+
+    // Get canvas dimension
+    const canvasWidth = $('#canvas').width();
+    const canvasHeight = $('#canvas').height();
+
+    // Calculate the scale ratio of the image once fitted within the canvas
+    let scale = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight);
+    const scaledWidth = imgWidth * scale;
+    const scaledHeight = imgHeight * scale;
+
+    // Padding on 1 side is half of total difference between image and canvas
+    const paddingX = (canvasWidth - scaledWidth) / 2;
+    const paddingY = (canvasHeight - scaledHeight) / 2;
+
+    // Adjust mouse coordinates
+    let mouseX = (e.offsetX - paddingX) / scale;
+    let mouseY = (e.offsetY - paddingY) / scale;
+
+    return {x: mouseX, y: mouseY};
 }

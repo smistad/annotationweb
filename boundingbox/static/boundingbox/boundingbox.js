@@ -21,7 +21,7 @@ function setupSegmentation() {
     $('#canvas').mousedown(function(e) {
 
         // TODO check if current frame is not the frame to segment
-        var pos = mousePos(e, this);
+        var pos = getMousePos(e);
         g_BBx = pos.x;
         g_BBy = pos.y;
         var insideBox = isInsideBox(pos.x, pos.y);
@@ -38,7 +38,7 @@ function setupSegmentation() {
     });
 
     $('#canvas').mousemove(function(e) {
-        var pos = mousePos(e, this);
+        var pos = getMousePos(e);
         if(g_paint) {
             g_BBx2 = pos.x;
             g_BBy2 = pos.y;
@@ -85,7 +85,7 @@ function setupSegmentation() {
     });
 
     $('#canvas').dblclick(function(e){
-        var pos = mousePos(e, this);
+        var pos = getMousePos(e);
         insideBox = isInsideBox(pos.x, pos.y);
         if(insideBox.isInside)
             removeBox(insideBox.boxNr);
@@ -101,7 +101,7 @@ function setupSegmentation() {
     // Define right-click callback for deleting bboxes
     $('#canvas').on('contextmenu', function(e) {
         e.preventDefault(); // Prevent the default context menu
-        var pos = mousePos(e, this);
+        var pos = getMousePos(e);
         insideBox = isInsideBox(pos.x, pos.y);
         if(insideBox.isInside)
             removeBox(insideBox.boxNr);

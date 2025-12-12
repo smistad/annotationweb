@@ -11,7 +11,7 @@ function setupLandmarkTask() {
 
     // Define event callbacks
     $('#canvas').click(function(e) {
-        var pos = mousePos(e, this);
+        var pos = getMousePos(e);
         if(!g_shiftKeyPressed) {
             // Check if frame is a key frame
             console.log(g_userFrameSelection);
@@ -48,7 +48,7 @@ function setupLandmarkTask() {
     // Define right-click callback for deleting landmarks
     $('#canvas').on('contextmenu', function(e) {
         e.preventDefault(); // Prevent the default context menu
-        var pos = mousePos(e, this);
+        var pos = getMousePos(e);
         let frameNr = g_currentFrameNr;
 
         // Call the deleteLandmark function for right-click
